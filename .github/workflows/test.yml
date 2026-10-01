@@ -1,0 +1,30 @@
+name: Tests
+on: [push, pull_request]
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ['3.10', '3.11', '3.12', '3.13']
+    env:
+      MPLBACKEND: Agg
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: ${{ matrix.python }}
+      - run: uv sync --locked
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+      - run: uv run mypy
+      - run: uv run lint-imports
+      - run: uv run pytest --cov=mosaickit --cov-report=term-missing
+      - run: uv build
+      - name: Install and test the wheel in isolation
+        shell: bash
+        run: |
+          uv venv /tmp/mosaickit-wheel --python '${{ matrix.python }}'
+          uv pip install --python /tmp/mosaickit-wheel/bin/python dist/*.whl pytest
+          cd /tmp
+          /tmp/mosaickit-wheel/bin/python -m pytest "$GITHUB_WORKSPACE/tests" -q

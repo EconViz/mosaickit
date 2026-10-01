@@ -1,0 +1,69 @@
+[project]
+name = "mosaickit"
+version = "0.1.0"
+description = "Domain-neutral scenes, styles, and rendering for EconViz."
+readme = "README.md"
+requires-python = ">=3.10"
+license = "MIT"
+authors = [{ name = "EconViz" }]
+dependencies = ["bezierkit @ git+https://github.com/EconViz/bezierkit.git@db1e66fd13749df56b6f50221d149d81a4c0adc9", "numpy>=1.24", "matplotlib>=3.6,<4", "tomli>=2; python_version < '3.11'"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mosaickit"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src", "tests", "README.md", "CHANGELOG.md", "LICENSE", "pyproject.toml", "uv.lock"]
+
+[dependency-groups]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.8", "pre-commit>=4", "mypy>=1.13", "import-linter>=2", "build>=1", "pillow>=10"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra --import-mode=importlib"
+
+[tool.mypy]
+files = ["src/mosaickit"]
+ignore_missing_imports = true
+check_untyped_defs = true
+
+[tool.importlinter]
+root_package = "mosaickit"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Models do not depend on rendering or canvas"
+type = "forbidden"
+source_modules = ["mosaickit.scene", "mosaickit.styles", "mosaickit.themes", "mosaickit.parameter"]
+forbidden_modules = ["mosaickit.rendering", "mosaickit.canvas"]
+
+[[tool.importlinter.contracts]]
+name = "Matplotlib does not depend on TikZ"
+type = "forbidden"
+source_modules = ["mosaickit.rendering.matplotlib"]
+forbidden_modules = ["mosaickit.rendering.tikz"]
+
+[[tool.importlinter.contracts]]
+name = "TikZ does not depend on Matplotlib"
+type = "forbidden"
+source_modules = ["mosaickit.rendering.tikz"]
+forbidden_modules = ["mosaickit.rendering.matplotlib"]
+
+[[tool.importlinter.contracts]]
+name = "Core never imports domain packages"
+type = "forbidden"
+source_modules = ["mosaickit"]
+forbidden_modules = ["econ_viz", "utility_viz", "micro_viz", "macro_viz", "trade_viz", "dsge_viz", "principle_viz"]
