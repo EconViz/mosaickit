@@ -13,7 +13,7 @@ def build(ax: Any, resolved: Any) -> Any:
     vertical = layer.anchor if layer.anchor in ("top", "bottom") else "center"
     return ax.annotate(
         text,
-        (layer.position.x, layer.position.y),
+        layer.position,
         xytext=layer.offset,
         textcoords="offset points",
         ha=horizontal,

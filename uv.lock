@@ -73,16 +73,6 @@ wheels = [
 ]
 
 [[package]]
-name = "bezierkit"
-version = "0.5.0rc1"
-source = { git = "https://github.com/EconViz/bezierkit.git?rev=db1e66fd13749df56b6f50221d149d81a4c0adc9#db1e66fd13749df56b6f50221d149d81a4c0adc9" }
-dependencies = [
-    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
-    { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
-    { name = "numpy", version = "2.5.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-]
-
-[[package]]
 name = "build"
 version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
@@ -1305,7 +1295,6 @@ name = "mosaickit"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
-    { name = "bezierkit" },
     { name = "matplotlib", version = "3.10.9", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "matplotlib", version = "3.11.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -1328,7 +1317,6 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "bezierkit", git = "https://github.com/EconViz/bezierkit.git?rev=db1e66fd13749df56b6f50221d149d81a4c0adc9" },
     { name = "matplotlib", specifier = ">=3.6,<4" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2" },

@@ -99,15 +99,9 @@ class Canvas:
         **options: Any,
     ) -> list[Path]:
         target = Path(target)
-        if target.suffix.lower() not in {".png", ".pdf", ".svg", ".tex", ".pgf"}:
+        if target.suffix.lower() not in {".png", ".pdf", ".svg"}:
             raise RenderError(f"Unsupported output format: {target.suffix!r}")
-        selected = self._renderer(
-            renderer
-            if renderer is not None
-            else "tikz"
-            if target.suffix.lower() in {".tex", ".pgf"}
-            else None
-        )
+        selected = self._renderer(renderer)
         result = selected.render(self.snapshot(), self._context(cache))
         try:
             return selected.save(result, target, SaveOptions(**options))

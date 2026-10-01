@@ -20,8 +20,4 @@ class RendererRegistry:
             from mosaickit.rendering.matplotlib import MatplotlibRenderer
 
             return MatplotlibRenderer()
-        if name == "tikz":
-            from mosaickit.rendering.tikz import TikzRenderer
-
-            return TikzRenderer()
         raise RenderError(f"Unknown renderer: {name!r}")

@@ -4,11 +4,9 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass, field
+from numbers import Real
 from typing import Any, ClassVar
 from uuid import uuid4
-
-from bezierkit import CubicBezierSegment, PiecewiseBezier, Point
-from bezierkit.core.geometry.point_set import PointSet
 
 from mosaickit.errors import ConfigurationError
 from mosaickit.parameter import Expression
@@ -36,29 +34,28 @@ class Layer:
 def _point(value: Any) -> Any:
     if isinstance(value, Expression):
         return value
-    if not isinstance(value, Point):
-        try:
-            values = tuple(value)
-            if len(values) == 2 and any(isinstance(v, Expression) for v in values):
-                return values
-            value = Point(*values)
-        except (TypeError, ValueError) as exc:
-            raise ConfigurationError("Expected a two-dimensional point") from exc
-    if value.dimension != 2:
-        raise ConfigurationError("Scene points must have dimension 2")
-    return value
+    try:
+        values = tuple(value)
+    except TypeError as exc:
+        raise ConfigurationError("Expected a two-dimensional point") from exc
+    if len(values) != 2:
+        raise ConfigurationError("Expected a two-dimensional point")
+    if any(isinstance(component, Expression) for component in values):
+        return values
+    if not all(isinstance(component, Real) for component in values):
+        raise ConfigurationError("Point coordinates must be real numbers")
+    point = (float(values[0]), float(values[1]))
+    if not all(math.isfinite(component) for component in point):
+        raise ConfigurationError("Point coordinates must be finite")
+    return point
 
 
 def _geometry(value: Any, *, minimum: int = 2) -> Any:
     if isinstance(value, Expression):
         return value
-    if isinstance(value, (PiecewiseBezier, CubicBezierSegment)):
-        if value.dimension != 2:
-            raise ConfigurationError("Scene paths must have dimension 2")
-        return value
-    if isinstance(value, PointSet) or isinstance(value, (tuple, list)):
+    if isinstance(value, (tuple, list)):
         points = tuple(_point(point) for point in value)
         if len(points) < minimum:
             raise ConfigurationError(f"Geometry requires at least {minimum} points")
         return points
-    raise ConfigurationError("Expected BezierKit geometry or an ordered point sequence")
+    raise ConfigurationError("Expected an ordered point sequence")

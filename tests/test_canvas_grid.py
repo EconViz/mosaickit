@@ -65,7 +65,7 @@ def test_flat_shape_inference_sweep_and_empty_cells():
     assert len(CanvasGrid([[Canvas(), None], [None, Canvas()]]).placements) == 2
     p = Parameter("x")
     grid = CanvasGrid.sweep(Canvas().add(TextLayer((p, 0), "x")), p.values([1, 2, 3]), cols=2)
-    assert [item.canvas.snapshot().layers[0].position.x for item in grid.placements] == [1, 2, 3]
+    assert [item.canvas.snapshot().layers[0].position[0] for item in grid.placements] == [1, 2, 3]
 
 
 @pytest.mark.parametrize(

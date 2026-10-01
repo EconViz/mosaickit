@@ -2,8 +2,6 @@
 
 from pathlib import Path
 
-from bezierkit import CubicBezierSegment, Point
-
 from mosaickit import (
     Canvas,
     CanvasSpec,
@@ -19,7 +17,7 @@ from mosaickit import (
 
 
 def build_diagram() -> Canvas:
-    curve = CubicBezierSegment(Point(1, 8), Point(2, 3), Point(6, 2), Point(9, 1))
+    curve = [(1, 8), (2, 5), (4, 3), (7, 1.5), (9, 1)]
     return (
         Canvas(CanvasSpec(title="A renderer-neutral diagram"))
         .extend(quadrant_axes(10, 10))
@@ -37,4 +35,3 @@ if __name__ == "__main__":
     output = Path("diagram.png")
     canvas = build_diagram()
     canvas.save(output)
-    canvas.save(output.with_suffix(".tex"))
