@@ -43,8 +43,8 @@ class Config:
                 raise ConfigurationError(
                     "TOML theme must be 'default'; pass custom Theme in Python"
                 )
-            if data.get("renderer", "matplotlib") not in ("matplotlib", "tikz"):
-                raise ConfigurationError("TOML renderer must be 'matplotlib' or 'tikz'")
+            if data.get("renderer", "matplotlib") != "matplotlib":
+                raise ConfigurationError("TOML renderer must be 'matplotlib'")
             styles = {}
             types = {
                 "stroke": Stroke,

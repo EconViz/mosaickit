@@ -1,7 +1,7 @@
 # mosaickit
 
 Domain-neutral scenes, styles, and renderers for two-dimensional diagrams.
-Python 3.10–3.13. Geometry comes from BezierKit; no economic package is required.
+Python 3.10–3.13. No economic or curve-fitting package is required.
 
 ## Development
 
@@ -16,23 +16,21 @@ uv run lint-imports
 uv build
 ```
 
-The lockfile pins all development dependencies. BezierKit is currently pinned to
-commit `db1e66fd13749df56b6f50221d149d81a4c0adc9` (0.5.0rc1): it was not available
-on the configured package index at implementation time. The same Git reference is
-included in wheel metadata so installing the wheel does not require a local
-sibling checkout. Replace this with a bounded registry dependency when published.
+The lockfile pins all development dependencies.
 
 ## A standalone diagram
 
 ```python
-from bezierkit import CubicBezierSegment, Point
 from mosaickit import Canvas, PathLayer, Stroke, quadrant_axes
 
-curve = CubicBezierSegment(Point(1, 8), Point(2, 3), Point(6, 2), Point(9, 1))
 canvas = Canvas().extend(quadrant_axes(10, 10))
-canvas.add(PathLayer(curve, stroke=Stroke(color="#984EA3", width=2)))
+canvas.add(
+    PathLayer(
+        [(1, 8), (2, 5), (4, 3), (7, 1.5), (9, 1)],
+        stroke=Stroke(color="#984EA3", width=2),
+    )
+)
 canvas.save("diagram.svg")
-canvas.save("diagram.tex")
 ```
 
 `Canvas.add/extend/remove/clear` are fluent builder operations. `snapshot()` returns
@@ -113,20 +111,12 @@ ffmpeg. Interactive `rendering.matplotlib.animation.play()` requires Matplotlib.
 `canvas.render()` returns a result with `figure`, `axes`, `show`, `save`, and `close`
 for Matplotlib. Close results when finished. `canvas.save()` closes its temporary
 result automatically and returns all paths written. Save PNG/PDF/SVG with
-Matplotlib or TEX/PGF with TikZ. Renderer modules load lazily. Both preserve native
-cubic segments without fixed-count resampling.
-
-TikZ supports standalone and fragment output (`fragment=True`), coordinate scale
-(`tikz_scale=...`), and precision. Geometry serialization delegates to BezierKit's
-public `export.tikz.to_tikz`. Separate-data mode raises `NotImplementedError` until
-BezierKit provides `to_tikz_separate`. Fragment consumers must load `arrows.meta`,
-`patterns`, and the `plotmarks` PGF library. Plain text is escaped; `math=True`
-labels are intentional raw TeX.
+Matplotlib. Paths are ordered finite `(x, y)` coordinates joined by straight
+segments. Curve fitting and TikZ export belong to separate packages used directly
+by domain libraries; MosaicKit does not depend on or adapt them.
 
 `Scene`, layers, styles, themes, and the public `Renderer` protocol form the API.
 Render contexts and plans remain private while the built-in backends evolve.
 Each render/save/grid/animation job owns its cache; an explicit `RenderCache`
 can be reused across jobs. Non-hashable models warn once per type per cache and
 bypass caching without blocking rendering.
-
-See [migration guidance](docs/migration.md) for domain-package adoption.

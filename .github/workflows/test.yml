@@ -27,4 +27,5 @@ jobs:
           uv venv /tmp/mosaickit-wheel --python '${{ matrix.python }}'
           uv pip install --python /tmp/mosaickit-wheel/bin/python dist/*.whl pytest
           cd /tmp
+          /tmp/mosaickit-wheel/bin/python -c "import importlib.util; assert importlib.util.find_spec('bezierkit') is None"
           /tmp/mosaickit-wheel/bin/python -m pytest "$GITHUB_WORKSPACE/tests" -q

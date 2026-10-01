@@ -175,13 +175,9 @@ class CanvasGrid:
         **options: Any,
     ) -> list[Path]:
         target = Path(target)
-        selected = self._renderer(
-            renderer
-            if renderer is not None
-            else "tikz"
-            if target.suffix.lower() in {".tex", ".pgf"}
-            else None
-        )
+        if target.suffix.lower() not in {".png", ".pdf", ".svg"}:
+            raise RenderError(f"Unsupported output format: {target.suffix!r}")
+        selected = self._renderer(renderer)
         result = self.render(renderer=selected, cache=cache)
         try:
             return selected.save(result, target, SaveOptions(**options))

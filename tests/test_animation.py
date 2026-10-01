@@ -12,7 +12,7 @@ def test_frames_are_backend_neutral_ordered_and_snapshot_isolated():
     template.clear()
     frames = list(animation.frames())
     assert all(isinstance(frame, Scene) for frame in frames)
-    assert [frame.layers[0].position.x for frame in frames] == [1, 2, 3]
+    assert [frame.layers[0].position[0] for frame in frames] == [1, 2, 3]
     assert len({frame.layers[0].id for frame in frames}) == 1
 
 
@@ -40,8 +40,17 @@ def test_gif_frame_count_and_shared_cache(tmp_path):
 
 
 def test_playback_and_save_reject_other_backends(tmp_path):
+    class StaticRenderer:
+        name = "static"
+
+        def render(self, scene, context):
+            return scene
+
+        def save(self, result, target, options):
+            return [target]
+
     p = Parameter("x")
-    animation = Animation.sweep(Canvas(renderer="tikz"), p.values([1]))
+    animation = Animation.sweep(Canvas(renderer=StaticRenderer()), p.values([1]))
     with pytest.raises(RenderError, match="Matplotlib"):
         play(animation)
     with pytest.raises(RenderError, match="animation"):

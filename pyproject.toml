@@ -6,14 +6,11 @@ readme = "README.md"
 requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "EconViz" }]
-dependencies = ["bezierkit @ git+https://github.com/EconViz/bezierkit.git@db1e66fd13749df56b6f50221d149d81a4c0adc9", "numpy>=1.24", "matplotlib>=3.6,<4", "tomli>=2; python_version < '3.11'"]
+dependencies = ["numpy>=1.24", "matplotlib>=3.6,<4", "tomli>=2; python_version < '3.11'"]
 
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
-
-[tool.hatch.metadata]
-allow-direct-references = true
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/mosaickit"]
@@ -49,18 +46,6 @@ name = "Models do not depend on rendering or canvas"
 type = "forbidden"
 source_modules = ["mosaickit.scene", "mosaickit.styles", "mosaickit.themes", "mosaickit.parameter"]
 forbidden_modules = ["mosaickit.rendering", "mosaickit.canvas"]
-
-[[tool.importlinter.contracts]]
-name = "Matplotlib does not depend on TikZ"
-type = "forbidden"
-source_modules = ["mosaickit.rendering.matplotlib"]
-forbidden_modules = ["mosaickit.rendering.tikz"]
-
-[[tool.importlinter.contracts]]
-name = "TikZ does not depend on Matplotlib"
-type = "forbidden"
-source_modules = ["mosaickit.rendering.tikz"]
-forbidden_modules = ["mosaickit.rendering.matplotlib"]
 
 [[tool.importlinter.contracts]]
 name = "Core never imports domain packages"

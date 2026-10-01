@@ -1,5 +1,4 @@
 import pytest
-from bezierkit import Point
 
 from mosaickit import BindingError, Canvas, Constant, Parameter, PathLayer, TextLayer
 
@@ -36,7 +35,7 @@ def test_partial_scene_binding_preserves_source_and_ids():
     partial = canvas.bind(x, 3)
     assert partial.snapshot().layers[0].position[0].free_parameters() == frozenset({y})
     bound = partial.bind(y, 4)
-    assert bound.snapshot().layers[0].position == Point(7, 2)
+    assert bound.snapshot().layers[0].position == (7.0, 2.0)
     assert bound.snapshot().layers[0].id == "text"
     assert canvas.snapshot().layers[0].position[0].free_parameters() == frozenset({x, y})
 
@@ -44,7 +43,7 @@ def test_partial_scene_binding_preserves_source_and_ids():
 def test_binding_path_coordinates_and_parameter_values():
     x = Parameter("x")
     canvas = Canvas().add(PathLayer([(0, 0), (x, 2)]))
-    assert canvas.bind(x, 3).snapshot().layers[0].path[-1] == Point(3, 2)
+    assert canvas.bind(x, 3).snapshot().layers[0].path[-1] == (3.0, 2.0)
     assert x.values([1, 2]).values == (1, 2)
 
 
