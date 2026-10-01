@@ -1,7 +1,7 @@
 # mosaickit
 
 <p align="center">
-  <img src="assets/banner.svg" alt="mosaickit" width="480">
+  <img src="https://raw.githubusercontent.com/EconViz/mosaickit/main/assets/banner.svg" alt="mosaickit" width="480">
 </p>
 
 <p align="center">
