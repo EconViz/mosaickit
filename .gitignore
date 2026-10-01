@@ -10,5 +10,4 @@ htmlcov/
 dist/
 .import_linter_cache/
 .superpowers/
-docs/spec/
-docs/plan/
+docs/
