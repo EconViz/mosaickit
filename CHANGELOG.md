@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 — 2026-10-01
+
+- Add verified project links for the homepage, source repository, issue tracker,
+  changelog, and release notes to the package metadata shown on PyPI.
+
 ## 0.1.0 — 2026-10-01
 
 - Add immutable viewport, styles, namespaced themes, scenes, and generic layers.
