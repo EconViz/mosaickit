@@ -1,9 +1,12 @@
 import subprocess
 import sys
-from importlib.metadata import version
+from importlib.metadata import requires, version
 from pathlib import Path
 
+import pytest
+
 import mosaickit
+from mosaickit import Canvas, RendererRegistry, RenderError
 
 
 def test_public_exports_and_typing_marker():
@@ -27,3 +30,16 @@ def test_root_import_does_not_load_matplotlib_or_domain_packages():
         text=True,
     )
     assert result.returncode == 0, result.stderr
+
+
+def test_distribution_has_no_bezierkit_dependency():
+    dependencies = requires("mosaickit") or []
+    assert not any(requirement.lower().startswith("bezierkit") for requirement in dependencies)
+
+
+def test_tikz_is_not_a_builtin_renderer(tmp_path):
+    with pytest.raises(RenderError, match="Unknown renderer"):
+        RendererRegistry().get("tikz")
+    for suffix in (".tex", ".pgf"):
+        with pytest.raises(RenderError, match="Unsupported output format"):
+            Canvas().save(tmp_path / f"figure{suffix}")

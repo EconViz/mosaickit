@@ -81,8 +81,8 @@ class MatplotlibRenderer:
             if isinstance(layer, ArrowLayer):
                 artist = add_arrow(
                     ax,
-                    layer.start.coords,
-                    layer.end.coords,
+                    layer.start,
+                    layer.end,
                     resolved.style.stroke,
                     layer.arrow_placement,
                     layer.z_index,
@@ -90,8 +90,8 @@ class MatplotlibRenderer:
                 artist.set_label(layer.legend)
                 if layer.label:
                     ax.text(
-                        (layer.start.x + layer.end.x) / 2,
-                        (layer.start.y + layer.end.y) / 2,
+                        (layer.start[0] + layer.end[0]) / 2,
+                        (layer.start[1] + layer.end[1]) / 2,
                         layer.label,
                     )
             else:

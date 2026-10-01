@@ -1,5 +1,4 @@
 import pytest
-from bezierkit import CubicBezierSegment, PiecewiseBezier, Point
 from matplotlib.path import Path as MplPath
 
 from mosaickit import (
@@ -22,15 +21,27 @@ from mosaickit import (
 )
 
 
-def test_cubic_paths_preserve_control_points_and_independent_subpaths():
-    first = CubicBezierSegment(Point(0, 0), Point(1, 4), Point(2, 3), Point(4, 0))
-    second = CubicBezierSegment.from_line(Point(6, 6), Point(8, 8))
-    geometry = PiecewiseBezier.compound([PiecewiseBezier([first]), PiecewiseBezier([second])])
-    result = Canvas().add(PathLayer(geometry)).render()
+def test_path_layers_render_ordered_coordinates_as_straight_segments():
+    result = Canvas().add(PathLayer([(0, 0), (1, 4), (4, 0)])).render()
     try:
         path = result.axes.patches[0].get_path()
-        assert path.codes.tolist() == [MplPath.MOVETO, *([MplPath.CURVE4] * 3)] * 2
+        assert path.codes.tolist() == [MplPath.MOVETO, MplPath.LINETO, MplPath.LINETO]
         assert path.vertices[1].tolist() == [1, 4]
+    finally:
+        result.close()
+
+
+def test_fill_closes_an_open_coordinate_sequence_once():
+    result = Canvas().add(FillLayer([(0, 0), (2, 0), (0, 2)])).render()
+    try:
+        path = result.axes.patches[0].get_path()
+        assert path.codes.tolist() == [
+            MplPath.MOVETO,
+            MplPath.LINETO,
+            MplPath.LINETO,
+            MplPath.CLOSEPOLY,
+        ]
+        assert path.vertices.tolist() == [[0, 0], [2, 0], [0, 2], [0, 0]]
     finally:
         result.close()
 

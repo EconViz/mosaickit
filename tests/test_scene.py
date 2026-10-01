@@ -1,8 +1,6 @@
 from dataclasses import FrozenInstanceError
 
 import pytest
-from bezierkit import CubicBezierSegment, Point
-from bezierkit.core.geometry.point_set import PointSet
 
 from mosaickit import (
     ArrowPlacement,
@@ -42,14 +40,14 @@ def test_duplicate_ids_include_hidden_nested_layers():
         Scene((a, GroupLayer((a,), visible=False)))
 
 
-def test_geometry_is_copied_and_native_segments_preserved():
-    points = PointSet([(0, 0), (1, 1)])
+def test_geometry_is_copied_and_normalized_to_coordinate_tuples():
+    points = [[0, 0], [1, 1]]
     layer = PathLayer(points)
-    assert layer.path == (Point(0, 0), Point(1, 1))
+    assert layer.path == ((0.0, 0.0), (1.0, 1.0))
+    points[0][0] = 9
+    assert layer.path == ((0.0, 0.0), (1.0, 1.0))
     with pytest.raises(FrozenInstanceError):
         layer.visible = False
-    segment = CubicBezierSegment.from_line(Point(0, 0), Point(1, 1))
-    assert PathLayer(segment).path is segment
 
 
 @pytest.mark.parametrize(
@@ -58,6 +56,9 @@ def test_geometry_is_copied_and_native_segments_preserved():
         lambda: PathLayer([]),
         lambda: MarkerLayer([]),
         lambda: PathLayer([(0, 0, 0), (1, 1, 1)]),
+        lambda: PathLayer([(0, 0), (float("nan"), 1)]),
+        lambda: MarkerLayer([(0, float("inf"))]),
+        lambda: TextLayer(("x", 0), "bad"),
         lambda: TextLayer((0, 0, 0), "bad"),
         lambda: TextLayer((0, 0), "bad", role="a..b"),
         lambda: TextLayer((0, 0), "bad", z_index=float("nan")),
