@@ -234,3 +234,18 @@ def test_dashed_arrow_has_a_dashed_shaft_and_a_solid_head():
         assert head.get_linestyle() == "solid"
     finally:
         result.close()
+
+
+def test_markers_on_the_plot_edge_are_drawn_whole_and_outside_ones_left_out():
+    spec = CanvasSpec(x_range=(0, 10), y_range=(0, 10))
+    result = (
+        Canvas(spec)
+        .add(MarkerLayer([(0, 5), (10, 0), (5, 5), (11, 5), (5, -1)], id="points"))
+        .render()
+    )
+    try:
+        (points,) = [c for c in result.axes.collections if c.get_gid() == "points"]
+        assert points.get_offsets().tolist() == [[0, 5], [10, 0], [5, 5]]
+        assert not points.get_clip_on()
+    finally:
+        result.close()

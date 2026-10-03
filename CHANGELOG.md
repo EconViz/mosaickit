@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.5.1 — 2026-10-03
+
+- Markers are drawn whole: a marker centred on the plot edge (such as a point on
+  an axis) is no longer cut in half, and a marker centred outside the plot is
+  left out (it was clipped away before).
+
 ## 0.5.0 — 2026-10-03
 
 - Add `GridLink(start_cell, start, end_cell, end, role=..., stroke=...)` and
