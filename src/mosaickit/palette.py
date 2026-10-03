@@ -45,7 +45,7 @@ _DEFAULT_HEX = {
     "grey-200": "#CCCCCC",
     "grey-100": "#E6E6E6",
     "white": "#FFFFFF",
-    # Hues, from The Economist's palette and brand red.
+    # Hues.
     "blue": "#01A2D9",
     "red": "#E3120B",
     "teal": "#00887D",

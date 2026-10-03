@@ -18,12 +18,12 @@ def test_expression_structure_arithmetic_and_comparison():
 
 
 def test_binding_errors_name_parameter():
-    x = Parameter("price", value_type=float)
-    with pytest.raises(BindingError, match="price"):
+    x = Parameter("alpha", value_type=float)
+    with pytest.raises(BindingError, match="alpha"):
         x.evaluate({})
-    with pytest.raises(BindingError, match="price"):
+    with pytest.raises(BindingError, match="alpha"):
         x.evaluate({x: "wrong"})
-    with pytest.raises(BindingError, match="price"):
+    with pytest.raises(BindingError, match="alpha"):
         (x + 1).evaluate({x: "wrong"})
     with pytest.raises(BindingError):
         Constant([])
@@ -48,7 +48,7 @@ def test_binding_path_coordinates_and_parameter_values():
 
 
 def test_render_reports_unbound_parameters():
-    price = Parameter("price")
-    canvas = Canvas().add(PathLayer([(0, 0), (price, 2)]))
-    with pytest.raises(BindingError, match="price"):
+    alpha = Parameter("alpha")
+    canvas = Canvas().add(PathLayer([(0, 0), (alpha, 2)]))
+    with pytest.raises(BindingError, match="alpha"):
         canvas.render()

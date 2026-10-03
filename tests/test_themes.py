@@ -20,12 +20,12 @@ def test_role_resolution_merges_namespace_category_and_defaults():
         "test",
         {
             "primary": StyleBundle(stroke=Stroke(width=4)),
-            "utility": StyleBundle(stroke=Stroke(color="#123456")),
-            "utility.budget": StyleBundle(stroke=Stroke(width=2)),
-            "utility.budget.final": StyleBundle(stroke=Stroke(opacity=0)),
+            "mypkg": StyleBundle(stroke=Stroke(color="#123456")),
+            "mypkg.boundary": StyleBundle(stroke=Stroke(width=2)),
+            "mypkg.boundary.final": StyleBundle(stroke=Stroke(opacity=0)),
         },
     )
-    style = theme.resolve("utility.budget.final", fallback_category="primary")
+    style = theme.resolve("mypkg.boundary.final", fallback_category="primary")
     assert style.stroke.width == 2
     assert style.stroke.opacity == 0
     assert style.stroke.color.to_hex() == "#123456"
@@ -50,11 +50,11 @@ def test_themes_copy_inputs_and_with_roles_merges():
 def test_registry_rejects_undotted_domain_roles():
     registry = ThemeRegistry()
     with pytest.raises(ConfigurationError, match="dotted"):
-        registry.register_roles("default", {"budget": StyleBundle()})
+        registry.register_roles("default", {"boundary": StyleBundle()})
     result = registry.register_roles(
-        "default", {"utility.budget": StyleBundle(fill=Fill(opacity=0))}
+        "default", {"mypkg.boundary": StyleBundle(fill=Fill(opacity=0))}
     )
-    assert result.roles["utility.budget"].fill.opacity == 0
+    assert result.roles["mypkg.boundary"].fill.opacity == 0
     with pytest.raises(ConfigurationError):
         registry.register(result)
     with pytest.raises(ConfigurationError):
@@ -64,8 +64,8 @@ def test_registry_rejects_undotted_domain_roles():
 def test_role_pack_expansion():
     @dataclass(frozen=True)
     class Roles:
-        _namespace: ClassVar[str] = "utility"
-        budget: StyleBundle = StyleBundle(stroke=Stroke(width=3))
-        budget_final: StyleBundle | None = None
+        _namespace: ClassVar[str] = "mypkg"
+        boundary: StyleBundle = StyleBundle(stroke=Stroke(width=3))
+        boundary_final: StyleBundle | None = None
 
-    assert expand_roles(Roles()) == {"utility.budget": StyleBundle(stroke=Stroke(width=3))}
+    assert expand_roles(Roles()) == {"mypkg.boundary": StyleBundle(stroke=Stroke(width=3))}
