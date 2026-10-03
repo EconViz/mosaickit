@@ -1,6 +1,6 @@
 [project]
 name = "mosaickit"
-version = "0.5.0"
+version = "0.5.1"
 description = "Domain-neutral scenes, styles, and rendering for EconViz."
 readme = "README.md"
 requires-python = ">=3.10"
