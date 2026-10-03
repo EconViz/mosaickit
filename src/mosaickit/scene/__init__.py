@@ -19,6 +19,7 @@ from mosaickit.scene.path import PathLayer
 from mosaickit.scene.point_label import PointLabelLayer
 from mosaickit.scene.region_label import RegionLabelLayer
 from mosaickit.scene.scene import Scene
+from mosaickit.scene.span_brace import SpanBraceLayer
 from mosaickit.scene.text import TextLayer
 
 __all__ = [
@@ -37,6 +38,7 @@ __all__ = [
     "PointLabelLayer",
     "RegionLabelLayer",
     "Scene",
+    "SpanBraceLayer",
     "TextLayer",
     "box_frame",
     "build_axes",
