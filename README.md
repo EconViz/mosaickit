@@ -74,6 +74,11 @@ The scene graph is deliberately small:
 - `PathLayer` joins ordered finite `(x, y)` coordinates with straight segments.
 - `FillLayer` describes filled regions.
 - `MarkerLayer`, `TextLayer`, and `ArrowLayer` add annotations.
+- `RegionLabelLayer` names a filled region (inside it, or as a callout), and
+  `PointLabelLayer` names a point with text placed right beside it. Both are
+  placed after everything else is drawn so they cover no line, marker, filled
+  region, or other text; a `LayoutWarning` names any label that cannot avoid
+  everything.
 - `LegendLayer` builds legends from stable layer IDs.
 - `GroupLayer` groups layers without adding renderer-specific state.
 

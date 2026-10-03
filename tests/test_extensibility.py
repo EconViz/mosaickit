@@ -5,7 +5,15 @@ from typing import Any, ClassVar
 
 from matplotlib.lines import Line2D
 
-from mosaickit import Canvas, FillLayer, Layer, RegionLabelLayer, Stroke, TextStyle
+from mosaickit import (
+    Canvas,
+    FillLayer,
+    Layer,
+    PointLabelLayer,
+    RegionLabelLayer,
+    Stroke,
+    TextStyle,
+)
 from mosaickit.layout.geometry import Rect, rect_hits_segment
 from mosaickit.rendering.matplotlib import register_builder
 from mosaickit.rendering.plan import _build_render_plan
@@ -70,6 +78,24 @@ def test_callouts_avoid_whatever_was_drawn_even_by_unknown_layer_types():
         label = next(t for t in ax.texts if t.get_gid() == "s.label")
         box = label.get_window_extent(renderer)
         a, b = ax.transData.transform([(6.0, 0), (6.0, 10)])
+        assert not rect_hits_segment(Rect(box.x0, box.y0, box.x1, box.y1), tuple(a), tuple(b))
+    finally:
+        result.close()
+
+
+def test_point_labels_avoid_whatever_was_drawn_even_by_unknown_layer_types():
+    result = (
+        Canvas()
+        .add(Wall(x=5.15, pen=Stroke(width=1), id="w"))
+        .add(PointLabelLayer((5, 5), "Point label", id="p.label"))
+        .render()
+    )
+    try:
+        ax = result.axes
+        renderer = ax.figure.canvas.get_renderer()
+        label = next(t for t in ax.texts if t.get_gid() == "p.label")
+        box = label.get_window_extent(renderer)
+        a, b = ax.transData.transform([(5.15, 0), (5.15, 10)])
         assert not rect_hits_segment(Rect(box.x0, box.y0, box.x1, box.y1), tuple(a), tuple(b))
     finally:
         result.close()

@@ -1,13 +1,13 @@
-"""Region labels are placed after every other layer so they can avoid it."""
+"""Region labels are placed after every builder and point label so they can avoid them."""
 
 from collections.abc import Sequence
 from typing import Any
 
-from mosaickit.rendering.matplotlib.region_labels.draw import draw_region_label
-from mosaickit.rendering.matplotlib.region_labels.obstacles import (
+from mosaickit.rendering.matplotlib.obstacles import (
     collect_obstacles,
     patch_polygon,
 )
+from mosaickit.rendering.matplotlib.region_labels.draw import draw_region_label
 from mosaickit.rendering.matplotlib.registry import PassContext
 
 

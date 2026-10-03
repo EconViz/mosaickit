@@ -9,6 +9,7 @@ from mosaickit.rendering.matplotlib.artists import (
     text_artist,
 )
 from mosaickit.rendering.matplotlib.legend import legend_pass
+from mosaickit.rendering.matplotlib.point_labels import point_label_pass
 from mosaickit.rendering.matplotlib.region_labels import region_label_pass
 from mosaickit.rendering.matplotlib.registry import register_builder, register_pass
 from mosaickit.scene import (
@@ -17,6 +18,7 @@ from mosaickit.scene import (
     LegendLayer,
     MarkerLayer,
     PathLayer,
+    PointLabelLayer,
     RegionLabelLayer,
     TextLayer,
 )
@@ -27,6 +29,10 @@ register_builder(MarkerLayer, marker_artist.build)
 register_builder(TextLayer, text_artist.build)
 register_builder(ArrowLayer, arrow_artist.build)
 
-# Order matters: labels avoid everything drawn so far; legends come last.
+# Order matters: each pass avoids everything drawn before it. Point labels go first
+# because they must sit right beside their point and have few positions to choose
+# from; region callouts can move much further out (with a leader) to avoid them.
+# Legends come last: they are positioned by Matplotlib, not by MosaicKit's layout.
+register_pass(PointLabelLayer, point_label_pass)
 register_pass(RegionLabelLayer, region_label_pass)
 register_pass(LegendLayer, legend_pass)
