@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- Point labels treat a region as theirs only when the point is strictly inside
+  it; a point on a region's edge (such as a vertex) keeps its label out of the
+  region, as before 0.3.1.
+
 ## 0.3.1 — 2026-10-03
 
 - Point labels may sit inside a filled region that contains their point (for
