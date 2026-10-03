@@ -88,3 +88,32 @@ def test_ragged_rows_require_explicit_empty_cells():
     with pytest.raises(ConfigurationError, match="row 1.*missing columns"):
         CanvasGrid([[Canvas(), Canvas()], [Canvas()]])
     assert len(CanvasGrid([[Canvas(), Canvas()], [Canvas(), None]]).placements) == 3
+
+
+def test_grid_link_joins_points_in_two_cells_over_the_gap():
+    from matplotlib.patches import ConnectionPatch
+
+    from mosaickit import CanvasSpec, DashStyle, GridLink, Stroke
+
+    spec = CanvasSpec(x_range=(0, 10), y_range=(0, 10))
+    link = GridLink(0, (10, 4), 1, (0, 4), stroke=Stroke(dash=DashStyle.DASHED, color="red"))
+    grid = CanvasGrid([Canvas(spec), Canvas(spec)], rows=1, links=(link,))
+    result = grid.render()
+    try:
+        (patch,) = [a for a in result.figure.artists if isinstance(a, ConnectionPatch)]
+        left, right = result.axes
+        start = left.transData.transform((10, 4))
+        end = right.transData.transform((0, 4))
+        assert start[1] == pytest.approx(end[1])
+        assert patch.get_linestyle() == "dashed"
+        assert patch.xy1 == (10, 4) and patch.xy2 == (0, 4)
+    finally:
+        result.close()
+
+
+@pytest.mark.parametrize("cell", [-1, 2, True, 1.0])
+def test_grid_link_cells_must_exist(cell):
+    from mosaickit import GridLink
+
+    with pytest.raises(ConfigurationError, match="GridLink.end_cell"):
+        CanvasGrid([Canvas(), Canvas()], rows=1, links=(GridLink(0, (0, 0), cell, (0, 0)),))
