@@ -14,7 +14,7 @@ def resolve(
 ) -> StyleBundle:
     """Primitive defaults, then the theme, then each override mapping in order."""
     chain = tuple(reversed(role_chain(role, fallback_category)))
-    result = PRIMITIVE_DEFAULT
+    result = theme.defaults.merged_over(PRIMITIVE_DEFAULT)
     for roles in (theme.roles, *overrides):
         for key in chain:
             result = roles.get(key, StyleBundle()).merged_over(result)
