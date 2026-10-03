@@ -1,6 +1,7 @@
 import asyncio
 
 import pytest
+from matplotlib.colors import to_hex
 
 from mosaickit import (
     DEFAULT_PALETTE,
@@ -10,6 +11,7 @@ from mosaickit import (
     Config,
     ConfigurationError,
     Palette,
+    PathLayer,
     Theme,
     use_config,
 )
@@ -99,19 +101,37 @@ def test_style_colors_accept_palette_names(tmp_path):
         '[styles."mypkg.line".text]\ncolor = "grey-900"\n'
     )
     bundle = Config.load(path).role_overrides["mypkg.line"]
-    assert bundle.stroke.color == Color.from_hex("#123456")
-    assert bundle.fill.color == Color.from_hex("#ABCDEF")
-    assert bundle.marker.color == DEFAULT_PALETTE["teal"]
+    assert bundle.stroke.color == "blue"
+    assert bundle.fill.color == "accent"
+    assert bundle.marker.color == "teal"
     assert bundle.marker.edge_color == Color.from_hex("#000000")
-    assert bundle.text.color == DEFAULT_PALETTE["grey-900"]
+    assert bundle.text.color == "grey-900"
 
 
 def test_named_color_renders_with_config_palette(tmp_path):
     path = tmp_path / "colors.toml"
     path.write_text('[palette]\nblue = "#123456"\n[styles."mypkg.line".stroke]\ncolor = "blue"\n')
     with use_config(Config.load(path)):
-        canvas = Canvas()
-    assert canvas.config.role_overrides["mypkg.line"].stroke.color == Color.from_hex("#123456")
+        canvas = Canvas().add(PathLayer([(0, 0), (1, 1)], role="mypkg.line"))
+    assert _path_color(canvas) == "#123456"
+
+
+def test_toml_palette_recolors_default_theme_roles(tmp_path):
+    path = tmp_path / "colors.toml"
+    path.write_text('[palette]\nblue = "#123456"\nred = "#654321"\n')
+    with use_config(Config.load(path)):
+        primary = Canvas().add(PathLayer([(0, 0), (1, 1)], role="primary"))
+        secondary = Canvas().add(PathLayer([(0, 0), (1, 1)], role="secondary"))
+    assert _path_color(primary) == "#123456"
+    assert _path_color(secondary) == "#654321"
+
+
+def _path_color(canvas):
+    result = canvas.render()
+    try:
+        return to_hex(result.axes.patches[0].get_edgecolor())
+    finally:
+        result.close()
 
 
 def test_unknown_color_name_names_file_and_key(tmp_path):

@@ -67,7 +67,7 @@ class Config:
                     )
                 patches = {}
                 for name, values in sections.items():
-                    values = _resolve_color_names(values, palette, f"styles.{role}.{name}")
+                    _check_color_names(values, palette, f"styles.{role}.{name}")
                     try:
                         patches[name] = types[name](**values)
                     except (TypeError, ValueError) as exc:
@@ -112,21 +112,19 @@ def _palette(section: Any) -> Palette:
     return Palette("config", colors)
 
 
-def _resolve_color_names(values: Any, palette: Palette, where: str) -> Any:
-    """Replace palette names in a style table's color fields with colors."""
+def _check_color_names(values: Any, palette: Palette, where: str) -> None:
+    """Fail at load time, naming the key, if a style table uses an unknown color name.
+
+    Names stay names in the style; they are resolved when a render plan is built.
+    """
     if not isinstance(values, Mapping):
-        return values
-    resolved = dict(values)
+        return
     for key in _COLOR_FIELDS:
-        value = resolved.get(key)
-        if isinstance(value, str) and not value.startswith("#"):
-            if value not in palette:
-                raise ConfigurationError(
-                    f"{where}.{key}: unknown color {value!r}; "
-                    "use a #hex value or a name from [palette]"
-                )
-            resolved[key] = palette[value]
-    return resolved
+        value = values.get(key)
+        if isinstance(value, str) and not value.startswith("#") and value not in palette:
+            raise ConfigurationError(
+                f"{where}.{key}: unknown color {value!r}; use a #hex value or a name from [palette]"
+            )
 
 
 _active: ContextVar[Config | None] = ContextVar("econ_viz_config", default=None)

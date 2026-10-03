@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from mosaickit.canvas_spec import CanvasSpec
+from mosaickit.palette import DEFAULT_PALETTE, Palette
 from mosaickit.rendering.cache import RenderCache
 from mosaickit.themes import StyleBundle, Theme
 
@@ -15,3 +16,4 @@ class _RenderContext:
     cache: RenderCache = field(default_factory=RenderCache)
     bindings: tuple = ()
     tolerance: float = 1e-6
+    palette: Palette = DEFAULT_PALETTE

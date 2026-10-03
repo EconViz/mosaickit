@@ -79,6 +79,7 @@ class Canvas:
             self.role_overrides,
             cache if cache is not None else RenderCache(),
             self._bindings,
+            palette=self.config.palette,
         )
 
     def _renderer(self, renderer: Renderer | str | None = None) -> Renderer:
