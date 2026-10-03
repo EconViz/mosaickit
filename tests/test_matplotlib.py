@@ -18,6 +18,7 @@ from mosaickit import (
     Span,
     Stroke,
     TextLayer,
+    quadrant_axes,
 )
 
 
@@ -174,5 +175,41 @@ def test_y_axis_arrowhead_draws_both_wings():
         right_wing = pixels[row, col + 2 : col + 6]
         assert left_wing.min() < 200, "left wing of the y-axis arrowhead is missing"
         assert right_wing.min() < 200, "right wing of the y-axis arrowhead is missing"
+    finally:
+        result.close()
+
+
+def test_path_clip_flag_reaches_the_patch():
+    result = (
+        Canvas()
+        .add(PathLayer([(0, 0), (1, 1)], id="clipped"))
+        .add(PathLayer([(0, 0), (1, 1)], id="free", clip=False))
+        .render()
+    )
+    try:
+        by_id = {p.get_gid(): p for p in result.axes.patches}
+        assert by_id["clipped"].get_clip_on() is True
+        assert by_id["free"].get_clip_on() is False
+    finally:
+        result.close()
+
+
+def test_axis_line_on_the_boundary_keeps_its_full_width():
+    import numpy as np
+
+    canvas = Canvas(CanvasSpec(x_range=(0, 10), y_range=(0, 10), width=3, height=3, dpi=300))
+    result = canvas.extend(quadrant_axes(10, 10)).render()
+    try:
+        result.figure.canvas.draw()
+        dark = np.asarray(result.figure.canvas.buffer_rgba())[:, :, :3].min(axis=2) < 200
+        height = dark.shape[0]
+        x_px, _ = result.axes.transData.transform((0, 0))
+        col = int(round(x_px))
+
+        def width_at(y):
+            _, y_px = result.axes.transData.transform((0, y))
+            return int(dark[int(round(height - y_px)), col - 8 : col + 8].sum())
+
+        assert width_at(3) == width_at(9.5)
     finally:
         result.close()

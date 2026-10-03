@@ -10,6 +10,11 @@
 - Axis presets (`build_axes`, `quadrant_axes`, `crosshair_axes`) draw filled
   triangle arrowheads by default instead of open chevrons. Pass a stroke with
   `ArrowStyle.OPEN` to keep the old look.
+- `PathLayer` accepts `clip` (default `True`). Axis presets set `clip=False`
+  so axis lines on the plot boundary keep their full stroke width instead of
+  losing the outer half.
+- Path arrowheads no longer redraw a solid shaft over the last 15% of the path,
+  so dashed arrows stay dashed and axis lines keep a uniform width.
 
 ## 0.1.1 — 2026-10-01
 

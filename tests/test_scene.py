@@ -116,3 +116,10 @@ def test_axis_arrows_default_to_filled_triangles():
     x_axis, y_axis, *_ = quadrant_axes(5, 6)
     assert x_axis.stroke.arrow == ArrowStyle.TRIANGLE
     assert y_axis.stroke.arrow == ArrowStyle.TRIANGLE
+
+
+def test_path_layers_clip_by_default_and_axes_do_not():
+    assert PathLayer([(0, 0), (1, 1)]).clip is True
+    assert PathLayer([(0, 0), (1, 1)], clip=False).clip is False
+    for layer in quadrant_axes(5, 6)[:2] + box_frame(5, 6)[:1]:
+        assert layer.clip is False

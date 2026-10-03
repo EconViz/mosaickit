@@ -45,12 +45,12 @@ def add_path_arrows(ax, path, stroke, placement, zorder):
     if placement in (ArrowPlacement.START, ArrowPlacement.BOTH):
         for point in vertices[1:]:
             if tuple(point) != tuple(vertices[0]):
-                near = vertices[0] + (point - vertices[0]) * 0.15
+                near = vertices[0] + (point - vertices[0]) * 0.001
                 add_arrow(ax, near, vertices[0], stroke, ArrowPlacement.END, zorder)
                 break
     if placement in (ArrowPlacement.END, ArrowPlacement.BOTH):
         for point in reversed(vertices[:-1]):
             if tuple(point) != tuple(vertices[-1]):
-                near = vertices[-1] + (point - vertices[-1]) * 0.15
+                near = vertices[-1] + (point - vertices[-1]) * 0.001
                 add_arrow(ax, near, vertices[-1], stroke, ArrowPlacement.END, zorder)
                 break
