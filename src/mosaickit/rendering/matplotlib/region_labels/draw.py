@@ -1,6 +1,7 @@
 """Measure, place, and draw one region label."""
 
 import warnings
+from collections.abc import Mapping
 from typing import Any
 
 from matplotlib.lines import Line2D
@@ -22,9 +23,10 @@ def _measure(ax: Any, text: str, style: Any, renderer: Any) -> tuple[float, floa
     return box.width, box.height
 
 
-def _boundary(layer: Any, regions: dict[str, Any]) -> Any:
+def _polygon(ax: Any, layer: Any, regions: Mapping[str, Any]) -> Any:
+    """The region in display pixels: a drawn filled artist by id, or the layer's own polygon."""
     if not isinstance(layer.region, str):
-        return layer.region
+        return to_display(ax, layer.region)
     if layer.region not in regions:
         raise RenderError(
             f"RegionLabelLayer {layer.id!r} references unknown region {layer.region!r}"
@@ -65,11 +67,11 @@ def _choose(
 
 
 def draw_region_label(
-    ax: Any, resolved: Any, regions: dict[str, Any], obstacles: Obstacles, renderer: Any
+    ax: Any, resolved: Any, regions: Mapping[str, Any], obstacles: Obstacles, renderer: Any
 ) -> Obstacles:
     """Draw one label and return the obstacles grown by what was drawn."""
     layer, style, stroke = resolved.layer, resolved.style.text, resolved.style.stroke
-    polygon = to_display(ax, _boundary(layer, regions))
+    polygon = _polygon(ax, layer, regions)
     text, rect, leader = _choose(ax, layer, style, polygon, obstacles, renderer)
 
     to_data = ax.transData.inverted()

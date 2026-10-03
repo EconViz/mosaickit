@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
@@ -11,6 +12,7 @@ class MarkerLayer(Layer):
     points: Any
     marker: Marker | None = None
     fallback_category: ClassVar[str] = "point"
+    style_slots: ClassVar[Mapping[str, str]] = {"marker": "marker"}
 
     def __post_init__(self) -> None:
         Layer.__post_init__(self)

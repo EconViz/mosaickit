@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
@@ -23,6 +24,7 @@ class RegionLabelLayer(Layer):
     style: TextStyle | None = None
     stroke: Stroke | None = Stroke(width=0.8)
     fallback_category: ClassVar[str] = "text"
+    style_slots: ClassVar[Mapping[str, str]] = {"text": "style", "stroke": "stroke"}
 
     def __post_init__(self) -> None:
         Layer.__post_init__(self)

@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
@@ -12,6 +13,7 @@ class FillLayer(Layer):
     fill: Fill | None = None
     stroke: Stroke | None = None
     fallback_category: ClassVar[str] = "region"
+    style_slots: ClassVar[Mapping[str, str]] = {"fill": "fill", "stroke": "stroke"}
 
     def __post_init__(self) -> None:
         Layer.__post_init__(self)

@@ -1,4 +1,8 @@
+from collections.abc import Sequence
+from typing import Any
+
 from mosaickit.errors import RenderError
+from mosaickit.rendering.matplotlib.registry import PassContext
 
 
 def build_legend(ax, resolved, handles):
@@ -19,3 +23,8 @@ def build_legend(ax, resolved, handles):
         frameon=style.frame,
         fontsize=style.size,
     )
+
+
+def legend_pass(ax: Any, legends: Sequence[Any], context: PassContext) -> None:
+    for resolved in legends:
+        build_legend(ax, resolved, context.handles)

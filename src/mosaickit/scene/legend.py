@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import ClassVar
 
@@ -11,6 +12,7 @@ class LegendLayer(Layer):
     style: LegendStyle | None = None
     role: str = field(default="legend", kw_only=True)
     fallback_category: ClassVar[str] = "legend"
+    style_slots: ClassVar[Mapping[str, str]] = {"legend": "style"}
 
     def __post_init__(self) -> None:
         Layer.__post_init__(self)

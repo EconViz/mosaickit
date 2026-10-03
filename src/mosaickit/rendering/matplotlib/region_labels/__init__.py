@@ -1,18 +1,26 @@
 """Region labels are placed after every other layer so they can avoid it."""
 
+from collections.abc import Sequence
 from typing import Any
 
 from mosaickit.rendering.matplotlib.region_labels.draw import draw_region_label
-from mosaickit.rendering.matplotlib.region_labels.obstacles import collect_obstacles
-from mosaickit.scene import FillLayer
+from mosaickit.rendering.matplotlib.region_labels.obstacles import (
+    collect_obstacles,
+    patch_polygon,
+)
+from mosaickit.rendering.matplotlib.registry import PassContext
 
 
-def place_region_labels(ax: Any, plan_layers: Any, labels: Any, texts: Any) -> None:
+def region_label_pass(ax: Any, labels: Sequence[Any], context: PassContext) -> None:
     renderer = ax.figure.canvas.get_renderer()
-    obstacles = collect_obstacles(ax, plan_layers, texts, renderer)
-    regions = {r.layer.id: r.layer.boundary for r in plan_layers if isinstance(r.layer, FillLayer)}
+    obstacles = collect_obstacles(ax, renderer)
+    regions = {}
+    for patch in ax.patches:
+        polygon = patch_polygon(patch)
+        if patch.get_gid() and polygon is not None:
+            regions[patch.get_gid()] = polygon
     for resolved in labels:
         obstacles = draw_region_label(ax, resolved, regions, obstacles, renderer)
 
 
-__all__ = ["place_region_labels"]
+__all__ = ["region_label_pass"]
