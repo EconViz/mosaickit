@@ -24,7 +24,10 @@ from mosaickit.rendering import (
 )
 from mosaickit.scene import (
     ArrowLayer,
+    AxisMarkLayer,
+    AxisNoteLayer,
     AxisSpec,
+    BraceLayer,
     FillLayer,
     GroupLayer,
     Layer,
@@ -59,7 +62,10 @@ __all__ = [
     "ArrowLayer",
     "ArrowPlacement",
     "ArrowStyle",
+    "AxisMarkLayer",
+    "AxisNoteLayer",
     "AxisSpec",
+    "BraceLayer",
     "BindingError",
     "CacheBypassWarning",
     "CacheKey",

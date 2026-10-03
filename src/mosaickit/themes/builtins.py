@@ -28,5 +28,6 @@ default = Theme(
         "guide": StyleBundle(stroke=Stroke(color="grey-400", dash=DashStyle.DASHED)),
         "axes": StyleBundle(stroke=Stroke(color="grey-800", width=1)),
         "canvas": StyleBundle(fill=Fill(color="white", opacity=1)),
+        "axes.note": StyleBundle(text=TextStyle(size=9, color="grey-600")),
     },
 )

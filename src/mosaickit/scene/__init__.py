@@ -1,4 +1,7 @@
 from mosaickit.scene.arrow import ArrowLayer
+from mosaickit.scene.axis_layer import AxisLayer
+from mosaickit.scene.axis_mark import AxisMarkLayer
+from mosaickit.scene.axis_note import AxisNoteLayer
 from mosaickit.scene.axis_spec import (
     AxisSpec,
     box_frame,
@@ -6,6 +9,7 @@ from mosaickit.scene.axis_spec import (
     crosshair_axes,
     quadrant_axes,
 )
+from mosaickit.scene.brace import BraceLayer
 from mosaickit.scene.fill import FillLayer
 from mosaickit.scene.group import GroupLayer
 from mosaickit.scene.layer import Layer
@@ -19,7 +23,11 @@ from mosaickit.scene.text import TextLayer
 
 __all__ = [
     "ArrowLayer",
+    "AxisLayer",
+    "AxisMarkLayer",
+    "AxisNoteLayer",
     "AxisSpec",
+    "BraceLayer",
     "FillLayer",
     "GroupLayer",
     "Layer",

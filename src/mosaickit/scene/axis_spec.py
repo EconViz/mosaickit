@@ -9,6 +9,8 @@ from mosaickit.scene.path import PathLayer
 from mosaickit.scene.text import TextLayer
 from mosaickit.styles import ArrowPlacement, ArrowStyle, Stroke
 
+TITLE_GAP = 6.0  # pt between an axis end (or arrow tip) and its title
+
 
 @dataclass(frozen=True, slots=True)
 class AxisSpec:
@@ -51,10 +53,29 @@ def build_axes(x: AxisSpec, y: AxisSpec) -> list[Layer]:
                     clip=False,
                 )
             )
+    # Titles sit past the arrow tips: the x title to the right, the y title above.
     if x.label:
-        layers.append(TextLayer((x1, 0), x.label, id="axes.x.label", role="axes", offset=(6, -6)))
+        layers.append(
+            TextLayer(
+                (x1, 0),
+                x.label,
+                id="axes.x.label",
+                role="axes",
+                anchor="left",
+                offset=(TITLE_GAP, 0),
+            )
+        )
     if y.label:
-        layers.append(TextLayer((0, y1), y.label, id="axes.y.label", role="axes", offset=(-6, 6)))
+        layers.append(
+            TextLayer(
+                (0, y1),
+                y.label,
+                id="axes.y.label",
+                role="axes",
+                anchor="bottom",
+                offset=(0, TITLE_GAP),
+            )
+        )
     return layers
 
 
