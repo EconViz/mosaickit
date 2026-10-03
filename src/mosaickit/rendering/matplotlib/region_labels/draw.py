@@ -10,17 +10,10 @@ from mosaickit.errors import LayoutWarning, RenderError
 from mosaickit.layout import Obstacles, Rect, fits_inside, place_callout, polylabel
 from mosaickit.layout.geometry import Segment
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
-from mosaickit.rendering.matplotlib.fonts import font_properties
-from mosaickit.rendering.matplotlib.region_labels.obstacles import to_display
+from mosaickit.rendering.matplotlib.fonts import font_properties, measure_text
+from mosaickit.rendering.matplotlib.obstacles import to_display
 
 PAD_PT = 2.0
-
-
-def _measure(ax: Any, text: str, style: Any, renderer: Any) -> tuple[float, float]:
-    probe = ax.text(0, 0, text, fontproperties=font_properties(style), ha="center", va="center")
-    box = probe.get_window_extent(renderer)
-    probe.remove()
-    return box.width, box.height
 
 
 def _polygon(ax: Any, layer: Any, regions: Mapping[str, Any]) -> Any:
@@ -42,7 +35,7 @@ def _choose(
     bounds = Rect(*ax.bbox.extents)
 
     def padded(text: str) -> tuple[float, float]:
-        width, height = _measure(ax, text, style, renderer)
+        width, height = measure_text(ax, text, style, renderer)
         return width + 2 * pad, height + 2 * pad
 
     if layer.placement != "callout":

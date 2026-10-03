@@ -48,8 +48,21 @@ def patch_polygon(patch: Any) -> tuple[Point, ...] | None:
     return ring[:-1] if len(ring) > 3 and ring[0] == ring[-1] else ring
 
 
-def collect_obstacles(ax: Any, renderer: Any) -> Obstacles:
+def marker_rects(ax: Any) -> list[Rect]:
+    """The bounding square of every point drawn by a collection (scatter markers)."""
     scale = ax.figure.dpi / 72
+    rects: list[Rect] = []
+    for collection in ax.collections:
+        offsets = collection.get_offset_transform().transform(collection.get_offsets())
+        sizes = collection.get_sizes()
+        for i, (x, y) in enumerate(offsets):
+            # Scatter size is an area in pt²; half its square root is the radius in pt.
+            radius = math.sqrt(sizes[i % len(sizes)] if len(sizes) else 0) / 2 * scale
+            rects.append(Rect(x - radius, y - radius, x + radius, y + radius))
+    return rects
+
+
+def collect_obstacles(ax: Any, renderer: Any) -> Obstacles:
     segments: list[Segment] = []
     rects: list[Rect] = []
     polygons: list[tuple[Point, ...]] = []
@@ -63,12 +76,6 @@ def collect_obstacles(ax: Any, renderer: Any) -> Obstacles:
                 segments.extend(_chain(ring))
     for line in ax.lines:
         segments.extend(_chain(to_display(ax, line.get_xydata())))
-    for collection in ax.collections:
-        offsets = collection.get_offset_transform().transform(collection.get_offsets())
-        sizes = collection.get_sizes()
-        for i, (x, y) in enumerate(offsets):
-            # Scatter size is an area in pt²; half its square root is the radius in pt.
-            radius = math.sqrt(sizes[i % len(sizes)] if len(sizes) else 0) / 2 * scale
-            rects.append(Rect(x - radius, y - radius, x + radius, y + radius))
+    rects.extend(marker_rects(ax))
     rects.extend(window_rect(text, renderer) for text in ax.texts if text.get_text())
     return Obstacles(tuple(segments), tuple(rects), tuple(polygons))

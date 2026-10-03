@@ -30,7 +30,7 @@ class Obstacles:
 @dataclass(frozen=True, slots=True)
 class Placement:
     rect: Rect
-    leader: Segment
+    leader: Segment | None  # None for labels drawn without a leader
     violations: int
 
 

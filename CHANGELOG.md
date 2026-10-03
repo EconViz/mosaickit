@@ -10,6 +10,18 @@
   file and key.
 - `Config` carries the palette: `Config(palette=...)` in Python, defaulting to
   `DEFAULT_PALETTE`. Behavior without a palette is unchanged.
+- Add `PointLabelLayer(point, text)`, which places its text right beside a point
+  so it covers nothing. It tries 16 directions around the point at a few small
+  gaps from the point's marker edge (nearest first, upper-right preferred) and
+  takes the closest position that stays inside the axes and touches no line,
+  marker, filled region, or other text. The point's own marker is never covered.
+  When no position is free it takes the one with fewest overlaps and emits a
+  `LayoutWarning` naming the layer.
+- Point labels are placed before region labels, so region callouts avoid them.
+- Add `place_point_label` to `mosaickit.layout`. `Placement.leader` may be
+  `None` (labels drawn without a leader).
+- Label text is measured with its `TextStyle.rotation`, so rotated region labels
+  are placed using their rotated extent.
 
 ## 0.2.0 — 2026-10-03
 
