@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- TOML config accepts a `[palette]` table that defines or overrides named
+  colors (`accent = "#984EA3"`) on top of `DEFAULT_PALETTE`.
+- Style `color` and `edge_color` values in TOML accept palette names
+  (`color = "accent"`) as well as hex. Names resolve against the config's
+  palette at load time; unknown names raise `ConfigurationError` naming the
+  file and key.
+- `Config` carries the palette: `Config(palette=...)` in Python, defaulting to
+  `DEFAULT_PALETTE`. Behavior without a palette is unchanged.
+
 ## 0.2.0 — 2026-10-03
 
 - `TextLayer.anchor` accepts `top-left`, `top-right`, `bottom-left`, and

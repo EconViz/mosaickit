@@ -115,11 +115,25 @@ Configuration can also be loaded from TOML:
 x_range = [0, 20]
 dpi = 150
 
+[palette]
+blue = "#0072B2"     # override a default color
+accent = "#984EA3"   # add a new name
+
 [styles."mypkg.boundary".stroke]
-color = "#984EA3"
+color = "accent"     # a palette name or a "#hex" value
 width = 2
 dash = "dashed"
+
+[styles."mypkg.line".stroke]
+color = "blue"
 ```
+
+The `[palette]` table layers named hex colors over `DEFAULT_PALETTE`. Style
+`color` and `edge_color` values accept those names as well as hex; names are
+resolved against the config's palette when the file is loaded, and an unknown
+name raises `ConfigurationError` naming the file and key. The loaded palette is
+available as `config.palette`; in Python, pass `Config(palette=...)` and use
+`palette["accent"]` for style colors. The built-in theme keeps its own colors.
 
 Use `Config.load(path)` to validate it. Runtime defaults are isolated with
 `contextvars`, while explicit constructor arguments always take precedence.
