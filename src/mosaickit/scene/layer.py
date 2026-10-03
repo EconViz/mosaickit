@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from numbers import Real
 from typing import Any, ClassVar
@@ -21,6 +22,8 @@ class Layer:
     legend: str | None = None
     model: Any = field(default=None, compare=False, hash=False, repr=False)
     fallback_category: ClassVar[str] = "primary"
+    # StyleBundle slot -> name of the field holding this layer's explicit style for it.
+    style_slots: ClassVar[Mapping[str, str]] = {}
 
     def __post_init__(self) -> None:
         if not isinstance(self.id, str) or not self.id:

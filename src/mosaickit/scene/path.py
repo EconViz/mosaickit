@@ -1,5 +1,6 @@
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, ClassVar
 
 from mosaickit.scene.layer import Layer, _geometry
 from mosaickit.styles import ArrowPlacement, Stroke
@@ -11,6 +12,7 @@ class PathLayer(Layer):
     stroke: Stroke | None = None
     arrow_placement: ArrowPlacement = ArrowPlacement.END
     clip: bool = True
+    style_slots: ClassVar[Mapping[str, str]] = {"stroke": "stroke"}
 
     def __post_init__(self) -> None:
         Layer.__post_init__(self)

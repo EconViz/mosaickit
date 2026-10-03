@@ -11,15 +11,19 @@ from matplotlib.figure import Figure
 
 from mosaickit.colors import Color
 from mosaickit.errors import RenderError
-from mosaickit.rendering.matplotlib.arrows import add_arrow
-from mosaickit.rendering.matplotlib.artists import BUILDERS
+from mosaickit.rendering.matplotlib import (
+    builtins as _builtins,  # noqa: F401  (registers built-in layers)
+)
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
-from mosaickit.rendering.matplotlib.legend import build_legend
-from mosaickit.rendering.matplotlib.region_labels import place_region_labels
+from mosaickit.rendering.matplotlib.registry import (
+    PassContext,
+    builder_for,
+    deferred_kind,
+    passes,
+)
 from mosaickit.rendering.plan import _build_render_plan, _resolve_role
 from mosaickit.rendering.protocol import SaveOptions
-from mosaickit.scene import ArrowLayer, LegendLayer, RegionLabelLayer, TextLayer
 
 
 @dataclass
@@ -73,45 +77,22 @@ class MatplotlibRenderer:
         )
         ax.set_axis_off()
         plan = _build_render_plan(scene, context)
-        handles, legends, region_labels, texts = {}, [], [], []
+        handles: dict[str, Any] = {}
+        deferred: dict[type, list[Any]] = {}
         for resolved in plan.layers:
             layer = resolved.layer
-            if isinstance(layer, LegendLayer):
-                legends.append(resolved)
+            kind = deferred_kind(type(layer))
+            if kind is not None:
+                deferred.setdefault(kind, []).append(resolved)
                 continue
-            if isinstance(layer, RegionLabelLayer):
-                region_labels.append(resolved)
-                continue
-            if isinstance(layer, ArrowLayer):
-                artist = add_arrow(
-                    ax,
-                    layer.start,
-                    layer.end,
-                    resolved.style.stroke,
-                    layer.arrow_placement,
-                    layer.z_index,
-                )
-                artist.set_label(layer.legend)
-                if layer.label:
-                    ax.text(
-                        (layer.start[0] + layer.end[0]) / 2,
-                        (layer.start[1] + layer.end[1]) / 2,
-                        layer.label,
-                    )
-            else:
-                builder = BUILDERS.get(type(layer))
-                if builder is None:
-                    raise RenderError(f"Unsupported layer: {type(layer).__name__}")
-                artist = builder(ax, resolved)
-                if isinstance(layer, TextLayer):
-                    texts.append(artist)
+            artist = builder_for(type(layer))(ax, resolved)
             artist.set_gid(layer.id)
             if layer.legend:
                 handles[layer.id] = artist
-        if region_labels:
-            place_region_labels(ax, plan.layers, region_labels, texts)
-        for legend in legends:
-            build_legend(ax, legend, handles)
+        pass_context = PassContext(handles)
+        for kind, run in passes():
+            if kind in deferred:
+                run(ax, deferred[kind], pass_context)
 
     def render(self, scene, context) -> MatplotlibResult:
         spec = context.spec

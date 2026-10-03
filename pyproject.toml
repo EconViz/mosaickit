@@ -59,3 +59,30 @@ name = "Core never imports domain packages"
 type = "forbidden"
 source_modules = ["mosaickit"]
 forbidden_modules = ["econ_viz", "utility_viz", "micro_viz", "macro_viz", "trade_viz", "dsge_viz", "principle_viz"]
+
+[[tool.importlinter.contracts]]
+name = "Layout is pure geometry"
+type = "forbidden"
+source_modules = ["mosaickit.layout"]
+forbidden_modules = [
+    "mosaickit.scene", "mosaickit.styles", "mosaickit.themes", "mosaickit.palette",
+    "mosaickit.config", "mosaickit.canvas", "mosaickit.rendering", "matplotlib",
+]
+
+[[tool.importlinter.contracts]]
+name = "Scene models know nothing about themes, layout, or config"
+type = "forbidden"
+source_modules = ["mosaickit.scene"]
+forbidden_modules = ["mosaickit.themes", "mosaickit.palette", "mosaickit.layout", "mosaickit.config"]
+
+[[tool.importlinter.contracts]]
+name = "Only the Matplotlib backend imports Matplotlib"
+type = "forbidden"
+source_modules = [
+    "mosaickit.scene", "mosaickit.styles", "mosaickit.themes", "mosaickit.palette",
+    "mosaickit.colors", "mosaickit.parameter", "mosaickit.layout", "mosaickit.canvas",
+    "mosaickit.config", "mosaickit.canvas_spec", "mosaickit.interval", "mosaickit.errors",
+    "mosaickit.rendering.plan", "mosaickit.rendering.cache", "mosaickit.rendering.context",
+    "mosaickit.rendering.protocol", "mosaickit.rendering.registry",
+]
+forbidden_modules = ["matplotlib"]

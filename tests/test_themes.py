@@ -69,3 +69,14 @@ def test_role_pack_expansion():
         boundary_final: StyleBundle | None = None
 
     assert expand_roles(Roles()) == {"mypkg.boundary": StyleBundle(stroke=Stroke(width=3))}
+
+
+def test_resolve_applies_override_layers_in_order():
+    from mosaickit.themes import resolve
+
+    theme = Theme("t", {"mypkg": StyleBundle(stroke=Stroke(width=1, opacity=0.5))})
+    first = {"mypkg": StyleBundle(stroke=Stroke(width=2))}
+    second = {"mypkg.boundary": StyleBundle(stroke=Stroke(width=3))}
+    style = resolve(theme, "mypkg.boundary", fallback_category="primary", overrides=(first, second))
+    assert style.stroke.width == 3
+    assert style.stroke.opacity == 0.5

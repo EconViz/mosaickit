@@ -1,5 +1,11 @@
+from importlib import import_module
+
 from mosaickit.errors import RenderError
 from mosaickit.rendering.protocol import Renderer
+
+# Built-in backends by name, loaded on first use so the core never imports a
+# drawing library itself.
+_BUILTINS = {"matplotlib": "mosaickit.rendering.matplotlib:MatplotlibRenderer"}
 
 
 class RendererRegistry:
@@ -16,8 +22,8 @@ class RendererRegistry:
     def get(self, name: str) -> Renderer:
         if name in self._renderers:
             return self._renderers[name]
-        if name == "matplotlib":
-            from mosaickit.rendering.matplotlib import MatplotlibRenderer
-
-            return MatplotlibRenderer()
+        if name in _BUILTINS:
+            module, attribute = _BUILTINS[name].split(":")
+            renderer: Renderer = getattr(import_module(module), attribute)()
+            return renderer
         raise RenderError(f"Unknown renderer: {name!r}")

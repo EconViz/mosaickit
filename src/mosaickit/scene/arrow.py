@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
@@ -14,6 +15,7 @@ class ArrowLayer(Layer):
     label: str | None = None
     arrow_placement: ArrowPlacement = ArrowPlacement.END
     fallback_category: ClassVar[str] = "annotation"
+    style_slots: ClassVar[Mapping[str, str]] = {"stroke": "stroke"}
 
     def __post_init__(self) -> None:
         Layer.__post_init__(self)
