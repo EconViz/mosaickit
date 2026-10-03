@@ -80,6 +80,7 @@ The scene graph is deliberately small:
   region, or other text; a `LayoutWarning` names any label that cannot avoid
   everything.
 - `LegendLayer` builds legends from stable layer IDs.
+- `AxisMarkLayer`, `AxisNoteLayer`, and `BraceLayer` annotate values and spans on an axis.
 - `GroupLayer` groups layers without adding renderer-specific state.
 
 `AxisSpec` and `build_axes()` construct axes from the same ordinary path and text
@@ -89,6 +90,31 @@ layouts. `CanvasSpec` owns ranges, physical size, DPI, labels, and title.
 Curve construction and TikZ export intentionally live outside MosaicKit. Domain
 packages can call a geometry package such as BezierKit directly, then pass the
 resulting coordinates or renderer-specific output to their own export pipeline.
+
+## Axis marks, notes, and braces
+
+```python
+from mosaickit import AxisMarkLayer, AxisNoteLayer, BraceLayer, Canvas, quadrant_axes
+
+canvas = Canvas().extend(quadrant_axes(10, 10))
+for value, symbol, note in [(7, "a_1", "Upper\nvalue"), (5, "a_0", "Lower\nvalue")]:
+    canvas.add(AxisMarkLayer("y", value, symbol, math=True))
+    canvas.add(AxisNoteLayer("y", value, note))
+canvas.add(BraceLayer("y", 5, 7, "Span", side="outside"))
+```
+
+The y axis is the plot's left edge and the x axis its bottom edge; the space
+outside them is the gutter. Columns run outward from the axis: marks, then
+outside braces, then notes, each as wide as its widest text. Marks and notes are
+spread along the axis so none overlap, keeping their order and moving as little
+as possible. An `"inside"` brace sits just inside the plot and its label is
+placed so it covers no line, point, region, or text. Notes use the `axes.note`
+role, which the default theme sets smaller and lighter than marks.
+
+Saving grows the canvas just enough to include text drawn past its edges and
+never crops; pass `expand=False` to `save()` to keep the exact `CanvasSpec`
+size. Axis titles from `build_axes()` sit past the arrow tips: the x title to the
+right, the y title above.
 
 ## Styles and themes
 

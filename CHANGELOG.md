@@ -33,6 +33,24 @@
   `None` (labels drawn without a leader).
 - Label text is measured with its `TextStyle.rotation`, so rotated region labels
   are placed using their rotated extent.
+- Add `AxisMarkLayer` (a symbol next to an axis at a value), `AxisNoteLayer` (an
+  explanation further out), and `BraceLayer` (a curly brace over a span, with an
+  optional label). They work on both the x and y axis.
+- Text outside an axis is laid out in columns running outward: marks, then
+  outside braces (one column per lane of overlapping braces), then notes. Marks
+  and notes are spread along the axis so none overlap. An inside brace's label is
+  placed so it covers no line, point, region, or text, and emits `LayoutWarning`
+  when no such spot exists.
+- Add pure layout modules: `mosaickit.layout.geometry.brace_outline`,
+  `mosaickit.layout.stack1d` (`spread`, `assign_lanes`), `mosaickit.layout.gutter`,
+  and `mosaickit.layout.placement.place_beside`.
+- Add the `axes.note` role to the default theme (9 pt, `grey-600`).
+- Add `SaveOptions.expand` (default `True`). Visible change: saving grows the
+  canvas to include anything drawn past its edges. It never crops, so a diagram
+  that fits keeps its `CanvasSpec` size. Pass `expand=False` for the old behaviour.
+- Visible change: `build_axes`, `quadrant_axes`, and `crosshair_axes` place axis
+  titles past the arrow tips (the x title to the right, the y title above)
+  instead of centred on the tip, where they covered the arrowhead.
 
 ## 0.2.0 — 2026-10-03
 
