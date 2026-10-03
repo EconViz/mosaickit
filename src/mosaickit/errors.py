@@ -15,3 +15,7 @@ class RenderError(MosaicKitError, RuntimeError):
 
 class BindingError(MosaicKitError, ValueError):
     """A parameter cannot be bound or evaluated."""
+
+
+class LayoutWarning(UserWarning):
+    """Automatic layout could not satisfy every placement constraint."""
