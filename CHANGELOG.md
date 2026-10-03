@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0 — 2026-10-03
 
 - `TextLayer.anchor` accepts `top-left`, `top-right`, `bottom-left`, and
   `bottom-right`. The anchor names the corner of the text box placed at
@@ -28,6 +28,15 @@
   change: `primary`, `secondary`, and `accent` become the palette's blue, red,
   and teal (previously ColorBrewer Set1 blue, red, and purple). Neutral greys
   are unchanged.
+- Layers declare `style_slots` (which field holds their explicit style for each
+  style slot), and Matplotlib drawing is driven by a per-type registry. Add
+  `register_builder` and `register_pass` in `mosaickit.rendering.matplotlib`
+  so other packages can add layer types without changing MosaicKit.
+- `themes.resolve` accepts `overrides`, applied in order after the theme.
+- Region-label callouts avoid everything drawn on the axes, including layers
+  drawn by registered third-party builders.
+- Built-in renderers are loaded by name on first use; the core no longer
+  imports the Matplotlib backend.
 
 ## 0.1.1 — 2026-10-01
 
