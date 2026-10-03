@@ -12,6 +12,7 @@ from mosaickit.errors import (
     RenderError,
 )
 from mosaickit.interval import Interval
+from mosaickit.palette import DEFAULT_PALETTE, Palette
 from mosaickit.parameter import Constant, Expression, Parameter, ParameterValues
 from mosaickit.rendering import (
     CacheBypassWarning,
@@ -61,6 +62,7 @@ __all__ = [
     "BindingError",
     "CacheBypassWarning",
     "CacheKey",
+    "DEFAULT_PALETTE",
     "Canvas",
     "CanvasGrid",
     "CanvasSpec",
@@ -83,6 +85,7 @@ __all__ = [
     "Marker",
     "MarkerLayer",
     "Parameter",
+    "Palette",
     "ParameterValues",
     "PathLayer",
     "RegionLabelLayer",
