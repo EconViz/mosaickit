@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Point labels may sit inside a filled region that contains their point (for
+  example a point inside a shaded area); other regions are still avoided.
+
 ## 0.3.0 — 2026-10-03
 
 - Themes and styles refer to colors by palette name (`Stroke(color="blue")`).

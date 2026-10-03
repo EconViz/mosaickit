@@ -2,16 +2,17 @@
 
 Principle: cover nothing, stay close. The text sits just outside the point's
 footprint (its marker, or the bare point) and may not leave the bounds or touch
-any line, rect (other markers, other text), or filled region. Obstacle rects
-lying within the footprint are the point's own marker: they set how far out the
-search starts instead of blocking it. There is no leader.
+any line, rect (other markers, other text), or filled region other than one the
+point lies in. Obstacle rects lying within the footprint are the point's own
+marker: they set how far out the search starts instead of blocking it. There is
+no leader.
 
 Candidates run nearest gap first; within a gap, directions run from upper-right
 outwards (ties go counter-clockwise first). The first candidate that covers
 nothing wins; if none does, the one with fewest violations wins, earliest first.
 """
 
-from mosaickit.layout.geometry import Point, Rect
+from mosaickit.layout.geometry import Point, Rect, point_in_polygon
 from mosaickit.layout.placement.candidates import anchored_rect, direction
 from mosaickit.layout.placement.obstacles import Obstacles, Placement, count_violations
 
@@ -53,12 +54,13 @@ def place_point_label(
 
     ``scale`` converts the point-based gaps to pixels.
     """
+    origin = footprint.center
+    # A region the point lies in is where its label belongs, not an obstacle.
     others = Obstacles(
         obstacles.segments,
         tuple(rect for rect in obstacles.rects if not rect.within(footprint)),
-        obstacles.polygons,
+        tuple(p for p in obstacles.polygons if not point_in_polygon(origin, p)),
     )
-    origin = footprint.center
     best: tuple[int, Placement] | None = None
     for gap in GAPS:
         for k in ORDER:
