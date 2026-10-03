@@ -6,6 +6,19 @@ from mosaickit.errors import ConfigurationError
 from mosaickit.scene.layer import Layer, _point
 from mosaickit.styles import TextStyle
 
+TEXT_ANCHORS: dict[str, tuple[str, str]] = {
+    "center": ("center", "center"),
+    "left": ("left", "center"),
+    "right": ("right", "center"),
+    "top": ("center", "top"),
+    "bottom": ("center", "bottom"),
+    "top-left": ("left", "top"),
+    "top-right": ("right", "top"),
+    "bottom-left": ("left", "bottom"),
+    "bottom-right": ("right", "bottom"),
+}
+"""Anchor name -> (horizontal, vertical) alignment of the text box at ``position``."""
+
 
 @dataclass(frozen=True, slots=True)
 class TextLayer(Layer):
@@ -24,5 +37,5 @@ class TextLayer(Layer):
         object.__setattr__(self, "offset", tuple(self.offset))
         if len(self.offset) != 2 or not all(math.isfinite(v) for v in self.offset):
             raise ConfigurationError("TextLayer.offset must contain two finite values")
-        if self.anchor not in ("center", "left", "right", "top", "bottom"):
+        if self.anchor not in TEXT_ANCHORS:
             raise ConfigurationError(f"Unsupported text anchor: {self.anchor}")

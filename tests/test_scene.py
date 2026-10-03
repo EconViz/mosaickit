@@ -82,3 +82,30 @@ def test_axis_presets_are_the_generic_assembler():
     assert frame == build_axes(AxisSpec((0, 5)), AxisSpec((0, 6)))
     assert len(frame[0].path) == 5
     assert frame[0].path[0] == frame[0].path[-1]
+
+
+@pytest.mark.parametrize(
+    "anchor,expected",
+    [
+        ("center", ("center", "center")),
+        ("left", ("left", "center")),
+        ("right", ("right", "center")),
+        ("top", ("center", "top")),
+        ("bottom", ("center", "bottom")),
+        ("top-left", ("left", "top")),
+        ("top-right", ("right", "top")),
+        ("bottom-left", ("left", "bottom")),
+        ("bottom-right", ("right", "bottom")),
+    ],
+)
+def test_text_anchor_table(anchor, expected):
+    from mosaickit.scene.text import TEXT_ANCHORS
+
+    assert TextLayer((0, 0), "x", anchor=anchor).anchor == anchor
+    assert TEXT_ANCHORS[anchor] == expected
+
+
+@pytest.mark.parametrize("anchor", ["upper left", "left-top", "middle", ""])
+def test_text_anchor_rejects_unknown_values(anchor):
+    with pytest.raises(ConfigurationError, match="Unsupported text anchor"):
+        TextLayer((0, 0), "x", anchor=anchor)
