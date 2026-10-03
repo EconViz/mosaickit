@@ -2,6 +2,7 @@ from typing import Any
 
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
+from mosaickit.scene.text import TEXT_ANCHORS
 
 
 def build(ax: Any, resolved: Any) -> Any:
@@ -9,8 +10,7 @@ def build(ax: Any, resolved: Any) -> Any:
     text = str(layer.text)
     if layer.math and not (text.startswith("$") and text.endswith("$")):
         text = f"${text}$"
-    horizontal = layer.anchor if layer.anchor in ("left", "right") else "center"
-    vertical = layer.anchor if layer.anchor in ("top", "bottom") else "center"
+    horizontal, vertical = TEXT_ANCHORS[layer.anchor]
     return ax.annotate(
         text,
         layer.position,

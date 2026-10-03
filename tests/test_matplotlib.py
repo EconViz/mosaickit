@@ -115,3 +115,22 @@ def test_grid_span_axes_size_and_repeated_saves(tmp_path):
     result.close()
     for _ in range(2):
         assert grid.save(tmp_path / "grid.png") == [tmp_path / "grid.png"]
+
+
+@pytest.mark.parametrize(
+    "anchor,ha,va",
+    [
+        ("left", "left", "center"),
+        ("top", "center", "top"),
+        ("top-left", "left", "top"),
+        ("bottom-right", "right", "bottom"),
+    ],
+)
+def test_text_anchor_sets_alignment(anchor, ha, va):
+    result = Canvas().add(TextLayer((1, 1), "x", anchor=anchor)).render()
+    try:
+        text = result.axes.texts[0]
+        assert text.get_horizontalalignment() == ha
+        assert text.get_verticalalignment() == va
+    finally:
+        result.close()
