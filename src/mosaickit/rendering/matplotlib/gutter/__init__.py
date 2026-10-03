@@ -8,11 +8,12 @@ from collections.abc import Sequence
 from typing import Any
 
 from mosaickit.errors import RenderError
+from mosaickit.rendering.matplotlib.fonts import measure_text
 from mosaickit.rendering.matplotlib.gutter.draw import draw_brace, draw_inside_label, draw_text
 from mosaickit.rendering.matplotlib.gutter.frame import AxisFrame
-from mosaickit.rendering.matplotlib.gutter.measure import as_drawn, measure
 from mosaickit.rendering.matplotlib.gutter.place import Item, plan_gutter
-from mosaickit.rendering.matplotlib.region_labels.obstacles import collect_obstacles
+from mosaickit.rendering.matplotlib.gutter.text import as_drawn
+from mosaickit.rendering.matplotlib.obstacles import collect_obstacles
 from mosaickit.rendering.matplotlib.registry import PassContext
 from mosaickit.scene import AxisMarkLayer, AxisNoteLayer, BraceLayer
 from mosaickit.scene.axis_layer import AXES
@@ -29,7 +30,7 @@ def _item(ax: Any, resolved: Any, renderer: Any) -> Item:
     if raw is None:
         return Item(resolved, None, (0.0, 0.0))
     text = as_drawn(raw, getattr(layer, "math", False))
-    return Item(resolved, text, measure(ax, text, resolved.style.text, renderer))
+    return Item(resolved, text, measure_text(ax, text, resolved.style.text, renderer))
 
 
 def gutter_pass(ax: Any, layers: Sequence[Any], context: PassContext) -> None:

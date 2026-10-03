@@ -1,4 +1,4 @@
-"""Decide where labels go: inside a region, out as a callout, beside a point, or beside an anchor."""
+"""Decide where labels go: in a region, as a callout, beside a point, or beside an anchor."""
 
 from mosaickit.layout.placement.beside import place_beside
 from mosaickit.layout.placement.callout import place_callout

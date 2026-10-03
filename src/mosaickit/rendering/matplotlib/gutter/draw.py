@@ -13,7 +13,7 @@ from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
 from mosaickit.rendering.matplotlib.gutter.frame import AxisFrame
 from mosaickit.rendering.matplotlib.gutter.place import GutterText, PlacedBrace
-from mosaickit.rendering.matplotlib.region_labels.obstacles import window_rect
+from mosaickit.rendering.matplotlib.obstacles import window_rect
 
 
 def _text(ax: Any, resolved: Any, text: str, at: Point, align: tuple[str, str], gid: str) -> Any:
