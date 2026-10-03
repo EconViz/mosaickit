@@ -21,6 +21,13 @@
   does not cover any line, point, filled region, or other text.
 - Add the pure-geometry `mosaickit.layout` package that makes those decisions.
 - Add `LayoutWarning`, emitted when no callout position avoids every obstacle.
+- Add `Palette`, a named color table, and `DEFAULT_PALETTE`: a grey ramp
+  (`grey-900` … `grey-100`, `white`) plus `blue` `#01A2D9`, `red` `#E3120B`,
+  and `teal` `#00887D`.
+- The default theme now takes every color from `DEFAULT_PALETTE`. Visible
+  change: `primary`, `secondary`, and `accent` become the palette's blue, red,
+  and teal (previously ColorBrewer Set1 blue, red, and purple). Neutral greys
+  are unchanged.
 
 ## 0.1.1 — 2026-10-01
 
