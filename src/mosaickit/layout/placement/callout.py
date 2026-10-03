@@ -1,8 +1,9 @@
 """Search positions around a region for a callout label.
 
 Principle: cover nothing. The text may not touch any line, point, text, or region
-(its own included) and must sit in open space, not a small enclosed pocket. The
-leader may not cross anything after leaving its own region. Among positions that
+(its own included), must sit in open space rather than a small enclosed pocket,
+and must stay on the region's side of any crossing the region touches. The leader
+may not cross anything after leaving its own region. Among positions that
 cover nothing, the shortest leader wins; ties keep the earlier candidate (16
 directions from +x counter-clockwise, near gaps first), so results are deterministic.
 """
@@ -10,6 +11,7 @@ directions from +x counter-clockwise, near gaps first), so results are determini
 import math
 
 from mosaickit.layout.geometry import Point, Polygon, Rect, polylabel, ray_exit
+from mosaickit.layout.placement.crossings import beyond_crossings, region_crossings
 from mosaickit.layout.placement.leader import build_leader, leader_violations
 from mosaickit.layout.placement.obstacles import Obstacles, Placement, count_violations
 from mosaickit.layout.placement.open_area import open_area
@@ -19,6 +21,7 @@ GAPS = (12.0, 24.0, 40.0)
 FAR_GAPS = (60.0, 90.0)
 LEADER_GAP = 2.0
 OPEN_AREA_CELL = 4.0
+CROSSING_TOLERANCE = 1.5  # px
 _SIDE = 0.38  # |cos| above this anchors the rect by its near side, otherwise by its middle
 
 
@@ -46,6 +49,7 @@ def place_callout(
     polygons = obstacles.polygons if own in obstacles.polygons else (*obstacles.polygons, own)
     everything = Obstacles(obstacles.segments, obstacles.rects, polygons)
     area = open_area(bounds, everything, OPEN_AREA_CELL * scale)
+    crossings = region_crossings(own, obstacles.segments, tolerance=CROSSING_TOLERANCE)
     best: tuple[tuple[int, float], Placement] | None = None
     for gaps in (GAPS, FAR_GAPS):
         for k in range(DIRECTIONS):
@@ -59,6 +63,7 @@ def place_callout(
                     count_violations(rect, obstacles, bounds, polygons)
                     + (0 if area.contains(rect.center) else 1)
                     + leader_violations(leader, everything, own)
+                    + beyond_crossings(rect.center, pole, crossings)
                 )
                 key = (violations, math.dist(*leader))
                 if best is None or key < best[0]:

@@ -197,3 +197,27 @@ def test_callout_does_not_land_in_an_unfilled_pocket_between_regions():
         assert not _rect(ax, _text(ax, "dwl.label")).intersects(Rect(x0, y0, x1, y1))
     finally:
         result.close()
+
+
+def test_callout_stays_on_its_side_of_a_crossing():
+    # Tax diagram: the deadweight-loss triangle has the equilibrium (5, 6) as a vertex.
+    # Its label must not sit right of the equilibrium, where the curves diverge.
+    result = (
+        Canvas(CanvasSpec(x_range=(0, 12), y_range=(0, 14), width=7.2, height=5.2, dpi=150))
+        .add(PathLayer([(0, 12), (10, 0)], id="demand"))
+        .add(PathLayer([(0, 2), (10, 10)], id="supply"))
+        .add(FillLayer([(0, 12), (0, 7.2), (4, 7.2)], id="cs"))
+        .add(FillLayer([(0, 7.2), (4, 7.2), (4, 5.2), (0, 5.2)], id="tax"))
+        .add(FillLayer([(0, 5.2), (0, 2), (4, 5.2)], id="ps"))
+        .add(FillLayer([(4, 7.2), (4, 5.2), (5, 6)], id="dwl"))
+        .add(MarkerLayer([(5, 6), (4, 7.2), (4, 5.2)]))
+        .add(RegionLabelLayer("dwl", "Deadweight loss", id="dwl.label"))
+        .render()
+    )
+    try:
+        ax = result.axes
+        ((eq_x, _),) = _display(ax, [(5, 6)])
+        center_x, _ = _rect(ax, _text(ax, "dwl.label")).center
+        assert center_x < eq_x
+    finally:
+        result.close()
