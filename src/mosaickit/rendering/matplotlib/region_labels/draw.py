@@ -1,16 +1,13 @@
 """Measure, place, and draw one region label."""
 
-import warnings
 from collections.abc import Mapping
 from typing import Any
 
-from matplotlib.lines import Line2D
-
-from mosaickit.errors import LayoutWarning, RenderError
+from mosaickit.errors import RenderError
 from mosaickit.layout import Obstacles, Rect, fits_inside, place_callout, polylabel
 from mosaickit.layout.geometry import Segment
-from mosaickit.rendering.matplotlib.artists.path_artist import rgba
-from mosaickit.rendering.matplotlib.fonts import font_properties, measure_text
+from mosaickit.rendering.matplotlib.fonts import measure_text
+from mosaickit.rendering.matplotlib.labels import draw_label, draw_leader, warn_unplaced
 from mosaickit.rendering.matplotlib.obstacles import to_display
 
 PAD_PT = 2.0
@@ -50,12 +47,7 @@ def _choose(
 
     placement = place_callout(polygon, padded(layer.text), obstacles, bounds, scale=scale)
     if placement.violations:
-        warnings.warn(
-            f"RegionLabelLayer {layer.id!r}: no callout position avoids every obstacle "
-            f"({placement.violations} overlaps)",
-            LayoutWarning,
-            stacklevel=2,
-        )
+        warn_unplaced(layer, placement.violations, "callout position")
     return layer.text, placement.rect, placement.leader
 
 
@@ -67,33 +59,8 @@ def draw_region_label(
     polygon = _polygon(ax, layer, regions)
     text, rect, leader = _choose(ax, layer, style, polygon, obstacles, renderer)
 
-    to_data = ax.transData.inverted()
-    x, y = to_data.transform(rect.center)
-    ax.text(
-        x,
-        y,
-        text,
-        ha="center",
-        va="center",
-        multialignment="center",
-        fontproperties=font_properties(style),
-        color=rgba(style.color, style.opacity),
-        rotation=style.rotation,
-        zorder=layer.z_index,
-        gid=layer.id,
-    )
+    draw_label(ax, style, text, rect.center, gid=layer.id, z_index=layer.z_index)
     if leader is None:
         return obstacles.extended(rects=(rect,))
-    (x0, y0), (x1, y1) = to_data.transform(list(leader))
-    ax.add_line(
-        Line2D(
-            [x0, x1],
-            [y0, y1],
-            color=rgba(stroke.color, stroke.opacity),
-            linewidth=stroke.width,
-            linestyle=stroke.dash.value,
-            zorder=layer.z_index,
-            gid=f"{layer.id}.leader",
-        )
-    )
+    draw_leader(ax, leader, stroke, gid=f"{layer.id}.leader", z_index=layer.z_index)
     return obstacles.extended(segments=(leader,), rects=(rect,))

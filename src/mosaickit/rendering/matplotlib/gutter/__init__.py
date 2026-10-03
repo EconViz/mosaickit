@@ -8,8 +8,9 @@ from collections.abc import Sequence
 from typing import Any
 
 from mosaickit.errors import RenderError
+from mosaickit.rendering.matplotlib.braces import draw_brace, place_brace_label
 from mosaickit.rendering.matplotlib.fonts import measure_text
-from mosaickit.rendering.matplotlib.gutter.draw import draw_brace, draw_inside_label, draw_text
+from mosaickit.rendering.matplotlib.gutter.draw import draw_text
 from mosaickit.rendering.matplotlib.gutter.frame import AxisFrame
 from mosaickit.rendering.matplotlib.gutter.place import Item, plan_gutter
 from mosaickit.rendering.matplotlib.gutter.text import as_drawn
@@ -49,7 +50,7 @@ def gutter_pass(ax: Any, layers: Sequence[Any], context: PassContext) -> None:
             ax, frame, by_type[AxisMarkLayer], by_type[BraceLayer], by_type[AxisNoteLayer], scale
         )
         for placed in plan.braces:
-            draw_brace(ax, placed)
+            draw_brace(ax, placed.resolved, placed.outline)
         for text in plan.texts:
             draw_text(ax, frame, text)
         sizes = {i.resolved.layer.id: i for i in by_type[BraceLayer]}
@@ -57,8 +58,17 @@ def gutter_pass(ax: Any, layers: Sequence[Any], context: PassContext) -> None:
     obstacles = collect_obstacles(ax, renderer)
     for frame, placed, item in inside_labels:
         if item.text:
-            obstacles = draw_inside_label(
-                ax, frame, placed, item.text, item.size, obstacles, renderer
+            obstacles = place_brace_label(
+                ax,
+                placed.resolved,
+                item.text,
+                item.size,
+                placed.outline.tip,
+                axis=frame.axis,
+                direction=1,
+                reach=placed.reach,
+                obstacles=obstacles,
+                renderer=renderer,
             )
 
 

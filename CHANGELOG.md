@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Add `SpanBraceLayer(start, end, label, side)`: a curly brace between two points
+  inside the plot (horizontal span: `side` `"above"`/`"below"`; vertical span:
+  `"left"`/`"right"`). Its label sits past the tip, covering nothing; when there
+  is no room there it moves out on a leader.
+- Inside axis-brace labels gain the same leader fallback when nothing past the
+  tip is free (previously they warned and overlapped).
+
 ## 0.3.2 — 2026-10-03
 
 - Point labels treat a region as theirs only when the point is strictly inside

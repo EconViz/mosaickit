@@ -20,12 +20,6 @@ def _axis_value(owner: str, value: Any) -> Any:
     return float(value)
 
 
-def _text(owner: str, value: Any) -> str:
-    if not isinstance(value, str) or not value:
-        raise ConfigurationError(f"{owner} must be a non-empty string")
-    return value
-
-
 @dataclass(frozen=True, slots=True)
 class AxisLayer(Layer):
     """Base for layers positioned by a value on the ``"x"`` or ``"y"`` axis.

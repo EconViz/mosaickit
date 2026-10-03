@@ -81,6 +81,8 @@ The scene graph is deliberately small:
   everything.
 - `LegendLayer` builds legends from stable layer IDs.
 - `AxisMarkLayer`, `AxisNoteLayer`, and `BraceLayer` annotate values and spans on an axis.
+- `SpanBraceLayer` braces a horizontal or vertical span between two points inside the
+  plot, with its label placed so it covers nothing (on a leader when there is no room).
 - `GroupLayer` groups layers without adding renderer-specific state.
 
 `AxisSpec` and `build_axes()` construct axes from the same ordinary path and text
