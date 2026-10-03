@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.0 — 2026-10-03
 
 - Themes and styles refer to colors by palette name (`Stroke(color="blue")`).
   Names resolve against the active palette (`Config.palette`) when the render
