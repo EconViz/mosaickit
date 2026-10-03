@@ -134,3 +134,45 @@ def test_text_anchor_sets_alignment(anchor, ha, va):
         assert text.get_verticalalignment() == va
     finally:
         result.close()
+
+
+def test_arrowheads_are_not_clipped_to_axes():
+    from matplotlib.patches import FancyArrowPatch
+
+    result = (
+        Canvas()
+        .add(PathLayer([(0, 0), (0, 10)], stroke=Stroke(arrow=ArrowStyle.OPEN)))
+        .add(ArrowLayer((1, 1), (2, 2)))
+        .render()
+    )
+    try:
+        arrows = [p for p in result.axes.patches if isinstance(p, FancyArrowPatch)]
+        assert len(arrows) == 2
+        assert all(not arrow.get_clip_on() for arrow in arrows)
+    finally:
+        result.close()
+
+
+def test_y_axis_arrowhead_draws_both_wings():
+    import numpy as np
+
+    from mosaickit import AxisSpec, build_axes
+
+    canvas = Canvas(CanvasSpec(x_range=(0, 10), y_range=(0, 10), width=3, height=3, dpi=100))
+    canvas.extend(
+        build_axes(AxisSpec((0, 10), ArrowPlacement.END), AxisSpec((0, 10), ArrowPlacement.END))
+    )
+    result = canvas.render()
+    try:
+        result.figure.canvas.draw()
+        pixels = np.asarray(result.figure.canvas.buffer_rgba())[:, :, :3]
+        height = pixels.shape[0]
+        x_px, y_px = result.axes.transData.transform((0, 10))
+        row = int(round(height - y_px)) + 6  # a few pixels below the tip, inside the head
+        col = int(round(x_px))
+        left_wing = pixels[row, col - 5 : col - 1]
+        right_wing = pixels[row, col + 2 : col + 6]
+        assert left_wing.min() < 200, "left wing of the y-axis arrowhead is missing"
+        assert right_wing.min() < 200, "right wing of the y-axis arrowhead is missing"
+    finally:
+        result.close()

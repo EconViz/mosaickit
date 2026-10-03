@@ -34,6 +34,7 @@ def add_arrow(ax, start, end, stroke, placement, zorder=0):
         shrinkA=0,
         shrinkB=0,
         zorder=zorder,
+        clip_on=False,
     )
     ax.add_patch(arrow)
     return arrow
