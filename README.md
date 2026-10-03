@@ -109,6 +109,50 @@ role override, theme, and finally primitive defaults. A field set to `None`
 inherits; falsey values such as `opacity=0`, `width=0`, and
 `LegendStyle(visible=False)` remain explicit overrides.
 
+### Colors by name
+
+Style `color` and `edge_color` fields take a `Color`, a `"#hex"` string, or a
+palette name such as `"blue"`. Names stay names in themes and styles; they are
+looked up in the active palette (`Config.palette`, default `DEFAULT_PALETTE`)
+when a canvas renders, so renderers only ever receive concrete colors. The
+built-in `default` theme names its colors (`primary` is `"blue"`, `secondary`
+is `"red"`, `accent` is `"teal"`, neutrals are the `grey-*` names), so changing
+a color once in the palette recolors every role that names it:
+
+```python
+from mosaickit import (
+    DEFAULT_PALETTE,
+    Canvas,
+    Config,
+    Palette,
+    Stroke,
+    StyleBundle,
+    Theme,
+    use_config,
+)
+from mosaickit.themes import default
+
+palette = Palette("brand", {**DEFAULT_PALETTE.colors, "blue": "#0072B2", "accent": "#984EA3"})
+
+# A domain package can name colors in its theme without knowing the palette.
+mypkg = Theme(
+    "mypkg",
+    {
+        **default.roles,
+        "mypkg.line": StyleBundle(stroke=Stroke(color="blue", width=2)),
+        "mypkg.boundary": StyleBundle(stroke=Stroke(color="accent")),
+    },
+)
+
+with use_config(Config(theme=mypkg, palette=palette)):
+    canvas = Canvas()  # primary and mypkg.line draw in #0072B2
+```
+
+A name the palette does not define raises `ConfigurationError` at render time,
+naming the role, the style field, and the palette. A Python `Palette` replaces
+the default palette, so start from `DEFAULT_PALETTE.colors` (as above) to keep
+the names the built-in theme uses.
+
 Domain packages register dotted role names through `ThemeRegistry`. Typed
 `RolePack` dataclasses and `expand_roles()` let those packages author themes
 without making MosaicKit import their domain types.
@@ -133,12 +177,12 @@ dash = "dashed"
 color = "blue"
 ```
 
-The `[palette]` table layers named hex colors over `DEFAULT_PALETTE`. Style
-`color` and `edge_color` values accept those names as well as hex; names are
-resolved against the config's palette when the file is loaded, and an unknown
-name raises `ConfigurationError` naming the file and key. The loaded palette is
-available as `config.palette`; in Python, pass `Config(palette=...)` and use
-`palette["accent"]` for style colors. The built-in theme keeps its own colors.
+The `[palette]` table layers named hex colors over `DEFAULT_PALETTE`, and the
+loaded palette is available as `config.palette`. Overriding `blue` there
+recolors the built-in `primary` role and any theme or style that names `blue`,
+with no styles needed. Style `color` and `edge_color` values accept palette
+names as well as hex; an unknown name raises `ConfigurationError` naming the
+file and key when the file is loaded.
 
 Use `Config.load(path)` to validate it. Runtime defaults are isolated with
 `contextvars`, while explicit constructor arguments always take precedence.

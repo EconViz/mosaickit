@@ -22,10 +22,16 @@ class SparseStyle:
         return replace(base, **updates)
 
 
-def _coerce_color(value: Color | str | None) -> Color | None:
+def _coerce_color(value: Color | str | None) -> Color | str | None:
+    """Parse ``#hex`` into a Color; keep any other string as a palette name.
+
+    Names are resolved against the active palette when a render plan is built.
+    """
     if value is None or isinstance(value, Color):
         return value
-    return Color.from_hex(value)
+    if not isinstance(value, str) or not value:
+        raise ConfigurationError("Color must be a Color, a #hex string, or a palette name")
+    return Color.from_hex(value) if value.startswith("#") else value
 
 
 def check_opacity(name: str, value: float | None) -> None:

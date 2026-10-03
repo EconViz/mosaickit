@@ -2,12 +2,23 @@
 
 ## Unreleased
 
+- Themes and styles refer to colors by palette name (`Stroke(color="blue")`).
+  Names resolve against the active palette (`Config.palette`) when the render
+  plan is built, so changing a color once in the palette, in Python or in a
+  TOML `[palette]` table, recolors every role that names it. Renderers still
+  receive only concrete colors.
+- The built-in `default` theme and primitive defaults name their colors
+  (`blue`, `red`, `teal`, `white`, and the `grey-*` ramp) instead of holding
+  copies of `DEFAULT_PALETTE` values. Rendered output with the default palette
+  is unchanged.
+- An unknown color name raises `ConfigurationError` naming the role, field,
+  and palette. A custom `Palette` must define the names its theme uses; build
+  it from `DEFAULT_PALETTE.colors` to keep the built-in names.
 - TOML config accepts a `[palette]` table that defines or overrides named
   colors (`accent = "#984EA3"`) on top of `DEFAULT_PALETTE`.
 - Style `color` and `edge_color` values in TOML accept palette names
-  (`color = "accent"`) as well as hex. Names resolve against the config's
-  palette at load time; unknown names raise `ConfigurationError` naming the
-  file and key.
+  (`color = "accent"`) as well as hex. Unknown names raise
+  `ConfigurationError` naming the file and key when the file is loaded.
 - `Config` carries the palette: `Config(palette=...)` in Python, defaulting to
   `DEFAULT_PALETTE`. Behavior without a palette is unchanged.
 - Add `PointLabelLayer(point, text)`, which places its text right beside a point

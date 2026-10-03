@@ -1,8 +1,9 @@
 """Pure style resolution shared by all renderers."""
 
-from dataclasses import dataclass, replace
+from dataclasses import dataclass, fields, replace
 
-from mosaickit.errors import BindingError
+from mosaickit.errors import BindingError, ConfigurationError
+from mosaickit.palette import Palette
 from mosaickit.parameter.binding import free_parameters
 from mosaickit.rendering.cache import CacheKey
 from mosaickit.rendering.context import _RenderContext
@@ -21,13 +22,41 @@ class _RenderPlan:
     layers: tuple[_ResolvedLayer, ...]
 
 
+_COLOR_FIELDS = ("color", "edge_color")
+
+
+def _bind_palette(style: StyleBundle, palette: Palette, role: str) -> StyleBundle:
+    """Replace palette names in every color field with the palette's colors."""
+    updates = {}
+    for slot in fields(style):
+        value = getattr(style, slot.name)
+        named = {
+            name: color
+            for name in _COLOR_FIELDS
+            if isinstance(color := getattr(value, name, None), str)
+        }
+        for name, color in named.items():
+            if color not in palette:
+                raise ConfigurationError(
+                    f"Role {role!r} {slot.name}.{name}: palette {palette.name!r} "
+                    f"has no color {color!r}"
+                )
+        if named:
+            updates[slot.name] = replace(
+                value, **{name: palette[color] for name, color in named.items()}
+            )
+    return replace(style, **updates) if updates else style
+
+
 def _resolve_role(context: _RenderContext, role: str, fallback: str) -> StyleBundle:
-    return resolve(
+    """Resolve a role's style with every color name bound to the context palette."""
+    style = resolve(
         context.theme,
         role,
         fallback_category=fallback,
         overrides=(context.config_overrides, context.canvas_overrides),
     )
+    return _bind_palette(style, context.palette, role)
 
 
 def _build_render_plan(scene: Scene, context: _RenderContext) -> _RenderPlan:
@@ -53,7 +82,7 @@ def _build_render_plan(scene: Scene, context: _RenderContext) -> _RenderPlan:
         explicit = StyleBundle(
             **{slot: getattr(layer, name) for slot, name in layer.style_slots.items()}
         )
-        style = explicit.merged_over(style)
+        style = _bind_palette(explicit.merged_over(style), context.palette, layer.role)
         cache_key = CacheKey(
             layer.id,
             context.bindings,
