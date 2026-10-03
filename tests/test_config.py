@@ -7,12 +7,12 @@ from mosaickit import Canvas, CanvasSpec, Config, ConfigurationError, Theme, use
 
 def test_strict_toml_styles_and_source_errors(tmp_path):
     path = tmp_path / "diagram.toml"
-    path.write_text('[canvas]\ndpi=72\n[styles."utility.budget".stroke]\nwidth=2\nopacity=0\n')
+    path.write_text('[canvas]\ndpi=72\n[styles."mypkg.boundary".stroke]\nwidth=2\nopacity=0\n')
     config = Config.load(path)
     assert config.canvas_spec.dpi == 72
-    assert config.role_overrides["utility.budget"].stroke.opacity == 0
-    path.write_text('[styles."utility.budget".stroke]\nwidht=2\n')
-    with pytest.raises(ConfigurationError, match=r"diagram.toml.*utility.budget.stroke"):
+    assert config.role_overrides["mypkg.boundary"].stroke.opacity == 0
+    path.write_text('[styles."mypkg.boundary".stroke]\nwidht=2\n')
+    with pytest.raises(ConfigurationError, match=r"diagram.toml.*mypkg.boundary.stroke"):
         Config.load(path)
 
 

@@ -5,8 +5,8 @@ from mosaickit import ConfigurationError, RegionLabelLayer, Stroke
 
 
 def test_region_label_defaults():
-    layer = RegionLabelLayer("fill.dwl", "Deadweight loss")
-    assert layer.region == "fill.dwl"
+    layer = RegionLabelLayer("fill.wedge", "Small region label")
+    assert layer.region == "fill.wedge"
     assert layer.short_text is None
     assert layer.placement == "auto"
     assert layer.role == "text"

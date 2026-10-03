@@ -14,10 +14,9 @@
 A domain-neutral toolkit for assembling two-dimensional diagrams from reusable
 scenes, layers, styles, parameters, and renderers.
 
-`mosaickit` is the shared graphics foundation for the EconViz package family.
-Domain libraries define economic models and semantic roles; MosaicKit composes
-their visual layers and renders the result. It does not depend on an economic
-model package or a curve-fitting library.
+Domain libraries define their own models and semantic roles; MosaicKit composes
+their visual layers and renders the result. It knows nothing about any domain
+and does not depend on a model package or a curve-fitting library.
 
 ## Installation
 
@@ -93,7 +92,7 @@ from mosaickit import Config, Stroke, StyleBundle, Theme, use_config
 
 paper = Theme(
     "paper",
-    {"utility.budget": StyleBundle(stroke=Stroke(color="#984EA3", width=2))},
+    {"mypkg.boundary": StyleBundle(stroke=Stroke(color="#984EA3", width=2))},
 )
 
 with use_config(Config(theme=paper)):
@@ -116,7 +115,7 @@ Configuration can also be loaded from TOML:
 x_range = [0, 20]
 dpi = 150
 
-[styles."utility.budget".stroke]
+[styles."mypkg.boundary".stroke]
 color = "#984EA3"
 width = 2
 dash = "dashed"
@@ -171,8 +170,7 @@ emit one warning per model type and cache.
 
 MosaicKit owns domain-neutral scene composition, styles, themes, parameter
 binding, grid layout, animation frames, renderer contracts, and static/animated
-output. Economic semantics belong to packages such as UtilityViz and
-PrincipleViz. Mathematical curve construction and native TikZ path generation
+output. Domain semantics belong to the packages that build on it. Mathematical curve construction and native TikZ path generation
 belong to geometry packages such as BezierKit.
 
 ## Development
