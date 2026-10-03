@@ -15,6 +15,12 @@
   losing the outer half.
 - Path arrowheads no longer redraw a solid shaft over the last 15% of the path,
   so dashed arrows stay dashed and axis lines keep a uniform width.
+- Add `RegionLabelLayer`, which names a filled region. With `placement="auto"`
+  the label goes inside the region when it fits (trying `short_text` second),
+  otherwise it becomes a callout: a thin leader and unboxed text placed so it
+  does not cover any line, point, filled region, or other text.
+- Add the pure-geometry `mosaickit.layout` package that makes those decisions.
+- Add `LayoutWarning`, emitted when no callout position avoids every obstacle.
 
 ## 0.1.1 — 2026-10-01
 

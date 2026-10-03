@@ -4,7 +4,13 @@ from mosaickit.canvas import Animation, Canvas, CanvasGrid, Layout, Span
 from mosaickit.canvas_spec import CanvasSpec
 from mosaickit.colors import TRANSPARENT, Color
 from mosaickit.config import Config, use_config
-from mosaickit.errors import BindingError, ConfigurationError, MosaicKitError, RenderError
+from mosaickit.errors import (
+    BindingError,
+    ConfigurationError,
+    LayoutWarning,
+    MosaicKitError,
+    RenderError,
+)
 from mosaickit.interval import Interval
 from mosaickit.parameter import Constant, Expression, Parameter, ParameterValues
 from mosaickit.rendering import (
@@ -24,6 +30,7 @@ from mosaickit.scene import (
     LegendLayer,
     MarkerLayer,
     PathLayer,
+    RegionLabelLayer,
     Scene,
     TextLayer,
     box_frame,
@@ -70,6 +77,7 @@ __all__ = [
     "Interval",
     "Layer",
     "Layout",
+    "LayoutWarning",
     "LegendLayer",
     "LegendStyle",
     "Marker",
@@ -77,6 +85,7 @@ __all__ = [
     "Parameter",
     "ParameterValues",
     "PathLayer",
+    "RegionLabelLayer",
     "RenderCache",
     "RenderError",
     "Renderer",

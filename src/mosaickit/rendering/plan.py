@@ -6,7 +6,7 @@ from mosaickit.errors import BindingError
 from mosaickit.parameter.binding import free_parameters
 from mosaickit.rendering.cache import CacheKey
 from mosaickit.rendering.context import _RenderContext
-from mosaickit.scene import GroupLayer, Layer, LegendLayer, Scene, TextLayer
+from mosaickit.scene import GroupLayer, Layer, LegendLayer, RegionLabelLayer, Scene, TextLayer
 from mosaickit.themes import StyleBundle
 from mosaickit.themes._walk import role_chain
 
@@ -54,7 +54,7 @@ def _build_render_plan(scene: Scene, context: _RenderContext) -> _RenderPlan:
             stroke=getattr(layer, "stroke", None),
             fill=getattr(layer, "fill", None),
             marker=getattr(layer, "marker", None),
-            text=layer.style if isinstance(layer, TextLayer) else None,
+            text=layer.style if isinstance(layer, (TextLayer, RegionLabelLayer)) else None,
             legend=layer.style if isinstance(layer, LegendLayer) else None,
         )
         style = explicit.merged_over(style)

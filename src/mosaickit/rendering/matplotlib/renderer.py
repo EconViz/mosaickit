@@ -16,9 +16,10 @@ from mosaickit.rendering.matplotlib.artists import BUILDERS
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
 from mosaickit.rendering.matplotlib.legend import build_legend
+from mosaickit.rendering.matplotlib.region_labels import place_region_labels
 from mosaickit.rendering.plan import _build_render_plan, _resolve_role
 from mosaickit.rendering.protocol import SaveOptions
-from mosaickit.scene import ArrowLayer, LegendLayer
+from mosaickit.scene import ArrowLayer, LegendLayer, RegionLabelLayer, TextLayer
 
 
 @dataclass
@@ -72,11 +73,14 @@ class MatplotlibRenderer:
         )
         ax.set_axis_off()
         plan = _build_render_plan(scene, context)
-        handles, legends = {}, []
+        handles, legends, region_labels, texts = {}, [], [], []
         for resolved in plan.layers:
             layer = resolved.layer
             if isinstance(layer, LegendLayer):
                 legends.append(resolved)
+                continue
+            if isinstance(layer, RegionLabelLayer):
+                region_labels.append(resolved)
                 continue
             if isinstance(layer, ArrowLayer):
                 artist = add_arrow(
@@ -99,9 +103,13 @@ class MatplotlibRenderer:
                 if builder is None:
                     raise RenderError(f"Unsupported layer: {type(layer).__name__}")
                 artist = builder(ax, resolved)
+                if isinstance(layer, TextLayer):
+                    texts.append(artist)
             artist.set_gid(layer.id)
             if layer.legend:
                 handles[layer.id] = artist
+        if region_labels:
+            place_region_labels(ax, plan.layers, region_labels, texts)
         for legend in legends:
             build_legend(ax, legend, handles)
 
