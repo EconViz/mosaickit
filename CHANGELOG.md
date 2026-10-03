@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.4.0 — 2026-10-03
 
 - Add `SpanBraceLayer(start, end, label, side)`: a curly brace between two points
   inside the plot (horizontal span: `side` `"above"`/`"below"`; vertical span:
