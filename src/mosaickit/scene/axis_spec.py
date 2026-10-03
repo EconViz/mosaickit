@@ -43,7 +43,7 @@ def build_axes(x: AxisSpec, y: AxisSpec) -> list[Layer]:
                     points,
                     id=f"axes.{name}",
                     role="axes",
-                    stroke=Stroke(arrow=ArrowStyle.OPEN) if spec.arrow else None,
+                    stroke=Stroke(arrow=ArrowStyle.TRIANGLE) if spec.arrow else None,
                     arrow_placement=spec.arrow or ArrowPlacement.END,
                 )
             )

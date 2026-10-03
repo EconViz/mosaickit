@@ -4,6 +4,7 @@ import pytest
 
 from mosaickit import (
     ArrowPlacement,
+    ArrowStyle,
     AxisSpec,
     ConfigurationError,
     GroupLayer,
@@ -109,3 +110,9 @@ def test_text_anchor_table(anchor, expected):
 def test_text_anchor_rejects_unknown_values(anchor):
     with pytest.raises(ConfigurationError, match="Unsupported text anchor"):
         TextLayer((0, 0), "x", anchor=anchor)
+
+
+def test_axis_arrows_default_to_filled_triangles():
+    x_axis, y_axis, *_ = quadrant_axes(5, 6)
+    assert x_axis.stroke.arrow == ArrowStyle.TRIANGLE
+    assert y_axis.stroke.arrow == ArrowStyle.TRIANGLE
