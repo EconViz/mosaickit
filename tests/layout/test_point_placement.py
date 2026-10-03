@@ -3,7 +3,7 @@ import math
 import pytest
 
 from mosaickit.layout import Obstacles, Rect, place_point_label
-from mosaickit.layout.geometry import rect_hits_segment
+from mosaickit.layout.geometry import rect_hits_segment, rect_overlaps_polygon
 
 BOUNDS = Rect(0, 0, 300, 300)
 DOT = Rect(147, 147, 153, 153)  # a 6 px marker centred on (150, 150)
@@ -115,3 +115,13 @@ def test_other_regions_still_block_the_label():
     placement = place_point_label(DOT, SIZE, Obstacles(polygons=(beside,)), BOUNDS)
     assert placement.violations == 0
     assert placement.rect.x1 <= DOT.x1 + 1.0
+
+
+def test_a_region_whose_edge_the_point_sits_on_still_blocks_the_label():
+    # The point is a vertex of the region (on its boundary, not inside it): the
+    # label must stay out of the region.
+    cx, cy = DOT.center
+    region = ((cx, cy), (cx + 120.0, cy), (cx + 120.0, cy + 120.0))
+    placement = place_point_label(DOT, SIZE, Obstacles(polygons=(region,)), BOUNDS)
+    assert placement.violations == 0
+    assert not rect_overlaps_polygon(placement.rect, region)
