@@ -32,7 +32,10 @@ def build_axes(x: AxisSpec, y: AxisSpec) -> list[Layer]:
     if x.arrow is None and y.arrow is None:
         layers: list[Layer] = [
             PathLayer(
-                ((x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)), id="axes.frame", role="axes"
+                ((x0, y0), (x1, y0), (x1, y1), (x0, y1), (x0, y0)),
+                id="axes.frame",
+                role="axes",
+                clip=False,
             )
         ]
     else:
@@ -43,8 +46,9 @@ def build_axes(x: AxisSpec, y: AxisSpec) -> list[Layer]:
                     points,
                     id=f"axes.{name}",
                     role="axes",
-                    stroke=Stroke(arrow=ArrowStyle.OPEN) if spec.arrow else None,
+                    stroke=Stroke(arrow=ArrowStyle.TRIANGLE) if spec.arrow else None,
                     arrow_placement=spec.arrow or ArrowPlacement.END,
+                    clip=False,
                 )
             )
     if x.label:

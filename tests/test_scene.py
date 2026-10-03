@@ -4,6 +4,7 @@ import pytest
 
 from mosaickit import (
     ArrowPlacement,
+    ArrowStyle,
     AxisSpec,
     ConfigurationError,
     GroupLayer,
@@ -82,3 +83,43 @@ def test_axis_presets_are_the_generic_assembler():
     assert frame == build_axes(AxisSpec((0, 5)), AxisSpec((0, 6)))
     assert len(frame[0].path) == 5
     assert frame[0].path[0] == frame[0].path[-1]
+
+
+@pytest.mark.parametrize(
+    "anchor,expected",
+    [
+        ("center", ("center", "center")),
+        ("left", ("left", "center")),
+        ("right", ("right", "center")),
+        ("top", ("center", "top")),
+        ("bottom", ("center", "bottom")),
+        ("top-left", ("left", "top")),
+        ("top-right", ("right", "top")),
+        ("bottom-left", ("left", "bottom")),
+        ("bottom-right", ("right", "bottom")),
+    ],
+)
+def test_text_anchor_table(anchor, expected):
+    from mosaickit.scene.text import TEXT_ANCHORS
+
+    assert TextLayer((0, 0), "x", anchor=anchor).anchor == anchor
+    assert TEXT_ANCHORS[anchor] == expected
+
+
+@pytest.mark.parametrize("anchor", ["upper left", "left-top", "middle", ""])
+def test_text_anchor_rejects_unknown_values(anchor):
+    with pytest.raises(ConfigurationError, match="Unsupported text anchor"):
+        TextLayer((0, 0), "x", anchor=anchor)
+
+
+def test_axis_arrows_default_to_filled_triangles():
+    x_axis, y_axis, *_ = quadrant_axes(5, 6)
+    assert x_axis.stroke.arrow == ArrowStyle.TRIANGLE
+    assert y_axis.stroke.arrow == ArrowStyle.TRIANGLE
+
+
+def test_path_layers_clip_by_default_and_axes_do_not():
+    assert PathLayer([(0, 0), (1, 1)]).clip is True
+    assert PathLayer([(0, 0), (1, 1)], clip=False).clip is False
+    for layer in quadrant_axes(5, 6)[:2] + box_frame(5, 6)[:1]:
+        assert layer.clip is False

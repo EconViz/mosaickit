@@ -35,6 +35,7 @@ def build(ax: Any, resolved: Any) -> Any:
         linestyle=stroke.dash.value,
         zorder=layer.z_index,
         label=layer.legend,
+        clip_on=layer.clip,
     )
     ax.add_patch(patch)
     if stroke.arrow:

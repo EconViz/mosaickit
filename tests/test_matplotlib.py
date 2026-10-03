@@ -18,6 +18,7 @@ from mosaickit import (
     Span,
     Stroke,
     TextLayer,
+    quadrant_axes,
 )
 
 
@@ -115,3 +116,100 @@ def test_grid_span_axes_size_and_repeated_saves(tmp_path):
     result.close()
     for _ in range(2):
         assert grid.save(tmp_path / "grid.png") == [tmp_path / "grid.png"]
+
+
+@pytest.mark.parametrize(
+    "anchor,ha,va",
+    [
+        ("left", "left", "center"),
+        ("top", "center", "top"),
+        ("top-left", "left", "top"),
+        ("bottom-right", "right", "bottom"),
+    ],
+)
+def test_text_anchor_sets_alignment(anchor, ha, va):
+    result = Canvas().add(TextLayer((1, 1), "x", anchor=anchor)).render()
+    try:
+        text = result.axes.texts[0]
+        assert text.get_horizontalalignment() == ha
+        assert text.get_verticalalignment() == va
+    finally:
+        result.close()
+
+
+def test_arrowheads_are_not_clipped_to_axes():
+    from matplotlib.patches import FancyArrowPatch
+
+    result = (
+        Canvas()
+        .add(PathLayer([(0, 0), (0, 10)], stroke=Stroke(arrow=ArrowStyle.OPEN)))
+        .add(ArrowLayer((1, 1), (2, 2)))
+        .render()
+    )
+    try:
+        arrows = [p for p in result.axes.patches if isinstance(p, FancyArrowPatch)]
+        assert len(arrows) == 2
+        assert all(not arrow.get_clip_on() for arrow in arrows)
+    finally:
+        result.close()
+
+
+def test_y_axis_arrowhead_draws_both_wings():
+    import numpy as np
+
+    from mosaickit import AxisSpec, build_axes
+
+    canvas = Canvas(CanvasSpec(x_range=(0, 10), y_range=(0, 10), width=3, height=3, dpi=100))
+    canvas.extend(
+        build_axes(AxisSpec((0, 10), ArrowPlacement.END), AxisSpec((0, 10), ArrowPlacement.END))
+    )
+    result = canvas.render()
+    try:
+        result.figure.canvas.draw()
+        pixels = np.asarray(result.figure.canvas.buffer_rgba())[:, :, :3]
+        height = pixels.shape[0]
+        x_px, y_px = result.axes.transData.transform((0, 10))
+        row = int(round(height - y_px)) + 6  # a few pixels below the tip, inside the head
+        col = int(round(x_px))
+        left_wing = pixels[row, col - 5 : col - 1]
+        right_wing = pixels[row, col + 2 : col + 6]
+        assert left_wing.min() < 200, "left wing of the y-axis arrowhead is missing"
+        assert right_wing.min() < 200, "right wing of the y-axis arrowhead is missing"
+    finally:
+        result.close()
+
+
+def test_path_clip_flag_reaches_the_patch():
+    result = (
+        Canvas()
+        .add(PathLayer([(0, 0), (1, 1)], id="clipped"))
+        .add(PathLayer([(0, 0), (1, 1)], id="free", clip=False))
+        .render()
+    )
+    try:
+        by_id = {p.get_gid(): p for p in result.axes.patches}
+        assert by_id["clipped"].get_clip_on() is True
+        assert by_id["free"].get_clip_on() is False
+    finally:
+        result.close()
+
+
+def test_axis_line_on_the_boundary_keeps_its_full_width():
+    import numpy as np
+
+    canvas = Canvas(CanvasSpec(x_range=(0, 10), y_range=(0, 10), width=3, height=3, dpi=300))
+    result = canvas.extend(quadrant_axes(10, 10)).render()
+    try:
+        result.figure.canvas.draw()
+        dark = np.asarray(result.figure.canvas.buffer_rgba())[:, :, :3].min(axis=2) < 200
+        height = dark.shape[0]
+        x_px, _ = result.axes.transData.transform((0, 0))
+        col = int(round(x_px))
+
+        def width_at(y):
+            _, y_px = result.axes.transData.transform((0, y))
+            return int(dark[int(round(height - y_px)), col - 8 : col + 8].sum())
+
+        assert width_at(3) == width_at(9.5)
+    finally:
+        result.close()
