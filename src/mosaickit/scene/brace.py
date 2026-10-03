@@ -1,16 +1,15 @@
-from collections.abc import Mapping
 from dataclasses import dataclass, field
-from typing import Any, ClassVar
+from typing import Any
 
 from mosaickit.errors import ConfigurationError
-from mosaickit.scene.axis_layer import AxisLayer, _axis_value, _text
-from mosaickit.styles import Stroke, TextStyle
+from mosaickit.scene.axis_layer import AxisLayer, _axis_value
+from mosaickit.scene.brace_parts import BraceParts
 
 BRACE_SIDES = ("inside", "outside")
 
 
 @dataclass(frozen=True, slots=True)
-class BraceLayer(AxisLayer):
+class BraceLayer(BraceParts, AxisLayer):
     """A curly brace over ``start``..``end`` on an axis, with an optional label.
 
     ``side="inside"`` draws it just inside the plot, its label placed so it covers
@@ -22,11 +21,6 @@ class BraceLayer(AxisLayer):
     end: Any
     label: str | None = None
     side: str = "inside"
-    math: bool = False
-    style: TextStyle | None = None
-    stroke: Stroke | None = None
-    fallback_category: ClassVar[str] = "text"
-    style_slots: ClassVar[Mapping[str, str]] = {"stroke": "stroke", "text": "style"}
 
     def __post_init__(self) -> None:
         AxisLayer.__post_init__(self)
@@ -35,7 +29,6 @@ class BraceLayer(AxisLayer):
             object.__setattr__(self, name, value)
         if self.start == self.end:
             raise ConfigurationError("BraceLayer needs start != end")
-        if self.label is not None:
-            _text("BraceLayer.label", self.label)
+        self._check_label("BraceLayer")
         if self.side not in BRACE_SIDES:
             raise ConfigurationError(f"Unsupported brace side: {self.side!r}")

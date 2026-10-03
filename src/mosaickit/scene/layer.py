@@ -34,6 +34,12 @@ class Layer:
             raise ConfigurationError("Layer.z_index must be finite")
 
 
+def _text(owner: str, value: Any) -> str:
+    if not isinstance(value, str) or not value:
+        raise ConfigurationError(f"{owner} must be a non-empty string")
+    return value
+
+
 def _point(value: Any) -> Any:
     if isinstance(value, Expression):
         return value

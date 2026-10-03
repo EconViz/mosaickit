@@ -2,7 +2,8 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 from typing import Any, ClassVar
 
-from mosaickit.scene.axis_layer import AxisLayer, _axis_value, _text
+from mosaickit.scene.axis_layer import AxisLayer, _axis_value
+from mosaickit.scene.layer import _text
 from mosaickit.styles import TextStyle
 
 
