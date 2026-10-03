@@ -2,7 +2,17 @@ import asyncio
 
 import pytest
 
-from mosaickit import Canvas, CanvasSpec, Config, ConfigurationError, Theme, use_config
+from mosaickit import (
+    DEFAULT_PALETTE,
+    Canvas,
+    CanvasSpec,
+    Color,
+    Config,
+    ConfigurationError,
+    Palette,
+    Theme,
+    use_config,
+)
 
 
 def test_strict_toml_styles_and_source_errors(tmp_path):
@@ -58,3 +68,75 @@ def test_contexts_are_isolated_between_concurrent_tasks():
 def test_renderer_config_is_strict():
     with pytest.raises(ConfigurationError, match="renderer"):
         Config.from_dict({"renderer": {"name": "missing"}})
+
+
+def test_toml_palette_layers_on_default_palette(tmp_path):
+    path = tmp_path / "colors.toml"
+    path.write_text('[palette]\nblue = "#123456"\naccent = "#ABCDEF"\n')
+    palette = Config.load(path).palette
+    assert palette["blue"] == Color.from_hex("#123456")
+    assert palette["accent"] == Color.from_hex("#ABCDEF")
+    assert palette["red"] == DEFAULT_PALETTE["red"]
+
+
+def test_default_config_palette_is_the_default_palette():
+    assert Config().palette == DEFAULT_PALETTE
+    assert Config.from_dict({}).palette == DEFAULT_PALETTE
+
+
+def test_python_palette_is_kept_as_given():
+    palette = Palette("mine", {"ink": "#000000"})
+    assert Config(palette=palette).palette is palette
+
+
+def test_style_colors_accept_palette_names(tmp_path):
+    path = tmp_path / "colors.toml"
+    path.write_text(
+        '[palette]\nblue = "#123456"\naccent = "#ABCDEF"\n'
+        '[styles."mypkg.line".stroke]\ncolor = "blue"\n'
+        '[styles."mypkg.line".fill]\ncolor = "accent"\n'
+        '[styles."mypkg.line".marker]\ncolor = "teal"\nedge_color = "#000000"\n'
+        '[styles."mypkg.line".text]\ncolor = "grey-900"\n'
+    )
+    bundle = Config.load(path).role_overrides["mypkg.line"]
+    assert bundle.stroke.color == Color.from_hex("#123456")
+    assert bundle.fill.color == Color.from_hex("#ABCDEF")
+    assert bundle.marker.color == DEFAULT_PALETTE["teal"]
+    assert bundle.marker.edge_color == Color.from_hex("#000000")
+    assert bundle.text.color == DEFAULT_PALETTE["grey-900"]
+
+
+def test_named_color_renders_with_config_palette(tmp_path):
+    path = tmp_path / "colors.toml"
+    path.write_text('[palette]\nblue = "#123456"\n[styles."mypkg.line".stroke]\ncolor = "blue"\n')
+    with use_config(Config.load(path)):
+        canvas = Canvas()
+    assert canvas.config.role_overrides["mypkg.line"].stroke.color == Color.from_hex("#123456")
+
+
+def test_unknown_color_name_names_file_and_key(tmp_path):
+    path = tmp_path / "colors.toml"
+    path.write_text('[styles."mypkg.boundary".marker]\nedge_color = "missing"\n')
+    with pytest.raises(
+        ConfigurationError, match=r"colors.toml.*styles.mypkg.boundary.marker.edge_color.*missing"
+    ):
+        Config.load(path)
+
+
+@pytest.mark.parametrize(
+    ("palette", "match"),
+    [
+        ({"accent": "blue"}, r"palette.accent"),
+        ({"accent": 3}, r"palette.accent"),
+        ({"": "#000000"}, r"palette"),
+        ("#000000", r"palette"),
+    ],
+)
+def test_invalid_palette_section_names_file_and_key(tmp_path, palette, match):
+    with pytest.raises(ConfigurationError, match=rf"colors.toml.*{match}"):
+        Config.from_dict({"palette": palette}, source="colors.toml")
+
+
+def test_python_palette_must_be_a_palette():
+    with pytest.raises(ConfigurationError, match="palette"):
+        Config(palette={"accent": "#123456"})  # type: ignore[arg-type]
