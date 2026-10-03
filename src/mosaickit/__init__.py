@@ -1,6 +1,6 @@
 """Domain-neutral diagram construction and rendering."""
 
-from mosaickit.canvas import Animation, Canvas, CanvasGrid, Layout, Span
+from mosaickit.canvas import Animation, Canvas, CanvasGrid, GridLink, Layout, Span
 from mosaickit.canvas_spec import CanvasSpec
 from mosaickit.colors import TRANSPARENT, Color
 from mosaickit.config import Config, use_config
@@ -57,7 +57,7 @@ from mosaickit.styles import (
 )
 from mosaickit.themes import RolePack, StyleBundle, Theme, ThemeRegistry, expand_roles
 
-__version__ = "0.4.0"
+__version__ = "0.5.0"
 __all__ = [
     "Animation",
     "ArrowLayer",
@@ -73,6 +73,7 @@ __all__ = [
     "DEFAULT_PALETTE",
     "Canvas",
     "CanvasGrid",
+    "GridLink",
     "CanvasSpec",
     "Color",
     "Config",

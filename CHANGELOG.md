@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.0 — 2026-10-03
+
+- Add `GridLink(start_cell, start, end_cell, end, role=..., stroke=...)` and
+  `CanvasGrid(..., links=...)`: a straight line from a point in one cell to a
+  point in another, each in its own cell's data coordinates, drawn across the
+  gaps between cells. It is styled by `role` in the start cell's theme, with
+  `stroke` on top.
+- `ArrowLayer` honors a dashed, dotted or dash-dot stroke: the shaft takes the
+  dash and the heads stay solid. It was drawn solid before.
+
 ## 0.4.0 — 2026-10-03
 
 - Add `SpanBraceLayer(start, end, label, side)`: a curly brace between two points

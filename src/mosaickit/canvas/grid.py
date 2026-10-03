@@ -3,11 +3,13 @@
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
 from mosaickit.canvas.canvas import Canvas
+from mosaickit.canvas.grid_link import GridLink
 from mosaickit.canvas.layout import Layout
 from mosaickit.canvas.span import Span
 from mosaickit.errors import ConfigurationError, RenderError
@@ -31,6 +33,7 @@ class CanvasGrid:
         rows: int | None = None,
         cols: int | None = None,
         shape: tuple[int, int] | None = None,
+        links: Sequence[GridLink] = (),
     ) -> None:
         if shape is not None:
             if rows is not None or cols is not None or len(shape) != 2:
@@ -123,6 +126,9 @@ class CanvasGrid:
                     )
         self.rows, self.cols = rows, cols
         self.placements = tuple(placements)
+        for link in links:
+            link.check(len(self.placements))
+        self.links = tuple(links)
 
     @classmethod
     def sweep(

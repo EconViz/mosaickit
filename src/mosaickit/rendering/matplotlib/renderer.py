@@ -17,6 +17,7 @@ from mosaickit.rendering.matplotlib import (
 )
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
+from mosaickit.rendering.matplotlib.grid_links import draw_grid_links
 from mosaickit.rendering.matplotlib.registry import (
     PassContext,
     builder_for,
@@ -132,11 +133,14 @@ class MatplotlibRenderer:
         figure = Figure(figsize=(width * grid.cols, height * grid.rows), dpi=dpi)
         FigureCanvasAgg(figure)
         slots = figure.add_gridspec(grid.rows, grid.cols)
-        axes = []
+        axes, contexts = [], []
         for p in grid.placements:
             ax = figure.add_subplot(slots[p.row : p.row + p.rows, p.col : p.col + p.cols])
-            self._draw(ax, p.canvas.snapshot(), p.canvas._context(cache))
+            context = p.canvas._context(cache)
+            self._draw(ax, p.canvas.snapshot(), context)
             axes.append(ax)
+            contexts.append(context)
+        draw_grid_links(figure, tuple(axes), tuple(contexts), grid.links)
         return MatplotlibResult(figure, tuple(axes))
 
     def save(self, result: MatplotlibResult, target: Path, options: SaveOptions) -> list[Path]:

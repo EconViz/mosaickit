@@ -213,3 +213,24 @@ def test_axis_line_on_the_boundary_keeps_its_full_width():
         assert width_at(3) == width_at(9.5)
     finally:
         result.close()
+
+
+def test_dashed_arrow_has_a_dashed_shaft_and_a_solid_head():
+    from matplotlib.patches import FancyArrowPatch, PathPatch
+
+    from mosaickit import DashStyle
+
+    result = (
+        Canvas()
+        .add(ArrowLayer((1, 1), (1, 4), id="move", stroke=Stroke(dash=DashStyle.DASHED)))
+        .render()
+    )
+    try:
+        (shaft,) = [p for p in result.axes.patches if isinstance(p, PathPatch)]
+        (head,) = [p for p in result.axes.patches if isinstance(p, FancyArrowPatch)]
+        assert shaft.get_gid() == "move"
+        assert shaft.get_linestyle() == "dashed"
+        assert shaft.get_path().vertices.tolist() == [[1, 1], [1, 4]]
+        assert head.get_linestyle() == "solid"
+    finally:
+        result.close()
