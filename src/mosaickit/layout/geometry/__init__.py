@@ -7,6 +7,7 @@ from mosaickit.layout.geometry.polygon import (
     rect_inside_polygon,
     rect_overlaps_polygon,
 )
+from mosaickit.layout.geometry.polylabel import polylabel
 from mosaickit.layout.geometry.rect import Point, Polygon, Rect, Segment
 from mosaickit.layout.geometry.segments import rect_hits_segment, segments_intersect
 
@@ -17,6 +18,7 @@ __all__ = [
     "Segment",
     "point_in_polygon",
     "polygon_edges",
+    "polylabel",
     "ray_exit",
     "rect_hits_segment",
     "rect_inside_polygon",
