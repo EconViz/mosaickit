@@ -1,13 +1,11 @@
 """Measure, place, and draw point labels after everything else they must avoid."""
 
-import warnings
 from collections.abc import Sequence
 from typing import Any
 
-from mosaickit.errors import LayoutWarning
 from mosaickit.layout import Obstacles, Rect, place_point_label
-from mosaickit.rendering.matplotlib.artists.path_artist import rgba
-from mosaickit.rendering.matplotlib.fonts import font_properties, measure_text
+from mosaickit.rendering.matplotlib.fonts import measure_text
+from mosaickit.rendering.matplotlib.labels import draw_label, warn_unplaced
 from mosaickit.rendering.matplotlib.obstacles import collect_obstacles, marker_rects, to_display
 from mosaickit.rendering.matplotlib.registry import PassContext
 
@@ -41,26 +39,8 @@ def _draw(ax: Any, resolved: Any, obstacles: Obstacles, renderer: Any) -> Obstac
         scale=scale,
     )
     if placement.violations:
-        warnings.warn(
-            f"PointLabelLayer {layer.id!r}: no position beside the point avoids every "
-            f"obstacle ({placement.violations} overlaps)",
-            LayoutWarning,
-            stacklevel=2,
-        )
-    x, y = ax.transData.inverted().transform(placement.rect.center)
-    ax.text(
-        x,
-        y,
-        layer.text,
-        ha="center",
-        va="center",
-        multialignment="center",
-        fontproperties=font_properties(style),
-        color=rgba(style.color, style.opacity),
-        rotation=style.rotation,
-        zorder=layer.z_index,
-        gid=layer.id,
-    )
+        warn_unplaced(layer, placement.violations, "position beside the point")
+    draw_label(ax, style, layer.text, placement.rect.center, gid=layer.id, z_index=layer.z_index)
     return obstacles.extended(rects=(placement.rect,))
 
 
