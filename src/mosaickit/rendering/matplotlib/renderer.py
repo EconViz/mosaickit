@@ -8,6 +8,7 @@ from typing import Any
 
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
+from matplotlib.transforms import Bbox
 
 from mosaickit.colors import Color
 from mosaickit.errors import RenderError
@@ -56,6 +57,24 @@ class MatplotlibResult:
                 plt.close(self._manager_number)
             self.figure.clear()
             self._closed = True
+
+
+EXPAND_PAD = 4 / 72  # inches of margin kept around content that overflowed the canvas
+
+
+def _expanded_bbox(figure: Figure) -> Bbox | None:
+    """The figure's own box grown to cover overflowing artists, or None when all fits."""
+    page = Bbox.from_bounds(0, 0, *figure.get_size_inches())
+    content = figure.get_tightbbox()
+    if content is None:
+        return None
+    grown = Bbox.from_extents(
+        content.x0 - EXPAND_PAD if content.x0 < page.x0 else page.x0,
+        content.y0 - EXPAND_PAD if content.y0 < page.y0 else page.y0,
+        content.x1 + EXPAND_PAD if content.x1 > page.x1 else page.x1,
+        content.y1 + EXPAND_PAD if content.y1 > page.y1 else page.y1,
+    )
+    return None if grown.bounds == page.bounds else grown
 
 
 class MatplotlibRenderer:
@@ -125,7 +144,8 @@ class MatplotlibRenderer:
             raise RenderError("Cannot save a closed result")
         if target.suffix.lower() not in {".png", ".pdf", ".svg"}:
             raise RenderError(f"Matplotlib does not support {target.suffix!r}")
-        result.figure.savefig(target, transparent=options.transparent)
+        bbox = _expanded_bbox(result.figure) if options.expand else None
+        result.figure.savefig(target, transparent=options.transparent, bbox_inches=bbox)
         return [target]
 
     def save_animation(self, animation, path, cache):

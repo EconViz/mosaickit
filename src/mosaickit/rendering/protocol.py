@@ -10,7 +10,15 @@ from mosaickit.scene import Scene
 
 @dataclass(frozen=True, slots=True)
 class SaveOptions:
+    """How a rendered result is written.
+
+    ``expand`` grows the saved canvas just enough to include anything drawn past
+    its edges (such as gutter text); it never crops, so a diagram that fits keeps
+    exactly the size its ``CanvasSpec`` asks for.
+    """
+
     transparent: bool = False
+    expand: bool = True
 
 
 @runtime_checkable
