@@ -7,23 +7,14 @@ centroid. Best-first search over square cells (Mapbox polylabel).
 import heapq
 import math
 
-from mosaickit.layout.geometry.polygon import point_in_polygon, polygon_edges
+from mosaickit.layout.geometry.polygon import distance_to_boundary, point_in_polygon
 from mosaickit.layout.geometry.rect import Point, Polygon
 
 _Cell = tuple[float, float, float, float, float]  # (-max possible, distance, x, y, half size)
 
 
-def _segment_distance(point: Point, a: Point, b: Point) -> float:
-    px, py = point
-    ax, ay = a
-    dx, dy = b[0] - ax, b[1] - ay
-    length2 = dx * dx + dy * dy
-    t = 0.0 if length2 == 0 else max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / length2))
-    return math.hypot(px - (ax + t * dx), py - (ay + t * dy))
-
-
 def _signed_distance(point: Point, polygon: Polygon) -> float:
-    distance = min(_segment_distance(point, a, b) for a, b in polygon_edges(polygon))
+    distance = distance_to_boundary(point, polygon)
     return distance if point_in_polygon(point, polygon) else -distance
 
 

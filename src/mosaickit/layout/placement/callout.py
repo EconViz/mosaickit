@@ -1,30 +1,24 @@
 """Search positions around a region for a callout label.
 
-Candidates: 16 directions from +x counter-clockwise; along each, start where the
-ray leaves the region and add a gap. Fewest violations wins, then lowest score;
-ties keep the earlier candidate so results are deterministic.
+Principle: cover nothing. The text may not touch any line, point, text, or region
+(its own included) and must sit in open space, not a small enclosed pocket. The
+leader may not cross anything after leaving its own region. Among positions that
+cover nothing, the shortest leader wins; ties keep the earlier candidate (16
+directions from +x counter-clockwise, near gaps first), so results are deterministic.
 """
 
 import math
 
-from mosaickit.layout.geometry import (
-    Point,
-    Polygon,
-    Rect,
-    Segment,
-    polygon_edges,
-    polylabel,
-    ray_exit,
-    segments_intersect,
-)
+from mosaickit.layout.geometry import Point, Polygon, Rect, polylabel, ray_exit
+from mosaickit.layout.placement.leader import build_leader, leader_violations
 from mosaickit.layout.placement.obstacles import Obstacles, Placement, count_violations
+from mosaickit.layout.placement.open_area import open_area
 
 DIRECTIONS = 16
 GAPS = (12.0, 24.0, 40.0)
 FAR_GAPS = (60.0, 90.0)
 LEADER_GAP = 2.0
-LINE_PENALTY = 1000.0
-REGION_PENALTY = 200.0
+OPEN_AREA_CELL = 4.0
 _SIDE = 0.38  # |cos| above this anchors the rect by its near side, otherwise by its middle
 
 
@@ -35,27 +29,6 @@ def _candidate(pole: Point, direction: Point, distance: float, size: tuple[float
     x0 = cx if dx > _SIDE else cx - width if dx < -_SIDE else cx - width / 2
     y0 = cy if dy > _SIDE else cy - height if dy < -_SIDE else cy - height / 2
     return Rect(x0, y0, x0 + width, y0 + height)
-
-
-def _leader(pole: Point, rect: Rect, gap: float) -> Segment:
-    end = rect.nearest_point(pole)
-    length = math.dist(pole, end)
-    if length <= gap:
-        return (pole, end)
-    ratio = (length - gap) / length
-    return (pole, (pole[0] + (end[0] - pole[0]) * ratio, pole[1] + (end[1] - pole[1]) * ratio))
-
-
-def _score(leader: Segment, obstacles: Obstacles, own: tuple[Point, ...]) -> float:
-    a, b = leader
-    lines = sum(1 for c, d in obstacles.segments if segments_intersect(a, b, c, d))
-    regions = sum(
-        1
-        for polygon in obstacles.polygons
-        if polygon != own and any(segments_intersect(a, b, c, d) for c, d in polygon_edges(polygon))
-    )
-    # The leader starts inside its region, so crossing one boundary line is free.
-    return math.dist(a, b) + LINE_PENALTY * max(0, lines - 1) + REGION_PENALTY * regions
 
 
 def place_callout(
@@ -71,6 +44,8 @@ def place_callout(
     pole = polylabel(own)
     # The label may never cover its own region, even when it is not an obstacle.
     polygons = obstacles.polygons if own in obstacles.polygons else (*obstacles.polygons, own)
+    everything = Obstacles(obstacles.segments, obstacles.rects, polygons)
+    area = open_area(bounds, everything, OPEN_AREA_CELL * scale)
     best: tuple[tuple[int, float], Placement] | None = None
     for gaps in (GAPS, FAR_GAPS):
         for k in range(DIRECTIONS):
@@ -79,13 +54,15 @@ def place_callout(
             exit_distance = ray_exit(pole, direction, own)
             for gap in gaps:
                 rect = _candidate(pole, direction, exit_distance + gap * scale, size)
-                leader = _leader(pole, rect, LEADER_GAP * scale)
-                key = (
-                    count_violations(rect, obstacles, bounds, polygons),
-                    _score(leader, obstacles, own),
+                leader = build_leader(pole, rect, LEADER_GAP * scale)
+                violations = (
+                    count_violations(rect, obstacles, bounds, polygons)
+                    + (0 if area.contains(rect.center) else 1)
+                    + leader_violations(leader, everything, own)
                 )
+                key = (violations, math.dist(*leader))
                 if best is None or key < best[0]:
-                    best = (key, Placement(rect, leader, key[0]))
+                    best = (key, Placement(rect, leader, violations))
         assert best is not None
         if best[1].violations == 0:
             break

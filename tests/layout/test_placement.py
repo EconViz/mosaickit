@@ -1,7 +1,7 @@
 import pytest
 
 from mosaickit.layout import Obstacles, Rect, fits_inside, place_callout
-from mosaickit.layout.geometry import rect_hits_segment, rect_overlaps_polygon
+from mosaickit.layout.geometry import rect_hits_segment, rect_overlaps_polygon, segments_intersect
 
 BOUNDS = Rect(0, 0, 300, 300)
 BIG = ((0.0, 0.0), (100.0, 0.0), (100.0, 100.0), (0.0, 100.0))
@@ -60,3 +60,54 @@ def test_obstacles_extended_keeps_polygons():
     grown = base.extended(segments=(((0.0, 0.0), (1.0, 1.0)),), rects=(Rect(0, 0, 1, 1),))
     assert grown.polygons == (SMALL,)
     assert len(grown.segments) == 1 and len(grown.rects) == 1
+
+
+def test_callout_stays_out_of_enclosed_pockets():
+    # A closed pocket of free space sits left of the region; the open area is to the right.
+    region = ((100.0, 140.0), (100.0, 160.0), (120.0, 150.0))
+    pocket_walls = (
+        ((0.0, 120.0), (100.0, 120.0)),
+        ((0.0, 180.0), (100.0, 180.0)),
+        ((100.0, 120.0), (100.0, 180.0)),
+    )
+    obstacles = Obstacles(segments=pocket_walls, polygons=(region,))
+    placement = place_callout(region, (40, 12), obstacles, BOUNDS)
+    pocket = Rect(0, 120, 100, 180)
+    assert placement.violations == 0
+    assert not placement.rect.intersects(pocket)
+
+
+def test_leader_never_crosses_a_line_outside_its_region():
+    # A full-height line blocks the shortest (rightward) route.
+    fence = ((115.0, 0.0), (115.0, 300.0))
+    obstacles = Obstacles(segments=(fence,), polygons=(SMALL,))
+    placement = place_callout(SMALL, (40, 12), obstacles, BOUNDS)
+    assert placement.violations == 0
+    assert not segments_intersect(*placement.leader, *fence)
+
+
+def test_leader_never_passes_through_a_point():
+    point = Rect(113, 103, 117, 107)  # a marker just right of the region
+    placement = place_callout(SMALL, (40, 12), Obstacles(rects=(point,), polygons=(SMALL,)), BOUNDS)
+    assert placement.violations == 0
+    assert not rect_hits_segment(point, *placement.leader)
+
+
+def test_a_line_that_bounds_the_region_may_be_crossed_once():
+    # The region's right edge is a drawn line; crossing it to get out is fine.
+    edge = ((110.0, 90.0), (110.0, 120.0))
+    placement = place_callout(
+        SMALL, (40, 12), Obstacles(segments=(edge,), polygons=(SMALL,)), BOUNDS
+    )
+    assert placement.violations == 0
+    assert placement.rect.x0 == pytest.approx(122)
+
+
+def test_large_enclosed_areas_are_open():
+    # Walls split the bounds in two big halves; the region sits in the left half.
+    wall = ((150.0, 0.0), (150.0, 300.0))
+    region = ((60.0, 140.0), (70.0, 140.0), (70.0, 150.0), (60.0, 150.0))
+    obstacles = Obstacles(segments=(wall,), polygons=(region,))
+    placement = place_callout(region, (40, 12), obstacles, BOUNDS)
+    assert placement.violations == 0
+    assert placement.rect.x1 < 150

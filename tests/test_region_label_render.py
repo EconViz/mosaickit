@@ -5,6 +5,7 @@ import pytest
 from mosaickit import (
     Canvas,
     CanvasGrid,
+    CanvasSpec,
     FillLayer,
     LayoutWarning,
     MarkerLayer,
@@ -172,5 +173,27 @@ def test_inline_polygon_region_in_grid_panels():
     try:
         for ax in result.axes:
             assert [t.get_text() for t in ax.texts if t.get_gid() == "lbl"] == ["Region"]
+    finally:
+        result.close()
+
+
+def test_callout_does_not_land_in_an_unfilled_pocket_between_regions():
+    # Tax-wedge layout with the tax-revenue rectangle left unfilled: the gap between
+    # consumer and producer surplus is enclosed, so the DWL callout must not go there.
+    result = (
+        Canvas(CanvasSpec(x_range=(0, 12), y_range=(0, 14), width=7.2, height=5.2, dpi=150))
+        .add(PathLayer([(0, 12), (10, 0)], id="demand"))
+        .add(PathLayer([(0, 2), (10, 10)], id="supply"))
+        .add(FillLayer([(0, 12), (0, 7.2), (4, 7.2)], id="cs"))
+        .add(FillLayer([(0, 5.2), (0, 2), (4, 5.2)], id="ps"))
+        .add(FillLayer([(4, 7.2), (4, 5.2), (5, 6)], id="dwl"))
+        .add(PathLayer([(0, 0), (0, 14)], id="y-axis"))
+        .add(RegionLabelLayer("dwl", "Deadweight loss", id="dwl.label"))
+        .render()
+    )
+    try:
+        ax = result.axes
+        (x0, y0), (x1, y1) = _display(ax, [(0, 5.2), (4, 7.2)])
+        assert not _rect(ax, _text(ax, "dwl.label")).intersects(Rect(x0, y0, x1, y1))
     finally:
         result.close()

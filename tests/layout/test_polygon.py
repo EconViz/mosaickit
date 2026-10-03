@@ -46,3 +46,11 @@ def test_ray_exit_distance():
     diagonal = (1 / math.sqrt(2), 1 / math.sqrt(2))
     assert ray_exit((5, 5), diagonal, SQUARE) == pytest.approx(5 * math.sqrt(2))
     assert ray_exit((50, 50), (1, 0), SQUARE) == 0
+
+
+def test_distance_to_boundary():
+    from mosaickit.layout.geometry import distance_to_boundary
+
+    assert distance_to_boundary((5, 5), SQUARE) == pytest.approx(5)
+    assert distance_to_boundary((15, 5), SQUARE) == pytest.approx(5)
+    assert distance_to_boundary((10, 3), SQUARE) == 0

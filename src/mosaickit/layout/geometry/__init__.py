@@ -1,6 +1,7 @@
 """Pure 2-D geometry in display pixels."""
 
 from mosaickit.layout.geometry.polygon import (
+    distance_to_boundary,
     point_in_polygon,
     polygon_edges,
     ray_exit,
@@ -16,6 +17,7 @@ __all__ = [
     "Polygon",
     "Rect",
     "Segment",
+    "distance_to_boundary",
     "point_in_polygon",
     "polygon_edges",
     "polylabel",

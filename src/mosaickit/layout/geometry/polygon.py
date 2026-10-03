@@ -1,5 +1,7 @@
 """Polygon containment, overlap, and ray tests."""
 
+import math
+
 from mosaickit.layout.geometry.rect import Point, Polygon, Rect, Segment
 from mosaickit.layout.geometry.segments import rect_hits_segment
 
@@ -7,6 +9,19 @@ from mosaickit.layout.geometry.segments import rect_hits_segment
 def polygon_edges(polygon: Polygon) -> tuple[Segment, ...]:
     points = tuple(polygon)
     return tuple((points[i], points[(i + 1) % len(points)]) for i in range(len(points)))
+
+
+def segment_distance(point: Point, a: Point, b: Point) -> float:
+    px, py = point
+    ax, ay = a
+    dx, dy = b[0] - ax, b[1] - ay
+    length2 = dx * dx + dy * dy
+    t = 0.0 if length2 == 0 else max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / length2))
+    return math.hypot(px - (ax + t * dx), py - (ay + t * dy))
+
+
+def distance_to_boundary(point: Point, polygon: Polygon) -> float:
+    return min(segment_distance(point, a, b) for a, b in polygon_edges(polygon))
 
 
 def point_in_polygon(point: Point, polygon: Polygon) -> bool:
