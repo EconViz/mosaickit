@@ -100,3 +100,18 @@ def test_point_placement_is_deterministic():
     obstacles = Obstacles(segments=(((0.0, 120.0), (300.0, 180.0)),))
     first = place_point_label(DOT, SIZE, obstacles, BOUNDS)
     assert all(place_point_label(DOT, SIZE, obstacles, BOUNDS) == first for _ in range(3))
+
+
+def test_a_region_containing_the_point_does_not_block_its_label():
+    # The point sits inside a large shaded region; its label belongs in there too.
+    region = ((0.0, 0.0), (300.0, 0.0), (300.0, 300.0), (0.0, 300.0))
+    placement = place_point_label(DOT, SIZE, Obstacles(polygons=(region,)), BOUNDS)
+    assert placement.violations == 0
+
+
+def test_other_regions_still_block_the_label():
+    # A region beside the point (not containing it) is still avoided.
+    beside = ((DOT.x1 + 1.0, 0.0), (300.0, 0.0), (300.0, 300.0), (DOT.x1 + 1.0, 300.0))
+    placement = place_point_label(DOT, SIZE, Obstacles(polygons=(beside,)), BOUNDS)
+    assert placement.violations == 0
+    assert placement.rect.x1 <= DOT.x1 + 1.0
