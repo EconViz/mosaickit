@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.1 — 2026-10-03
 
 - Point labels may sit inside a filled region that contains their point (for
   example a point inside a shaded area); other regions are still avoided.
