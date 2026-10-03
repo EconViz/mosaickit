@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.3.2 — 2026-10-03
 
 - Point labels treat a region as theirs only when the point is strictly inside
   it; a point on a region's edge (such as a vertex) keeps its label out of the
