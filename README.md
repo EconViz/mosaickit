@@ -120,6 +120,19 @@ right, the y title above.
 
 ## Styles and themes
 
+Set values shared by every role with `defaults`. Individual roles and layer
+styles can still override them:
+
+```python
+paper = Theme(
+    "paper",
+    {
+        "title": StyleBundle(text=TextStyle(family="Noto Serif TC")),
+    },
+    defaults=StyleBundle(text=TextStyle(family="Noto Sans TC")),
+)
+```
+
 ```python
 from mosaickit import Config, Stroke, StyleBundle, Theme, use_config
 

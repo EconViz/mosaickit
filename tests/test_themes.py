@@ -8,6 +8,7 @@ from mosaickit import (
     Fill,
     Stroke,
     StyleBundle,
+    TextStyle,
     Theme,
     ThemeRegistry,
     expand_roles,
@@ -32,6 +33,17 @@ def test_role_resolution_merges_namespace_category_and_defaults():
     assert style.fill == PRIMITIVE_DEFAULT.fill
     assert theme.resolve("new.package", fallback_category="primary").stroke.width == 4
     assert Theme("empty", {}).resolve("other", fallback_category="region") == PRIMITIVE_DEFAULT
+
+
+def test_theme_defaults_override_primitive_text_family_for_every_role():
+    theme = Theme(
+        "traditional-chinese",
+        {"axes.note": StyleBundle(text=TextStyle(size=9))},
+        defaults=StyleBundle(text=TextStyle(family="Noto Sans TC")),
+    )
+
+    assert theme.resolve("axes.note", fallback_category="axes").text.family == "Noto Sans TC"
+    assert theme.resolve("custom.label", fallback_category="text").text.family == "Noto Sans TC"
 
 
 def test_themes_copy_inputs_and_with_roles_merges():

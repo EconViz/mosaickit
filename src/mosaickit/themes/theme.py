@@ -44,8 +44,11 @@ class StyleBundle:
 class Theme:
     name: str
     roles: Mapping[str, StyleBundle]
+    defaults: StyleBundle = StyleBundle()
 
     def __post_init__(self) -> None:
+        if not isinstance(self.defaults, StyleBundle):
+            raise ConfigurationError("Theme.defaults requires a StyleBundle")
         for role, bundle in self.roles.items():
             if not isinstance(role, str) or not all(part for part in role.split(".")):
                 raise ConfigurationError(f"Invalid role: {role!r}")
@@ -54,13 +57,13 @@ class Theme:
         object.__setattr__(self, "roles", MappingProxyType(dict(self.roles)))
 
     def __hash__(self) -> int:
-        return hash((self.name, tuple(sorted(self.roles.items()))))
+        return hash((self.name, tuple(sorted(self.roles.items())), self.defaults))
 
     def with_roles(self, **patch: StyleBundle) -> Theme:
         roles = dict(self.roles)
         for name, value in patch.items():
             roles[name] = value.merged_over(roles.get(name, StyleBundle()))
-        return Theme(self.name, roles)
+        return Theme(self.name, roles, defaults=self.defaults)
 
     def resolve(self, role: str, *, fallback_category: str) -> StyleBundle:
         from mosaickit.themes.resolution import resolve

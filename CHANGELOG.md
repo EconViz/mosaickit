@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- A theme can define a `defaults` `StyleBundle`. These values sit above
+  MosaicKit's primitive defaults and below semantic roles and layer overrides,
+  so applications can set one default font family while retaining per-role and
+  per-layer typography.
+
 ## 0.5.1 — 2026-10-03
 
 - Markers are drawn whole: a marker centred on the plot edge (such as a point on
