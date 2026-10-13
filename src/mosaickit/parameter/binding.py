@@ -6,6 +6,7 @@ from typing import Any
 
 from mosaickit.parameter.expression import Constant, Expression, _BinOp, _wrap
 from mosaickit.parameter.parameter import Parameter
+from mosaickit.styles.base import SparseStyle
 
 
 def free_parameters(value: Any) -> frozenset[Parameter]:
@@ -51,5 +52,7 @@ def bind(value: Any, bindings: Mapping[Parameter, Any]) -> Any:
             for f in fields(value)
             if f.init and f.name != "model"
         }
+        if isinstance(value, SparseStyle):
+            return value._replace(**changes)
         return replace(value, **changes)
     return value

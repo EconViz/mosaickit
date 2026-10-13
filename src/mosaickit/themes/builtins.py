@@ -1,7 +1,13 @@
 from mosaickit.styles import DashStyle, Fill, LegendStyle, Marker, Stroke, TextStyle
+from mosaickit.styles.text import _legacy_font_values
 from mosaickit.themes.theme import StyleBundle, Theme
 
 # Colors are palette names, resolved against the active palette at render time.
+with _legacy_font_values():
+    _DEFAULT_TEXT = TextStyle(
+        color="grey-900", size=12, family="DejaVu Sans", weight="normal", opacity=1, rotation=0
+    )
+
 PRIMITIVE_DEFAULT = StyleBundle(
     stroke=Stroke(color="grey-800", width=1.5, dash=DashStyle.SOLID, opacity=1),
     fill=Fill(color="grey-200", opacity=0.3, hatch=""),
@@ -13,9 +19,7 @@ PRIMITIVE_DEFAULT = StyleBundle(
         edge_color="grey-800",
         edge_width=0,
     ),
-    text=TextStyle(
-        color="grey-900", size=12, family="DejaVu Sans", weight="normal", opacity=1, rotation=0
-    ),
+    text=_DEFAULT_TEXT,
     legend=LegendStyle(visible=True, location="best", frame=False, size=10),
 )
 

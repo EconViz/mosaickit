@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+import warnings
 from collections.abc import Iterator
 from dataclasses import dataclass
 from pathlib import Path
@@ -10,6 +12,11 @@ from mosaickit.errors import ConfigurationError, RenderError
 from mosaickit.parameter import Parameter, ParameterValues
 from mosaickit.rendering import RenderCache, Renderer
 from mosaickit.scene import Scene
+
+_DEPRECATION_MESSAGE = (
+    "MosaicKit Animation and Animation.sweep() are deprecated; use KineticKit for animation. "
+    "These compatibility APIs may be removed in the next release."
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -27,10 +34,24 @@ class Animation:
             raise ConfigurationError("Animation requires at least one value")
         object.__setattr__(self, "values", values)
         object.__setattr__(self, "template", self.template.copy())
+        warnings.warn(
+            _DEPRECATION_MESSAGE,
+            DeprecationWarning,
+            stacklevel=3,  # Skip __post_init__ and the generated dataclass __init__.
+        )
 
     @staticmethod
     def sweep(canvas: Canvas, values: ParameterValues, *, fps: int = 30) -> Animation:
-        return Animation(canvas, values.parameter, values.values, fps)
+        # Only suppress this constructor's warning, then attribute it to the sweep caller.
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                message=f"^{re.escape(_DEPRECATION_MESSAGE)}$",
+                category=DeprecationWarning,
+            )
+            animation = Animation(canvas, values.parameter, values.values, fps)
+        warnings.warn(_DEPRECATION_MESSAGE, DeprecationWarning, stacklevel=2)
+        return animation
 
     def frames(self) -> Iterator[Scene]:
         for value in self.values:

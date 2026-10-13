@@ -2,10 +2,22 @@
 
 ## Unreleased
 
+- Require `glyphkit>=1.0.0b2,<2` for font processing. `TextLayer` and
+  `TextStyle` remain public; color, size, opacity, and rotation remain supported.
+- Deprecate `TextStyle.family` and `TextStyle.weight`: explicitly supplying
+  either emits one caller-facing `DeprecationWarning` directing users to
+  GlyphKit. Legacy font values and Matplotlib output remain unchanged, and
+  internal theme setup, style copying, and rendering do not repeat warnings.
+- Deprecate `Animation` and `Animation.sweep()` with one construction-time
+  warning directing users to KineticKit. Both public import paths, frames,
+  GIF/MP4 saving, and the existing playback helper continue to work. KineticKit
+  is not a MosaicKit dependency. The next release may remove these animation
+  APIs/helpers and the legacy family/weight font path; see the README migration
+  guidance before upgrading.
 - A theme can define a `defaults` `StyleBundle`. These values sit above
   MosaicKit's primitive defaults and below semantic roles and layer overrides,
-  so applications can set one default font family while retaining per-role and
-  per-layer typography.
+  so applications can set shared text size and color while retaining per-role
+  and per-layer typography.
 
 ## 0.5.1 — 2026-10-03
 
