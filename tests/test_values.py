@@ -1,4 +1,6 @@
+import warnings
 from dataclasses import FrozenInstanceError, fields
+from pathlib import Path
 
 import pytest
 
@@ -120,3 +122,50 @@ def test_style_opacity_validation(style, opacity):
 def test_styles_do_not_cross_merge():
     with pytest.raises(TypeError):
         Marker(size=3).merged_over(TextStyle(size=12))
+
+
+@pytest.mark.parametrize(
+    "font_fields",
+    [{"family": "serif"}, {"weight": "bold"}, {"family": "serif", "weight": "bold"}],
+)
+def test_legacy_font_selection_warns_once_at_caller_and_preserves_fields(font_fields):
+    with pytest.warns(DeprecationWarning, match="GlyphKit") as caught:
+        style = TextStyle(**font_fields)
+    assert len(caught) == 1
+    assert caught[0].category is DeprecationWarning
+    assert Path(caught[0].filename) == Path(__file__)
+    for name, value in font_fields.items():
+        assert getattr(style, name) == value
+
+
+@pytest.mark.parametrize(
+    "values",
+    [
+        {},
+        {"family": None, "weight": None},
+        {"color": "#123456", "size": 12, "opacity": 0.5, "rotation": 45},
+    ],
+)
+def test_default_and_non_font_text_styles_remain_warning_free(values):
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        TextStyle(**values)
+    assert not caught
+
+
+def test_internal_text_style_copies_preserve_fonts_without_repeating_warning():
+    from mosaickit import Canvas, Parameter, TextLayer
+    from mosaickit.rendering.plan import _build_render_plan
+
+    with pytest.warns(DeprecationWarning, match="GlyphKit"):
+        style = TextStyle(color="blue", family="DejaVu Serif", weight="bold")
+    p = Parameter("x")
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        merged = TextStyle(size=14).merged_over(style)
+        canvas = Canvas().add(TextLayer((p, 5), "text", style=merged)).bind(p, 2)
+        plan = _build_render_plan(canvas.snapshot(), canvas._context())
+    assert not caught
+    assert plan.layers[0].style.text.family == "DejaVu Serif"
+    assert plan.layers[0].style.text.weight == "bold"
+    assert plan.layers[0].style.text.size == 14

@@ -42,8 +42,8 @@ def _bind_palette(style: StyleBundle, palette: Palette, role: str) -> StyleBundl
                     f"has no color {color!r}"
                 )
         if named:
-            updates[slot.name] = replace(
-                value, **{name: palette[color] for name, color in named.items()}
+            updates[slot.name] = value._replace(
+                **{name: palette[color] for name, color in named.items()}
             )
     return replace(style, **updates) if updates else style
 

@@ -27,6 +27,7 @@ uv add mosaickit
 ```
 
 A plain `pip install mosaickit` also works. MosaicKit supports Python 3.10–3.13.
+GlyphKit (`>=1.0.0b2,<2`) is installed as a required dependency for font processing.
 
 ## Python API
 
@@ -122,6 +123,22 @@ right, the y title above.
 
 Set values shared by every role with `defaults`. Individual roles and layer
 styles can still override them:
+
+```python
+from mosaickit import StyleBundle, TextStyle, Theme
+
+paper = Theme(
+    "paper",
+    {"title": StyleBundle(text=TextStyle(size=16, color="grey-900"))},
+    defaults=StyleBundle(text=TextStyle(size=12)),
+)
+```
+
+`TextLayer` and `TextStyle` remain public. Color, size, opacity, and rotation
+continue to be supported. Use GlyphKit for new font selection and processing;
+MosaicKit's `TextStyle.family` and `TextStyle.weight` fields are deprecated.
+The following legacy example still renders through Matplotlib in this release,
+but each style supplying a font field emits one `DeprecationWarning`:
 
 ```python
 paper = Theme(
@@ -230,6 +247,9 @@ Use `Config.load(path)` to validate it. Runtime defaults are isolated with
 
 ## Grids, parameters, and animation
 
+Grid sweeps and parameter binding remain supported. The `Animation.sweep()`
+line below is a deprecated compatibility example:
+
 ```python
 from mosaickit import Animation, Canvas, CanvasGrid, Parameter, TextLayer
 
@@ -238,7 +258,7 @@ template = Canvas().add(TextLayer((position, 5), "moving"))
 values = position.values([1.0, 3.0, 5.0])
 
 CanvasGrid.sweep(template, values, cols=3).save("sweep.svg")
-Animation.sweep(template, values, fps=2).save("sweep.gif")
+Animation.sweep(template, values, fps=2).save("sweep.gif")  # Deprecated: use KineticKit.
 ```
 
 `CanvasGrid` accepts flat canvases, nested rows, `None` cells, and
@@ -248,6 +268,22 @@ explicit `rows` and `cols` may leave trailing cells empty.
 Parameters and expressions support arithmetic, ordered comparisons, partial
 binding, and stable structural equality. `Animation.frames()` yields
 backend-neutral scenes. GIF output uses Pillow; MP4 output requires ffmpeg.
+
+### Font and animation migration
+
+Use GlyphKit for font processing and KineticKit for new animation work.
+Install KineticKit separately when needed; MosaicKit does not depend on it.
+This transition release retains the Matplotlib font path and exports
+`Animation` from both `mosaickit` and `mosaickit.canvas`. Direct construction
+and `Animation.sweep()` each emit one `DeprecationWarning` at the caller.
+Frame iteration, GIF/MP4 saving, and the existing Matplotlib playback helper
+continue to work. Internal style copying and rendering do not repeat warnings.
+
+The next release may remove the legacy family/weight font-selection path and
+MosaicKit's animation APIs and renderer helpers. Migrate those uses before
+upgrading; retain `TextLayer`, non-font `TextStyle` fields, `CanvasGrid`, and
+parameter binding for static scene composition. No new cross-library scene
+adapter is introduced in this release.
 
 ## Rendering
 
@@ -273,9 +309,11 @@ emit one warning per model type and cache.
 ## Scope
 
 MosaicKit owns domain-neutral scene composition, styles, themes, parameter
-binding, grid layout, animation frames, renderer contracts, and static/animated
-output. Domain semantics belong to the packages that build on it. Mathematical curve construction and native TikZ path generation
-belong to geometry packages such as BezierKit.
+binding, grid layout, renderer contracts, and static output. GlyphKit owns font
+processing; KineticKit owns animation. MosaicKit retains deprecated font and
+animation compatibility paths for this release. Domain semantics belong to
+the packages that build on it. Mathematical curve construction and native TikZ
+path generation belong to geometry packages such as BezierKit.
 
 ## Development
 

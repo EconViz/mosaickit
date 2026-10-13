@@ -22,8 +22,10 @@ def test_root_import_does_not_load_matplotlib_or_domain_packages():
         [
             sys.executable,
             "-c",
-            "import sys; import mosaickit; "
+            "import sys, warnings; warnings.simplefilter('error', DeprecationWarning); "
+            "import mosaickit; "
             "assert 'matplotlib' not in sys.modules; "
+            "assert 'kinetickit' not in sys.modules; "
             "assert 'econ_viz' not in sys.modules",
         ],
         capture_output=True,
@@ -35,6 +37,15 @@ def test_root_import_does_not_load_matplotlib_or_domain_packages():
 def test_distribution_has_no_bezierkit_dependency():
     dependencies = requires("mosaickit") or []
     assert not any(requirement.lower().startswith("bezierkit") for requirement in dependencies)
+
+
+def test_distribution_requires_glyphkit_without_kinetickit():
+    dependencies = requires("mosaickit") or []
+    glyphkit = [item for item in dependencies if item.lower().startswith("glyphkit")]
+    # Build backends may normalize the ordering of version specifiers.
+    assert len(glyphkit) == 1
+    assert glyphkit[0] in ("glyphkit>=1.0.0b2,<2", "glyphkit<2,>=1.0.0b2")
+    assert not any(item.lower().startswith("kinetickit") for item in dependencies)
 
 
 def test_tikz_is_not_a_builtin_renderer(tmp_path):

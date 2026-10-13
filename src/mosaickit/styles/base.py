@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import fields, is_dataclass, replace
-from typing import TypeVar
+from typing import Any, TypeVar
 
 from mosaickit.colors import Color
 from mosaickit.errors import ConfigurationError
@@ -19,7 +19,13 @@ class SparseStyle:
         if not is_dataclass(self) or not is_dataclass(base):
             raise TypeError("SparseStyle requires frozen dataclasses")
         updates = {f.name: v for f in fields(self) if (v := getattr(self, f.name)) is not None}
-        return replace(base, **updates)
+        return base._replace(**updates)
+
+    def _replace(self: S, **changes: Any) -> S:
+        """Copy internal style values without reintroducing construction side effects."""
+        if not is_dataclass(self):
+            raise TypeError("SparseStyle requires frozen dataclasses")
+        return replace(self, **changes)
 
 
 def _coerce_color(value: Color | str | None) -> Color | str | None:
