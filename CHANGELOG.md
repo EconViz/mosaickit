@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.6.0 — 2026-10-19
 
 - Add scene-owned TikZ export for `Canvas` and `CanvasGrid`, including a path
   serializer registry that geometry packages can extend without becoming a
