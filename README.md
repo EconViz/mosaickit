@@ -90,9 +90,12 @@ The scene graph is deliberately small:
 layers. `quadrant_axes()`, `crosshair_axes()`, and `box_frame()` cover common
 layouts. `CanvasSpec` owns ranges, physical size, DPI, labels, and title.
 
-Curve construction and TikZ export intentionally live outside MosaicKit. Domain
-packages can call a geometry package such as BezierKit directly, then pass the
-resulting coordinates or renderer-specific output to their own export pipeline.
+Saving to a `.tex` path writes the scene as TikZ, for a `Canvas` or a
+`CanvasGrid`; pass `standalone=False` to get just the `tikzpicture`. Paths are
+written as polylines unless a geometry package registers a serializer for its
+curve type with `register_path_serializer`, which lets it emit native Bézier
+segments without MosaicKit depending on it. Curve construction itself stays
+outside MosaicKit.
 
 ## Axis marks, notes, and braces
 
@@ -313,7 +316,8 @@ binding, grid layout, renderer contracts, and static output. GlyphKit owns font
 processing; KineticKit owns animation. MosaicKit retains deprecated font and
 animation compatibility paths for this release. Domain semantics belong to
 the packages that build on it. Mathematical curve construction and native TikZ
-path generation belong to geometry packages such as BezierKit.
+Bézier segments belong to geometry packages such as BezierKit, which plug into
+the scene-level TikZ export through a path serializer.
 
 ## Development
 
