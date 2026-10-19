@@ -58,7 +58,7 @@ from mosaickit.styles import (
 )
 from mosaickit.themes import RolePack, StyleBundle, Theme, ThemeRegistry, expand_roles
 
-__version__ = "0.6.0"
+__version__ = "0.7.0"
 __all__ = [
     "Animation",
     "ArrowLayer",

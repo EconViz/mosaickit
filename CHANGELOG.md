@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.7.0 — 2026-10-19
 
 - Add `MathFont` and `Config(math_font=...)` (TOML: `[math] font = "..."`) to set
   math text in a caller-chosen OpenType math font through GlyphKit. When set, labels
