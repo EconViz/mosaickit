@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Add `MathFont` and `Config(math_font=...)` (TOML: `[math] font = "..."`) to set
+  math text in a caller-chosen OpenType math font through GlyphKit. When set, labels
+  that are a single `$...$` span or `math=True` text (`TextLayer`, `PointLabelLayer`,
+  `RegionLabelLayer`, axis marks and notes, brace labels) are laid out from the font's
+  `MATH` table and drawn from glyph outlines, with italic letters and spaced operators;
+  placement measures the same layout. This replaces wrapping saves in
+  `matplotlib.rc_context({"mathtext.fontset": ...})`. With no `MathFont`, rendering is
+  unchanged and still uses mathtext. A font without a `MATH` table raises
+  `ConfigurationError`; a formula GlyphKit cannot parse raises `RenderError`.
+
 ## 0.6.0 — 2026-10-19
 
 - Add scene-owned TikZ export for `Canvas` and `CanvasGrid`, including a path

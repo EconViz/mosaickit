@@ -14,6 +14,7 @@ from typing import Any
 from mosaickit.canvas_spec import CanvasSpec
 from mosaickit.colors import Color
 from mosaickit.errors import ConfigurationError
+from mosaickit.math_font import MathFont
 from mosaickit.palette import DEFAULT_PALETTE, Palette
 from mosaickit.styles import Fill, LegendStyle, Marker, Stroke, TextStyle
 from mosaickit.themes import StyleBundle, Theme, default
@@ -31,17 +32,26 @@ class Config:
     renderer: Any = "matplotlib"
     role_overrides: Mapping[str, StyleBundle] = field(default_factory=dict)
     palette: Palette = DEFAULT_PALETTE
+    math_font: MathFont | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.palette, Palette):
             raise ConfigurationError("Config.palette must be a Palette")
+        if self.math_font is not None and not isinstance(self.math_font, MathFont):
+            raise ConfigurationError("Config.math_font must be a MathFont or None")
         checked = Theme("config", self.role_overrides)
         object.__setattr__(self, "role_overrides", MappingProxyType(dict(checked.roles)))
 
     @classmethod
-    def from_dict(cls, data: Mapping[str, Any], *, source: str = "<dict>") -> Config:
+    def from_dict(
+        cls, data: Mapping[str, Any], *, source: str = "<dict>", base_dir: Path | None = None
+    ) -> Config:
+        """Build a configuration from parsed TOML data.
+
+        A relative ``[math] font`` path is resolved against ``base_dir`` when given.
+        """
         try:
-            unknown = set(data) - {"theme", "canvas", "renderer", "styles", "palette"}
+            unknown = set(data) - {"theme", "canvas", "renderer", "styles", "palette", "math"}
             if unknown:
                 raise ConfigurationError(f"Unknown configuration keys: {sorted(unknown)}")
             if data.get("theme", "default") != "default":
@@ -78,6 +88,7 @@ class Config:
                 renderer=data.get("renderer", "matplotlib"),
                 role_overrides=styles,
                 palette=palette,
+                math_font=_math_font(data.get("math", {}), base_dir),
             )
         except (TypeError, ValueError, AttributeError) as exc:
             raise ConfigurationError(f"{source}: {exc}") from exc
@@ -87,7 +98,7 @@ class Config:
         path = Path(path)
         try:
             with path.open("rb") as stream:
-                return cls.from_dict(tomllib.load(stream), source=str(path))
+                return cls.from_dict(tomllib.load(stream), source=str(path), base_dir=path.parent)
         except (OSError, tomllib.TOMLDecodeError) as exc:
             raise ConfigurationError(f"{path}: {exc}") from exc
 
@@ -110,6 +121,29 @@ def _palette(section: Any) -> Palette:
         except ConfigurationError as exc:
             raise ConfigurationError(f"palette.{name}: {exc}") from exc
     return Palette("config", colors)
+
+
+def _math_font(section: Any, base_dir: Path | None) -> MathFont | None:
+    """Read a TOML ``[math]`` table: ``font`` (a file path) and optional ``italic``."""
+    if not isinstance(section, Mapping):
+        raise ConfigurationError("math must be a table with a font path")
+    unknown = set(section) - {"font", "italic"}
+    if unknown:
+        raise ConfigurationError(f"math: unknown keys {sorted(unknown)}")
+    if "font" not in section:
+        if section:
+            raise ConfigurationError("math.font is required")
+        return None
+    font = section["font"]
+    if not isinstance(font, str) or not font:
+        raise ConfigurationError("math.font must be a file path")
+    path = Path(font).expanduser()
+    if base_dir is not None and not path.is_absolute():
+        path = base_dir / path
+    try:
+        return MathFont(path, **({"italic": section["italic"]} if "italic" in section else {}))
+    except ConfigurationError as exc:
+        raise ConfigurationError(f"math: {exc}") from exc
 
 
 def _check_color_names(values: Any, palette: Palette, where: str) -> None:
