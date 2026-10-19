@@ -80,6 +80,7 @@ class Canvas:
             cache if cache is not None else RenderCache(),
             self._bindings,
             palette=self.config.palette,
+            math_font=self.config.math_font,
         )
 
     def _renderer(self, renderer: Renderer | str | None = None) -> Renderer:

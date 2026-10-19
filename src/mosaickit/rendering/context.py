@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass, field
 
 from mosaickit.canvas_spec import CanvasSpec
+from mosaickit.math_font import MathFont
 from mosaickit.palette import DEFAULT_PALETTE, Palette
 from mosaickit.rendering.cache import RenderCache
 from mosaickit.themes import StyleBundle, Theme
@@ -17,3 +18,4 @@ class _RenderContext:
     bindings: tuple = ()
     tolerance: float = 1e-6
     palette: Palette = DEFAULT_PALETTE
+    math_font: MathFont | None = None

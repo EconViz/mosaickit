@@ -248,6 +248,48 @@ file and key when the file is loaded.
 Use `Config.load(path)` to validate it. Runtime defaults are isolated with
 `contextvars`, while explicit constructor arguments always take precedence.
 
+## Math fonts
+
+By default math text (`TextLayer(math=True)`, axis marks, and any label written as
+`$...$`) goes through Matplotlib's mathtext, so letters come out in DejaVu Sans. To
+set math in a font of your choice, give the configuration a `MathFont`:
+
+```python
+from mosaickit import Canvas, Config, MathFont, TextLayer, TextStyle, use_config
+
+config = Config(math_font=MathFont("fonts/STIXTwoMath.otf"))
+with use_config(config):  # or Canvas(config=config)
+    canvas = Canvas().add(TextLayer((4, 3), r"u(x_1, x_2) = x_1^\alpha x_2^{1-\alpha}", math=True))
+canvas.save("diagram.svg")
+```
+
+No `rc_context` is needed, and Matplotlib's global settings are untouched. The same
+setting works in TOML (a relative path is read from the file's directory):
+
+```toml
+[math]
+font = "fonts/STIXTwoMath.otf"
+italic = true   # default: letters in the font's math italic alphabet
+```
+
+The size and color come from the label's `TextStyle`, like any other text.
+
+- **Fonts are explicit.** `MathFont` takes a path to an OpenType font with a `MATH`
+  table, such as STIX Two Math, Libertinus Math, or Fira Math. MosaicKit and GlyphKit
+  never search the system for fonts, and GlyphKit's `FontSource` has no installed-name
+  lookup; pass the file. A font without a `MATH` table, or a file that is not
+  a font, raises `ConfigurationError` when the canvas renders.
+- **Which labels.** A label whose whole text is one `$...$` span (or a `math=True` text)
+  is laid out by GlyphKit and drawn from its glyph outlines, in `TextLayer`,
+  `PointLabelLayer`, `RegionLabelLayer`, `AxisMarkLayer`, `AxisNoteLayer`, and brace
+  labels. Placement measures the same layout it draws, so labels keep avoiding each
+  other. Text that mixes plain words with `$...$`, legends, and the title keep using
+  Matplotlib, as does everything when no `MathFont` is set.
+- **Supported math.** GlyphKit parses a TeX-like subset: scripts, `\frac`, `\sqrt`, Greek
+  letters, accents, `\left...\right`, and big operators (see GlyphKit's math grammar).
+  Anything else, such as `\mathrm` or `\cdot`, raises `RenderError` naming the formula
+  instead of silently changing fonts. TikZ export is unchanged.
+
 ## Grids, parameters, and animation
 
 Grid sweeps and parameter binding remain supported. The `Animation.sweep()`

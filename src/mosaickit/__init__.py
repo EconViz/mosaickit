@@ -12,6 +12,7 @@ from mosaickit.errors import (
     RenderError,
 )
 from mosaickit.interval import Interval
+from mosaickit.math_font import MathFont
 from mosaickit.palette import DEFAULT_PALETTE, Palette
 from mosaickit.parameter import Constant, Expression, Parameter, ParameterValues
 from mosaickit.rendering import (
@@ -93,6 +94,7 @@ __all__ = [
     "LegendStyle",
     "Marker",
     "MarkerLayer",
+    "MathFont",
     "Parameter",
     "Palette",
     "ParameterValues",
