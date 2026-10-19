@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add scene-owned TikZ export for `Canvas` and `CanvasGrid`, including a path
+  serializer registry that geometry packages can extend without becoming a
+  MosaicKit dependency.
 - Require `glyphkit>=1.0.0b2,<2` for font processing. `TextLayer` and
   `TextStyle` remain public; color, size, opacity, and rotation remain supported.
 - Deprecate `TextStyle.family` and `TextStyle.weight`: explicitly supplying

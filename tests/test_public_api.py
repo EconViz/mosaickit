@@ -48,9 +48,9 @@ def test_distribution_requires_glyphkit_without_kinetickit():
     assert not any(item.lower().startswith("kinetickit") for item in dependencies)
 
 
-def test_tikz_is_not_a_builtin_renderer(tmp_path):
+def test_tikz_is_an_export_format_but_not_a_builtin_renderer(tmp_path):
     with pytest.raises(RenderError, match="Unknown renderer"):
         RendererRegistry().get("tikz")
-    for suffix in (".tex", ".pgf"):
-        with pytest.raises(RenderError, match="Unsupported output format"):
-            Canvas().save(tmp_path / f"figure{suffix}")
+    assert Canvas().save(tmp_path / "figure.tex") == [tmp_path / "figure.tex"]
+    with pytest.raises(RenderError, match="Unsupported output format"):
+        Canvas().save(tmp_path / "figure.pgf")

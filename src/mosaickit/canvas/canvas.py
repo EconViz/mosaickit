@@ -100,6 +100,16 @@ class Canvas:
         **options: Any,
     ) -> list[Path]:
         target = Path(target)
+        if target.suffix.lower() == ".tex":
+            from mosaickit.rendering.tikz import canvas_to_tikz
+
+            standalone = bool(options.pop("standalone", options.pop("tikz_standalone", True)))
+            if options:
+                names = ", ".join(sorted(options))
+                raise TypeError(f"unsupported TikZ export options: {names}")
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(canvas_to_tikz(self, standalone=standalone), encoding="utf-8")
+            return [target]
         if target.suffix.lower() not in {".png", ".pdf", ".svg"}:
             raise RenderError(f"Unsupported output format: {target.suffix!r}")
         selected = self._renderer(renderer)
