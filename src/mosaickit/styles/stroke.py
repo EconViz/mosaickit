@@ -14,6 +14,11 @@ class DashStyle(str, Enum):
     DOTTED = "dotted"
     DASHDOT = "dashdot"
 
+    @classmethod
+    def _missing_(cls, value):
+        """Also accept the conventional short forms: ``-``, ``--``, ``:``, ``-.``."""
+        return {"-": cls.SOLID, "--": cls.DASHED, ":": cls.DOTTED, "-.": cls.DASHDOT}.get(value)
+
 
 @dataclass(frozen=True, slots=True)
 class Stroke(SparseStyle):

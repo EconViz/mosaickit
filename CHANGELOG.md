@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- `DashStyle` accepts the short forms `-`, `--`, `:` and `-.`; `ArrowStyle` accepts
+  the Matplotlib spellings `->` (open) and `-|>` (triangle) and gains `SIMPLE` as
+  another name for `OPEN`. A caller that exposes its own line and arrow style enums
+  can now use these two directly.
+
 ## 0.7.0 — 2026-10-19
 
 - Add `MathFont` and `Config(math_font=...)` (TOML: `[math] font = "..."`) to set
