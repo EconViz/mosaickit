@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.8.0 — 2026-10-20
 
 - `DashStyle` accepts the short forms `-`, `--`, `:` and `-.`; `ArrowStyle` accepts
   the Matplotlib spellings `->` (open) and `-|>` (triangle) and gains `SIMPLE` as
