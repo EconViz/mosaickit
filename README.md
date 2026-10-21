@@ -330,7 +330,9 @@ machine and nothing searches the system for fonts.
 from mosaickit import Canvas, Config, TextFonts, TextLayer, TextStyle
 
 canvas = Canvas()
-canvas.add(TextLayer((5, 5), "Total revenue", style=TextStyle(size=12, font="serif", weight="bold")))
+canvas.add(
+    TextLayer((5, 5), "Total revenue", style=TextStyle(size=12, font="serif", weight="bold"))
+)
 ```
 
 To use other fonts, pass the files. Each slot you give replaces that generic font; the others keep
