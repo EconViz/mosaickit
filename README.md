@@ -290,6 +290,36 @@ The size and color come from the label's `TextStyle`, like any other text.
   Anything else, such as `\mathrm` or `\cdot`, raises `RenderError` naming the formula
   instead of silently changing fonts. TikZ export is unchanged.
 
+## Text fonts
+
+By default text is drawn by Matplotlib with its default face. To choose the fonts, and to set
+bold, list the font files; GlyphKit selects and lays out the faces.
+
+```python
+from mosaickit import Canvas, Config, TextFonts, TextLayer, TextStyle
+
+fonts = TextFonts(("fonts/SourceSans3-Regular.ttf", "fonts/SourceSans3-Bold.ttf"))
+canvas = Canvas(config=Config(fonts=fonts))
+canvas.add(TextLayer((5, 5), "Total revenue", style=TextStyle(size=12, weight="bold")))
+```
+
+```toml
+[fonts]
+files = ["fonts/SourceSans3-Regular.ttf", "fonts/SourceSans3-Bold.ttf"]
+```
+
+- **Weight.** `TextStyle.weight` is `"normal"` (400), `"bold"` (700) or an integer from 1 to 1000.
+  GlyphKit uses the nearest listed face, or sets the `wght` axis of a variable font. It never makes
+  a bold face up: list one, or the nearest face is used.
+- **Fonts are explicit.** Paths only; MosaicKit never searches the system. A file that is not a
+  font raises `ConfigurationError` when the canvas renders. The order of the files is the order a
+  face is tried for a character the first lacks, and a character no listed face has raises
+  `RenderError` naming the text.
+- **Which text.** Strings without `$...$` in `TextLayer`, labels, axis marks and notes, and brace
+  labels. Math keeps using the math font, text mixed with math, legends and the title keep using
+  Matplotlib, and so does everything when no `TextFonts` is set.
+- **`TextStyle.family` is deprecated.** Choose fonts with `TextFonts`; `weight` is not deprecated.
+
 ## Grids, parameters, and animation
 
 Grid sweeps and parameter binding remain supported. The `Animation.sweep()`
@@ -318,7 +348,7 @@ backend-neutral scenes. GIF output uses Pillow; MP4 output requires ffmpeg.
 
 Use GlyphKit for font processing and KineticKit for new animation work.
 Install KineticKit separately when needed; MosaicKit does not depend on it.
-This transition release retains the Matplotlib font path and exports
+This transition release retains the Matplotlib font path (`TextStyle.family`) and exports
 `Animation` from both `mosaickit` and `mosaickit.canvas`. Direct construction
 and `Animation.sweep()` each emit one `DeprecationWarning` at the caller.
 Frame iteration, GIF/MP4 saving, and the existing Matplotlib playback helper

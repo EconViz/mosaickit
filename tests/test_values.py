@@ -125,10 +125,9 @@ def test_styles_do_not_cross_merge():
 
 
 @pytest.mark.parametrize(
-    "font_fields",
-    [{"family": "serif"}, {"weight": "bold"}, {"family": "serif", "weight": "bold"}],
+    "font_fields", [{"family": "serif"}, {"family": "serif", "weight": "bold"}]
 )
-def test_legacy_font_selection_warns_once_at_caller_and_preserves_fields(font_fields):
+def test_legacy_family_warns_once_at_caller_and_preserves_fields(font_fields):
     with pytest.warns(DeprecationWarning, match="GlyphKit") as caught:
         style = TextStyle(**font_fields)
     assert len(caught) == 1
@@ -138,11 +137,26 @@ def test_legacy_font_selection_warns_once_at_caller_and_preserves_fields(font_fi
         assert getattr(style, name) == value
 
 
+@pytest.mark.parametrize("weight", ["normal", "bold", 1, 400, 700, 1000])
+def test_weight_is_not_deprecated_and_accepts_glyphkit_values(weight):
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter("always")
+        assert TextStyle(weight=weight).weight == weight
+    assert not caught
+
+
+@pytest.mark.parametrize("weight", ["heavy", "", 0, 1001, 4.5, True, -1])
+def test_weight_rejects_values_glyphkit_cannot_resolve(weight):
+    with pytest.raises(ConfigurationError, match="weight"):
+        TextStyle(weight=weight)
+
+
 @pytest.mark.parametrize(
     "values",
     [
         {},
         {"family": None, "weight": None},
+        {"weight": "bold"},
         {"color": "#123456", "size": 12, "opacity": 0.5, "rotation": 45},
     ],
 )

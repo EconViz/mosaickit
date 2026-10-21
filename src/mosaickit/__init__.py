@@ -56,6 +56,7 @@ from mosaickit.styles import (
     Stroke,
     TextStyle,
 )
+from mosaickit.text_fonts import TextFonts
 from mosaickit.themes import RolePack, StyleBundle, Theme, ThemeRegistry, expand_roles
 
 __version__ = "0.8.0"
@@ -95,6 +96,7 @@ __all__ = [
     "Marker",
     "MarkerLayer",
     "MathFont",
+    "TextFonts",
     "Parameter",
     "Palette",
     "ParameterValues",

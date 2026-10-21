@@ -2,7 +2,8 @@ from typing import Any
 
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
-from mosaickit.rendering.matplotlib.math_text import draw_math, typeset
+from mosaickit.rendering.matplotlib.math_text import draw_math
+from mosaickit.rendering.matplotlib.typesetting import typeset
 from mosaickit.scene.text import TEXT_ANCHORS
 
 
@@ -12,7 +13,7 @@ def build(ax: Any, resolved: Any) -> Any:
     if layer.math and not (text.startswith("$") and text.endswith("$")):
         text = f"${text}$"
     horizontal, vertical = TEXT_ANCHORS[layer.anchor]
-    layout = typeset(text, style.size)
+    layout = typeset(text, style)
     if layout is not None:
         return draw_math(
             ax,

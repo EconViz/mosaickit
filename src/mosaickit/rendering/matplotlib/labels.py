@@ -9,7 +9,8 @@ from mosaickit.errors import LayoutWarning
 from mosaickit.layout.geometry import Point, Segment
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
-from mosaickit.rendering.matplotlib.math_text import draw_math, typeset
+from mosaickit.rendering.matplotlib.math_text import draw_math
+from mosaickit.rendering.matplotlib.typesetting import typeset
 
 
 def draw_label(
@@ -24,7 +25,7 @@ def draw_label(
 ) -> Any:
     """Text aligned at the display point ``at``; returns the Matplotlib text."""
     x, y = ax.transData.inverted().transform(at)
-    layout = typeset(text, style.size)
+    layout = typeset(text, style)
     if layout is not None:
         return draw_math(
             ax,

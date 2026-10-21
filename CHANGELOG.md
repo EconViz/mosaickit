@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Add `TextFonts` and `Config(fonts=...)` (TOML: `[fonts] files = [...]`) to set plain text in
+  caller-chosen fonts through GlyphKit, the way `MathFont` does for math. Weight is chosen by
+  GlyphKit from the listed faces; without `TextFonts` text is unchanged.
+- `TextStyle.weight` is no longer deprecated. It takes `"normal"`, `"bold"` or an integer from 1 to
+  1000, and other values raise `ConfigurationError`. Only `TextStyle.family` stays deprecated.
+
 ## 0.8.0 — 2026-10-20
 
 - `DashStyle` accepts the short forms `-`, `--`, `:` and `-.`; `ArrowStyle` accepts

@@ -18,13 +18,13 @@ from mosaickit.rendering.matplotlib import (
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
 from mosaickit.rendering.matplotlib.grid_links import draw_grid_links
-from mosaickit.rendering.matplotlib.math_text import math_typesetting
 from mosaickit.rendering.matplotlib.registry import (
     PassContext,
     builder_for,
     deferred_kind,
     passes,
 )
+from mosaickit.rendering.matplotlib.typesetting import typesetting
 from mosaickit.rendering.plan import _build_render_plan, _resolve_role
 from mosaickit.rendering.protocol import SaveOptions
 
@@ -83,7 +83,7 @@ class MatplotlibRenderer:
     name = "matplotlib"
 
     def _draw(self, ax, scene, context) -> None:
-        with math_typesetting(context.math_font):
+        with typesetting(context.math_font, context.text_fonts):
             self._draw_scene(ax, scene, context)
 
     def _draw_scene(self, ax, scene, context) -> None:

@@ -5,6 +5,7 @@ from mosaickit.canvas_spec import CanvasSpec
 from mosaickit.math_font import MathFont
 from mosaickit.palette import DEFAULT_PALETTE, Palette
 from mosaickit.rendering.cache import RenderCache
+from mosaickit.text_fonts import TextFonts
 from mosaickit.themes import StyleBundle, Theme
 
 
@@ -19,3 +20,4 @@ class _RenderContext:
     tolerance: float = 1e-6
     palette: Palette = DEFAULT_PALETTE
     math_font: MathFont | None = None
+    text_fonts: TextFonts | None = None
