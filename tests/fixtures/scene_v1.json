@@ -1,0 +1,441 @@
+{
+  "format": "mosaickit.scene",
+  "version": 1,
+  "metadata": {
+    "title": "Every layer"
+  },
+  "layers": [
+    {
+      "$": "PathLayer",
+      "id": "axes.x",
+      "role": "axes",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "path": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          10.0,
+          0.0
+        ]
+      ],
+      "stroke": {
+        "$": "Stroke",
+        "color": null,
+        "width": null,
+        "dash": null,
+        "arrow": "triangle",
+        "opacity": null
+      },
+      "arrow_placement": "end",
+      "clip": false
+    },
+    {
+      "$": "PathLayer",
+      "id": "axes.y",
+      "role": "axes",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "path": [
+        [
+          0.0,
+          0.0
+        ],
+        [
+          0.0,
+          10.0
+        ]
+      ],
+      "stroke": {
+        "$": "Stroke",
+        "color": null,
+        "width": null,
+        "dash": null,
+        "arrow": "triangle",
+        "opacity": null
+      },
+      "arrow_placement": "end",
+      "clip": false
+    },
+    {
+      "$": "FillLayer",
+      "id": "area",
+      "role": "region",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "boundary": [
+        [
+          1.0,
+          1.0
+        ],
+        [
+          1.0,
+          7.0
+        ],
+        [
+          8.0,
+          1.0
+        ]
+      ],
+      "fill": {
+        "$": "Fill",
+        "color": {
+          "$": "Color",
+          "channels": [
+            0.21568627450980393,
+            0.49411764705882355,
+            0.7215686274509804,
+            1.0
+          ]
+        },
+        "opacity": 0.2,
+        "hatch": null
+      },
+      "stroke": null
+    },
+    {
+      "$": "PathLayer",
+      "id": "layer3",
+      "role": "primary",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "path": [
+        [
+          1.0,
+          8.0
+        ],
+        [
+          2.0,
+          5.0
+        ],
+        [
+          4.0,
+          3.0
+        ]
+      ],
+      "stroke": {
+        "$": "Stroke",
+        "color": {
+          "$": "Color",
+          "channels": [
+            0.596078431372549,
+            0.3058823529411765,
+            0.6392156862745098,
+            1.0
+          ]
+        },
+        "width": 2,
+        "dash": "dashed",
+        "arrow": null,
+        "opacity": null
+      },
+      "arrow_placement": "both",
+      "clip": true
+    },
+    {
+      "$": "PathLayer",
+      "id": "layer4",
+      "role": "secondary",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "path": [
+        [
+          1,
+          {
+            "$": "BinOp",
+            "operation": "add",
+            "left": {
+              "$": "Constant",
+              "value": 1
+            },
+            "right": {
+              "$": "Parameter",
+              "name": "shift",
+              "value_type": "float"
+            }
+          }
+        ],
+        [
+          9,
+          {
+            "$": "BinOp",
+            "operation": "add",
+            "left": {
+              "$": "Constant",
+              "value": 4
+            },
+            "right": {
+              "$": "Parameter",
+              "name": "shift",
+              "value_type": "float"
+            }
+          }
+        ]
+      ],
+      "stroke": null,
+      "arrow_placement": "end",
+      "clip": true
+    },
+    {
+      "$": "MarkerLayer",
+      "id": "layer5",
+      "role": "point",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "points": [
+        [
+          4.0,
+          3.0
+        ],
+        [
+          5,
+          {
+            "$": "BinOp",
+            "operation": "add",
+            "left": {
+              "$": "BinOp",
+              "operation": "mul",
+              "left": {
+                "$": "Parameter",
+                "name": "shift",
+                "value_type": "float"
+              },
+              "right": {
+                "$": "Constant",
+                "value": 2
+              }
+            },
+            "right": {
+              "$": "Constant",
+              "value": 1
+            }
+          }
+        ]
+      ],
+      "marker": {
+        "$": "Marker",
+        "color": null,
+        "size": 40,
+        "shape": "s",
+        "opacity": null,
+        "edge_color": null,
+        "edge_width": null
+      }
+    },
+    {
+      "$": "TextLayer",
+      "id": "layer6",
+      "role": "text",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "position": [
+        4.0,
+        3.0
+      ],
+      "text": "A",
+      "style": {
+        "$": "TextStyle",
+        "color": null,
+        "size": 11,
+        "family": null,
+        "weight": null,
+        "opacity": null,
+        "rotation": null
+      },
+      "offset": [
+        6,
+        6
+      ],
+      "anchor": "top-right",
+      "math": false
+    },
+    {
+      "$": "TextLayer",
+      "id": "layer7",
+      "role": "text",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "position": [
+        1.0,
+        1.0
+      ],
+      "text": "$x_1$",
+      "style": null,
+      "offset": [
+        0,
+        0
+      ],
+      "anchor": "center",
+      "math": true
+    },
+    {
+      "$": "ArrowLayer",
+      "id": "layer8",
+      "role": "annotation",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "start": [
+        1.0,
+        1.0
+      ],
+      "end": [
+        3.0,
+        3.0
+      ],
+      "stroke": null,
+      "label": "move",
+      "arrow_placement": "end"
+    },
+    {
+      "$": "AxisMarkLayer",
+      "id": "layer9",
+      "role": "axes",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "axis": "y",
+      "value": 7.0,
+      "label": "a_1",
+      "math": true,
+      "style": null
+    },
+    {
+      "$": "AxisNoteLayer",
+      "id": "layer10",
+      "role": "axes.note",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "axis": "y",
+      "value": 5.0,
+      "text": "Lower\nvalue",
+      "style": null
+    },
+    {
+      "$": "BraceLayer",
+      "id": "layer11",
+      "role": "axes",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "axis": "y",
+      "math": false,
+      "style": null,
+      "stroke": null,
+      "start": 5.0,
+      "end": 7.0,
+      "label": "Span",
+      "side": "outside"
+    },
+    {
+      "$": "SpanBraceLayer",
+      "id": "layer12",
+      "role": "axes",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "math": false,
+      "style": null,
+      "stroke": null,
+      "start": [
+        3.0,
+        2.7
+      ],
+      "end": [
+        3.0,
+        5.0
+      ],
+      "label": "gap",
+      "side": "left"
+    },
+    {
+      "$": "PointLabelLayer",
+      "id": "layer13",
+      "role": "text",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "point": [
+        4.0,
+        3.0
+      ],
+      "text": "P",
+      "style": null
+    },
+    {
+      "$": "RegionLabelLayer",
+      "id": "layer14",
+      "role": "text",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "region": "area",
+      "text": "Feasible",
+      "short_text": "F",
+      "placement": "auto",
+      "style": null,
+      "stroke": {
+        "$": "Stroke",
+        "color": null,
+        "width": 0.8,
+        "dash": null,
+        "arrow": null,
+        "opacity": null
+      }
+    },
+    {
+      "$": "LegendLayer",
+      "id": "layer15",
+      "role": "legend",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "entries": [
+        "a",
+        "b"
+      ],
+      "style": null
+    },
+    {
+      "$": "GroupLayer",
+      "id": "layer16",
+      "role": "primary",
+      "z_index": 0,
+      "visible": true,
+      "legend": null,
+      "children": [
+        {
+          "$": "TextLayer",
+          "id": "layer16.0",
+          "role": "text",
+          "z_index": 0,
+          "visible": true,
+          "legend": null,
+          "position": [
+            2.0,
+            2.0
+          ],
+          "text": "in group",
+          "style": null,
+          "offset": [
+            0,
+            0
+          ],
+          "anchor": "center",
+          "math": false
+        }
+      ]
+    }
+  ]
+}
