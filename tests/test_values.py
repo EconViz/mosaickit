@@ -105,6 +105,7 @@ def test_sparse_merge_preserves_every_field(style):
         "shape": "s",
         "family": "serif",
         "weight": "bold",
+        "font": "serif",
         "rotation": 0,
     }
     full = style(**{field.name: values[field.name] for field in fields(style)})

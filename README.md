@@ -312,39 +312,60 @@ scene = scene_from_json(text)
   `MAX_STRING` characters per text, so an untrusted document can be checked before anything is built.
 - **Not serialized.** A layer's `model` link, and geometry that is not plain points (a layer holding a
   BezierKit curve, for example, raises `ConfigurationError` naming the layer).
-- **Compatibility.** Version 1 is frozen: `tests/fixtures/scene_v1.json` must keep loading and keep
-  being written byte for byte. A change to the format is a new version, read alongside the old.
+- **Compatibility.** Version 1 is frozen: `tests/fixtures/scene_v1.json` must keep loading, and a scene
+  read from it is written back with the same values. An optional field added later (such as
+  `TextStyle.font`) is written as `null` when unused. Loading is strict about unknown fields, so a
+  document written with a field this release does not know is refused. A change that is not
+  additive is a new version, read alongside the old.
 - **Scope.** This is data only. Diffs between documents and ways to send one belong elsewhere.
 
 ## Text fonts
 
-By default text is drawn by Matplotlib with its default face. To choose the fonts, and to set
-bold, list the font files; GlyphKit selects and lays out the faces.
+Text is set in one of three generic fonts, chosen with `TextStyle.font`: `"sans"` (the default),
+`"serif"` or `"mono"`. MosaicKit supplies all three, DejaVu Sans, DejaVu Serif and DejaVu Sans Mono
+from the files Matplotlib installs, and GlyphKit lays them out, so a figure looks the same on every
+machine and nothing searches the system for fonts.
 
 ```python
 from mosaickit import Canvas, Config, TextFonts, TextLayer, TextStyle
 
-fonts = TextFonts(("fonts/SourceSans3-Regular.ttf", "fonts/SourceSans3-Bold.ttf"))
+canvas = Canvas()
+canvas.add(
+    TextLayer((5, 5), "Total revenue", style=TextStyle(size=12, font="serif", weight="bold"))
+)
+```
+
+To use other fonts, pass the files. Each slot you give replaces that generic font; the others keep
+their defaults.
+
+```python
+fonts = TextFonts(
+    sans=("fonts/SourceSans3-Regular.ttf", "fonts/SourceSans3-Bold.ttf"),
+    mono="fonts/JetBrainsMono-Regular.ttf",
+)
 canvas = Canvas(config=Config(fonts=fonts))
-canvas.add(TextLayer((5, 5), "Total revenue", style=TextStyle(size=12, weight="bold")))
 ```
 
 ```toml
 [fonts]
-files = ["fonts/SourceSans3-Regular.ttf", "fonts/SourceSans3-Bold.ttf"]
+sans = ["fonts/SourceSans3-Regular.ttf", "fonts/SourceSans3-Bold.ttf"]
+mono = ["fonts/JetBrainsMono-Regular.ttf"]
 ```
 
 - **Weight.** `TextStyle.weight` is `"normal"` (400), `"bold"` (700) or an integer from 1 to 1000.
   GlyphKit uses the nearest listed face, or sets the `wght` axis of a variable font. It never makes
   a bold face up: list one, or the nearest face is used.
-- **Fonts are explicit.** Paths only; MosaicKit never searches the system. A file that is not a
-  font raises `ConfigurationError` when the canvas renders. The order of the files is the order a
-  face is tried for a character the first lacks, and a character no listed face has raises
-  `RenderError` naming the text.
+- **Fonts are explicit.** Paths only. A file that is not a font raises `ConfigurationError` when the
+  canvas renders. The order of the files in a slot is the order a face is tried for a character the
+  first lacks. A character no listed face has raises `RenderError` naming the text: the default
+  fonts have no CJK glyphs, so Chinese, Japanese and Korean text needs a font file in the slot.
 - **Which text.** Strings without `$...$` in `TextLayer`, labels, axis marks and notes, and brace
-  labels. Math keeps using the math font, text mixed with math, legends and the title keep using
-  Matplotlib, and so does everything when no `TextFonts` is set.
-- **`TextStyle.family` is deprecated.** Choose fonts with `TextFonts`; `weight` is not deprecated.
+  labels. Math keeps using the math font, text mixed with math, legends, arrow labels and the title
+  keep using Matplotlib's default font.
+- **`TextStyle.family` is deprecated.** A style that still sets it is drawn by Matplotlib with that
+  installed family, as before. Use `font` and `TextFonts` instead; `weight` is not deprecated.
+- **`TextFonts(paths)`** from 0.9.0 still works: the first argument is the `sans` slot, and
+  `[fonts] files` is another name for `sans`.
 
 ## Grids, parameters, and animation
 

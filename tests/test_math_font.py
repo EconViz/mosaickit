@@ -123,7 +123,7 @@ def test_math_labels_use_glyphkit_outlines_when_a_math_font_is_set():
         ax = result.axes
         for gid in ("f", "g", "e", "mark", "xmark", "span.label", "inner.label"):
             assert isinstance(_text(ax, gid), MathText), gid
-        assert not isinstance(_text(ax, "plain"), MathText)
+        assert isinstance(_text(ax, "plain"), Text)  # plain words are set by GlyphKit too
         assert _text(ax, "f").get_text() == "$f$"
     finally:
         result.close()
@@ -258,10 +258,9 @@ def test_stroke_and_theme_overrides_do_not_disturb_math_text():
         result.close()
 
 
-def test_plain_text_class_is_unchanged_for_non_math_labels():
+def test_plain_labels_stay_matplotlib_text_objects():
     result = _render(TextLayer((5, 5), "hello", id="hello"))
     try:
-        assert isinstance(_text(result.axes, "hello"), Text)
-        assert not isinstance(_text(result.axes, "hello"), MathText)
+        assert isinstance(_text(result.axes, "hello"), Text)  # placement and extents work on it
     finally:
         result.close()
