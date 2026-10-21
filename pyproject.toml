@@ -86,3 +86,12 @@ source_modules = [
     "mosaickit.rendering.protocol", "mosaickit.rendering.registry",
 ]
 forbidden_modules = ["matplotlib"]
+
+[[tool.importlinter.contracts]]
+name = "The scene document is data only"
+type = "forbidden"
+source_modules = ["mosaickit.document"]
+forbidden_modules = [
+    "mosaickit.rendering", "mosaickit.canvas", "mosaickit.layout", "mosaickit.themes",
+    "mosaickit.config", "matplotlib",
+]
