@@ -44,7 +44,7 @@ def test_distribution_requires_glyphkit_without_kinetickit():
     glyphkit = [item for item in dependencies if item.lower().startswith("glyphkit")]
     # Build backends may normalize the ordering of version specifiers.
     assert len(glyphkit) == 1
-    assert glyphkit[0] in ("glyphkit>=1.0.0b2,<2", "glyphkit<2,>=1.0.0b2")
+    assert glyphkit[0] in ("glyphkit>=1.0.0b3,<2", "glyphkit<2,>=1.0.0b3")
     assert not any(item.lower().startswith("kinetickit") for item in dependencies)
 
 
