@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.0 — 2026-10-21
 
 - Add `mosaickit.document`: `scene_to_dict`/`scene_to_json` and `scene_from_dict`/`scene_from_json`
   write and read a `Scene` as a versioned (version 1) JSON-compatible document, with strict loading
