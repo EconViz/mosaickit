@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.2 — 2026-10-21
 
 - TikZ export sets the generic font of a text style: `\sffamily` for `"sans"` (the default),
   `\rmfamily` for `"serif"` and `\ttfamily` for `"mono"`. A style that still sets the deprecated
