@@ -204,6 +204,23 @@ def _stable(layers, prefix="layer"):
     return out
 
 
+def _drop_removed_nulls(frozen, written):
+    """The frozen document without keys that are null there and absent from what is written now.
+
+    Version 1 once wrote ``TextStyle.family`` as ``null``; the field is gone, and reading
+    that ``null`` still works.
+    """
+    if isinstance(frozen, dict) and isinstance(written, dict):
+        return {
+            key: _drop_removed_nulls(value, written.get(key))
+            for key, value in frozen.items()
+            if key in written or value is not None
+        }
+    if isinstance(frozen, list) and isinstance(written, list) and len(frozen) == len(written):
+        return [_drop_removed_nulls(f, w) for f, w in zip(frozen, written, strict=True)]
+    return frozen
+
+
 def _drop_new_nulls(written, frozen):
     """The written document without keys that are absent from the frozen one and null.
 
@@ -230,5 +247,13 @@ def test_version_1_fixture_still_loads_and_still_matches():
     """
     scene = Scene(_stable(_every_layer().layers), {"title": "Every layer"})
     document = json.loads(FIXTURE.read_text())
-    assert _drop_new_nulls(scene_to_dict(scene), document) == document
+    written = scene_to_dict(scene)
+    assert _drop_new_nulls(written, document) == _drop_removed_nulls(document, written)
     assert scene_from_dict(document) == scene
+
+
+def test_a_document_that_names_a_font_family_is_refused():
+    document = json.loads(FIXTURE.read_text())
+    text = json.dumps(document).replace('"family": null', '"family": "serif"', 1)
+    with pytest.raises(ConfigurationError, match="family was removed"):
+        scene_from_dict(json.loads(text))

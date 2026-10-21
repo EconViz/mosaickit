@@ -35,15 +35,15 @@ def test_role_resolution_merges_namespace_category_and_defaults():
     assert Theme("empty", {}).resolve("other", fallback_category="region") == PRIMITIVE_DEFAULT
 
 
-def test_theme_defaults_override_primitive_text_family_for_every_role():
+def test_theme_defaults_override_primitive_text_font_for_every_role():
     theme = Theme(
         "traditional-chinese",
         {"axes.note": StyleBundle(text=TextStyle(size=9))},
-        defaults=StyleBundle(text=TextStyle(family="Noto Sans TC")),
+        defaults=StyleBundle(text=TextStyle(font="serif")),
     )
 
-    assert theme.resolve("axes.note", fallback_category="axes").text.family == "Noto Sans TC"
-    assert theme.resolve("custom.label", fallback_category="text").text.family == "Noto Sans TC"
+    assert theme.resolve("axes.note", fallback_category="axes").text.font == "serif"
+    assert theme.resolve("custom.label", fallback_category="text").text.font == "serif"
 
 
 def test_themes_copy_inputs_and_with_roles_merges():

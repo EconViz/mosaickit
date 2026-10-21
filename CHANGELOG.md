@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.10.0 — unreleased
+
+- Remove `Animation`, `Animation.sweep()` and the Matplotlib animation helper (deprecated in 0.6.0).
+  Use KineticKit for animation. `CanvasGrid.sweep()` and `canvas.bind()` are unchanged.
+- Remove `TextStyle.family` (deprecated in 0.6.0). Choose `font` and replace it with files through
+  `TextFonts`. `TextStyle` is now `TextStyle(color, size, weight, opacity, rotation, font)`: pass
+  fields by name. Matplotlib-drawn text (titles, legends, text mixed with `$...$`) uses
+  Matplotlib's default font, as it did for a style without `family`.
+- A version 1 scene document that has `"family": null` still loads; one that names a family is
+  refused. Documents written now omit the field.
+
 ## 0.9.2 — 2026-10-21
 
 - TikZ export sets the generic font of a text style: `\sffamily` for `"sans"` (the default),

@@ -139,13 +139,6 @@ def test_weight_reaches_the_drawn_text():
     assert _width("Weight", weight=None) == _width("Weight", weight="normal")
 
 
-def test_the_deprecated_family_keeps_the_matplotlib_path():
-    with pytest.warns(DeprecationWarning, match="family"):
-        style = TextStyle(size=12, family="DejaVu Serif")
-    ax = _canvas(TextLayer((5, 5), "label", id="t", style=style)).render().axes
-    assert not isinstance(_text(ax, "t"), MathText)
-
-
 def test_a_missing_glyph_is_an_error_naming_the_text():
     with pytest.raises(RenderError, match="Cannot set text .* in the sans font"):
         _canvas(TextLayer((5, 5), "效用")).render()

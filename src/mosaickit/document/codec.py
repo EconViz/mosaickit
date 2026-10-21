@@ -266,6 +266,11 @@ def _decode(value: Any, where: str, budget: _Budget, depth: int = 0) -> Any:
     cls = _DATACLASSES.get(tag)
     if cls is None:
         raise _fail(where, f"unknown kind {tag!r}")
+    if tag == "TextStyle" and "family" in body:
+        # 0.9 wrote the removed field as null; a name is a font choice this release cannot honour
+        if body["family"] is not None:
+            raise _fail(where, "TextStyle.family was removed; use font and TextFonts")
+        body = {name: value for name, value in body.items() if name != "family"}
     accepted = {s.name for s in fields(cls) if s.init and s.name not in _NOT_SERIALIZED}
     unknown = set(body) - accepted
     if unknown:

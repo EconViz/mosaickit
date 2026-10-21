@@ -35,12 +35,6 @@ _ARROW_TIPS = {
     "fancy": "Stealth[length=5pt]",
     "wedge": "Kite[length=5pt]",
 }
-_FONT_COMMANDS = {
-    "serif": r"\rmfamily",
-    "sans": r"\sffamily",
-    "sans-serif": r"\sffamily",
-    "monospace": r"\ttfamily",
-}
 _GENERIC_FONT_COMMANDS = {
     "sans": r"\sffamily",
     "serif": r"\rmfamily",
@@ -208,11 +202,7 @@ def _text_command(layer: TextLayer, bundle: Any, colors: _Colors) -> str:
     anchor = " ".join(part for part in (_VERTICAL[vertical], _HORIZONTAL[horizontal]) if part)
     size = float(style.size or 12)
     font = f"\\fontsize{{{_number(size)}}}{{{_number(size * 1.2)}}}\\selectfont"
-    # the generic font (sans, serif, mono) is what MosaicKit draws with; the deprecated family
-    # name still decides when a style sets one
-    family = _FONT_COMMANDS.get((style.family or "").lower()) or _GENERIC_FONT_COMMANDS.get(
-        style.font or ""
-    )
+    family = _GENERIC_FONT_COMMANDS.get(style.font or "")
     if family:
         font += family
     opts = [

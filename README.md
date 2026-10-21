@@ -137,21 +137,9 @@ paper = Theme(
 )
 ```
 
-`TextLayer` and `TextStyle` remain public. Color, size, opacity, and rotation
-continue to be supported. Use GlyphKit for new font selection and processing;
-MosaicKit's `TextStyle.family` and `TextStyle.weight` fields are deprecated.
-The following legacy example still renders through Matplotlib in this release,
-but each style supplying a font field emits one `DeprecationWarning`:
-
-```python
-paper = Theme(
-    "paper",
-    {
-        "title": StyleBundle(text=TextStyle(family="Noto Serif TC")),
-    },
-    defaults=StyleBundle(text=TextStyle(family="Noto Sans TC")),
-)
-```
+`TextLayer` and `TextStyle` are public. A style sets color, size, opacity, rotation, weight
+and a generic font (`"sans"`, `"serif"` or `"mono"`); font files come from `TextFonts`
+(see Fonts below).
 
 ```python
 from mosaickit import Config, Stroke, StyleBundle, Theme, use_config
@@ -362,25 +350,21 @@ mono = ["fonts/JetBrainsMono-Regular.ttf"]
 - **Which text.** Strings without `$...$` in `TextLayer`, labels, axis marks and notes, and brace
   labels. Math keeps using the math font, text mixed with math, legends, arrow labels and the title
   keep using Matplotlib's default font.
-- **`TextStyle.family` is deprecated.** A style that still sets it is drawn by Matplotlib with that
-  installed family, as before. Use `font` and `TextFonts` instead; `weight` is not deprecated.
+- **`TextStyle.family` is gone** (removed in 0.10.0). Choose a generic font with `font` and replace
+  it with files through `TextFonts`.
 - **`TextFonts(paths)`** from 0.9.0 still works: the first argument is the `sans` slot, and
   `[fonts] files` is another name for `sans`.
 
-## Grids, parameters, and animation
-
-Grid sweeps and parameter binding remain supported. The `Animation.sweep()`
-line below is a deprecated compatibility example:
+## Grids and parameters
 
 ```python
-from mosaickit import Animation, Canvas, CanvasGrid, Parameter, TextLayer
+from mosaickit import Canvas, CanvasGrid, Parameter, TextLayer
 
 position = Parameter("position", value_type=float)
 template = Canvas().add(TextLayer((position, 5), "moving"))
 values = position.values([1.0, 3.0, 5.0])
 
 CanvasGrid.sweep(template, values, cols=3).save("sweep.svg")
-Animation.sweep(template, values, fps=2).save("sweep.gif")  # Deprecated: use KineticKit.
 ```
 
 `CanvasGrid` accepts flat canvases, nested rows, `None` cells, and
@@ -388,24 +372,18 @@ Animation.sweep(template, values, fps=2).save("sweep.gif")  # Deprecated: use Ki
 explicit `rows` and `cols` may leave trailing cells empty.
 
 Parameters and expressions support arithmetic, ordered comparisons, partial
-binding, and stable structural equality. `Animation.frames()` yields
-backend-neutral scenes. GIF output uses Pillow; MP4 output requires ffmpeg.
+binding, and stable structural equality.
 
-### Font and animation migration
+### Migrating from 0.9
 
-Use GlyphKit for font processing and KineticKit for new animation work.
-Install KineticKit separately when needed; MosaicKit does not depend on it.
-This transition release retains the Matplotlib font path (`TextStyle.family`) and exports
-`Animation` from both `mosaickit` and `mosaickit.canvas`. Direct construction
-and `Animation.sweep()` each emit one `DeprecationWarning` at the caller.
-Frame iteration, GIF/MP4 saving, and the existing Matplotlib playback helper
-continue to work. Internal style copying and rendering do not repeat warnings.
+0.10.0 removes what 0.6.0 deprecated:
 
-The next release may remove the legacy family/weight font-selection path and
-MosaicKit's animation APIs and renderer helpers. Migrate those uses before
-upgrading; retain `TextLayer`, non-font `TextStyle` fields, `CanvasGrid`, and
-parameter binding for static scene composition. No new cross-library scene
-adapter is introduced in this release.
+- `Animation`, `Animation.sweep()` and the Matplotlib playback helper. Use KineticKit for
+  animation; install it separately, MosaicKit does not depend on it. `CanvasGrid.sweep()` and
+  `canvas.bind()` still draw one frame per value.
+- `TextStyle.family`. Use `TextStyle(font="serif")` with `Config(fonts=TextFonts(serif=[...]))`.
+  `TextStyle` now takes `color, size, weight, opacity, rotation, font`, so pass them by name.
+  A version 1 scene document that holds `"family": null` still loads; a name is refused.
 
 ## Rendering
 
@@ -424,7 +402,7 @@ finally:
 backend state in the scene graph. Render plans and contexts remain private while
 the built-in backends evolve.
 
-Each render, grid, or animation job owns its cache. Pass an explicit
+Each render or grid job owns its cache. Pass an explicit
 `RenderCache` to reuse work across jobs. Non-hashable models bypass caching and
 emit one warning per model type and cache.
 
@@ -432,8 +410,7 @@ emit one warning per model type and cache.
 
 MosaicKit owns domain-neutral scene composition, styles, themes, parameter
 binding, grid layout, renderer contracts, and static output. GlyphKit owns font
-processing; KineticKit owns animation. MosaicKit retains deprecated font and
-animation compatibility paths for this release. Domain semantics belong to
+processing; KineticKit owns animation. Domain semantics belong to
 the packages that build on it. Mathematical curve construction and native TikZ
 Bézier segments belong to geometry packages such as BezierKit, which plug into
 the scene-level TikZ export through a path serializer.
