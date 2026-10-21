@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add `mosaickit.document`: `scene_to_dict`/`scene_to_json` and `scene_from_dict`/`scene_from_json`
+  write and read a `Scene` as a versioned (version 1) JSON-compatible document, with strict loading
+  and limits on size, nesting and text length.
 - Add `TextFonts` and `Config(fonts=...)` (TOML: `[fonts] files = [...]`) to set plain text in
   caller-chosen fonts through GlyphKit, the way `MathFont` does for math. Weight is chosen by
   GlyphKit from the listed faces; without `TextFonts` text is unchanged.

@@ -290,6 +290,32 @@ The size and color come from the label's `TextStyle`, like any other text.
   Anything else, such as `\mathrm` or `\cdot`, raises `RenderError` naming the formula
   instead of silently changing fonts. TikZ export is unchanged.
 
+## Scene documents
+
+A `Scene` can be written as a versioned, JSON-compatible document and read back, so a figure can be
+stored, diffed or handed to another program without Python objects.
+
+```python
+from mosaickit.document import scene_from_json, scene_to_json
+
+text = scene_to_json(canvas.snapshot())
+scene = scene_from_json(text)
+```
+
+- **Format.** `{"format": "mosaickit.scene", "version": 1, "metadata": {...}, "layers": [...]}`. Anything
+  that is not a number, string, boolean or `null` is an object with a `"$"` tag naming its kind (a layer
+  class, a style, a color, an enum member, a `Parameter` or an expression), and sequences are lists.
+  An unbound scene keeps its parameters and expressions; a bound snapshot holds resolved numbers.
+- **Strict loading.** An unknown version, tag, field or operation, a missing field, a non-finite number,
+  or a value a layer rejects raises `ConfigurationError` with the path, for example
+  `layers[3].anchor: ...`. Documents are limited to `MAX_NODES` values, `MAX_DEPTH` levels and
+  `MAX_STRING` characters per text, so an untrusted document can be checked before anything is built.
+- **Not serialized.** A layer's `model` link, and geometry that is not plain points (a layer holding a
+  BezierKit curve, for example, raises `ConfigurationError` naming the layer).
+- **Compatibility.** Version 1 is frozen: `tests/fixtures/scene_v1.json` must keep loading and keep
+  being written byte for byte. A change to the format is a new version, read alongside the old.
+- **Scope.** This is data only. Diffs between documents and ways to send one belong elsewhere.
+
 ## Text fonts
 
 By default text is drawn by Matplotlib with its default face. To choose the fonts, and to set
