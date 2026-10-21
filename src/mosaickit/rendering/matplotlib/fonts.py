@@ -2,7 +2,7 @@ from typing import Any
 
 from matplotlib.font_manager import FontProperties
 
-from mosaickit.rendering.matplotlib.math_text import typeset
+from mosaickit.rendering.matplotlib.typesetting import typeset
 
 
 def font_properties(style) -> FontProperties:
@@ -11,7 +11,7 @@ def font_properties(style) -> FontProperties:
 
 def measure_text(ax: Any, text: str, style: Any, renderer: Any) -> tuple[float, float]:
     """Width and height in display pixels of ``text`` drawn in ``style``."""
-    layout = typeset(text, style.size)
+    layout = typeset(text, style)
     if layout is not None:
         return layout.measure(ax.figure.dpi / 72, style.rotation)
     probe = ax.text(

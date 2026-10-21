@@ -81,6 +81,7 @@ class Canvas:
             self._bindings,
             palette=self.config.palette,
             math_font=self.config.math_font,
+            text_fonts=self.config.fonts,
         )
 
     def _renderer(self, renderer: Renderer | str | None = None) -> Renderer:
