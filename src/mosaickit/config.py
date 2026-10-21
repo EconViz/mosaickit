@@ -160,27 +160,41 @@ def _math_font(section: Any, base_dir: Path | None) -> MathFont | None:
 
 
 def _text_fonts(section: Any, base_dir: Path | None) -> TextFonts | None:
-    """Read a TOML ``[fonts]`` table: ``files``, a list of font file paths."""
+    """Read a TOML ``[fonts]`` table: ``sans``, ``serif`` and ``mono``, each a list of font files.
+
+    ``files`` is an older name for ``sans``.
+    """
     if not isinstance(section, Mapping):
-        raise ConfigurationError("fonts must be a table with a list of files")
-    unknown = set(section) - {"files"}
+        raise ConfigurationError("fonts must be a table of font file lists")
+    unknown = set(section) - {"sans", "serif", "mono", "files"}
     if unknown:
         raise ConfigurationError(f"fonts: unknown keys {sorted(unknown)}")
-    if "files" not in section:
-        if section:
-            raise ConfigurationError("fonts.files is required")
+    if "files" in section and "sans" in section:
+        raise ConfigurationError("fonts: files is another name for sans; give only one")
+    slots: dict[str, tuple[Path, ...]] = {}
+    for key, slot in (("sans", "sans"), ("files", "sans"), ("serif", "serif"), ("mono", "mono")):
+        if key not in section:
+            continue
+        files = section[key]
+        if isinstance(files, str):
+            files = [files]
+        if (
+            not isinstance(files, list)
+            or not files
+            or not all(isinstance(f, str) and f for f in files)
+        ):
+            raise ConfigurationError(f"fonts.{key} must be a non-empty list of file paths")
+        paths = []
+        for name in files:
+            path = Path(name).expanduser()
+            if base_dir is not None and not path.is_absolute():
+                path = base_dir / path
+            paths.append(path)
+        slots[slot] = tuple(paths)
+    if not slots:
         return None
-    files = section["files"]
-    if not isinstance(files, list) or not files or not all(isinstance(f, str) and f for f in files):
-        raise ConfigurationError("fonts.files must be a non-empty list of file paths")
-    paths = []
-    for name in files:
-        path = Path(name).expanduser()
-        if base_dir is not None and not path.is_absolute():
-            path = base_dir / path
-        paths.append(path)
     try:
-        return TextFonts(tuple(paths))
+        return TextFonts(**slots)
     except ConfigurationError as exc:
         raise ConfigurationError(f"fonts: {exc}") from exc
 

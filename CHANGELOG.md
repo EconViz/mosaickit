@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+- Text is set in three generic fonts, chosen with the new `TextStyle.font` (`"sans"` by default,
+  `"serif"`, `"mono"`) and laid out by GlyphKit. MosaicKit supplies DejaVu Sans, DejaVu Serif and
+  DejaVu Sans Mono from the files Matplotlib installs, so every font has a default and no
+  configuration is needed.
+- `TextFonts(sans=..., serif=..., mono=...)` replaces any of the three with your font files and
+  leaves the others at the defaults. Its first argument is `sans`, so `TextFonts(paths)` from 0.9.0
+  still means the same; TOML `[fonts]` takes `sans`, `serif` and `mono`, with `files` kept as another
+  name for `sans`.
+- Behaviour change: default text is now drawn from glyph outlines instead of by Matplotlib (in SVG
+  and PDF as paths), and a character the font lacks, such as a CJK character, raises `RenderError`
+  naming the text instead of drawing a missing-glyph box.
+- A style that sets the deprecated `TextStyle.family` keeps its Matplotlib path.
+- Version 1 of the scene document gains the optional `TextStyle.font` field, written as `null` when
+  unused.
+
 ## 0.9.0 — 2026-10-21
 
 - Add `mosaickit.document`: `scene_to_dict`/`scene_to_json` and `scene_from_dict`/`scene_from_json`

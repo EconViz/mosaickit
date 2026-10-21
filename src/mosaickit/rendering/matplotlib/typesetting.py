@@ -30,4 +30,4 @@ def typeset(text: str, style) -> MathLayout | None:
     layout = typeset_math(text, style.size)
     if layout is not None:
         return layout
-    return typeset_text(text, style.size, style.weight)
+    return typeset_text(text, style)

@@ -38,6 +38,7 @@ class TextStyle(SparseStyle):
     weight: str | int | None = None
     opacity: float | None = None
     rotation: float | None = None
+    font: str | None = None
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "color", _coerce_color(self.color))
@@ -46,6 +47,7 @@ class TextStyle(SparseStyle):
         if self.rotation is not None and not math.isfinite(self.rotation):
             raise ConfigurationError("TextStyle.rotation must be finite")
         _check_weight(self.weight)
+        _check_font(self.font)
         if self.family is not None:
             warnings.warn(
                 _DEPRECATION_MESSAGE,
@@ -67,3 +69,10 @@ def _check_weight(weight: Any) -> None:
     raise ConfigurationError(
         f"TextStyle.weight must be 'normal', 'bold' or an integer from 1 to 1000, got {weight!r}"
     )
+
+
+def _check_font(font: Any) -> None:
+    """``font`` is a generic font name: ``"sans"``, ``"serif"`` or ``"mono"``."""
+    if font is None or font in ("sans", "serif", "mono") and isinstance(font, str):
+        return
+    raise ConfigurationError(f"TextStyle.font must be 'sans', 'serif' or 'mono', got {font!r}")
