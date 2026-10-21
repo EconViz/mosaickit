@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.10.0 — unreleased
+## 1.0.0rc1 — 2026-10-21
 
 - Remove `Animation`, `Animation.sweep()` and the Matplotlib animation helper (deprecated in 0.6.0).
   Use KineticKit for animation. `CanvasGrid.sweep()` and `canvas.bind()` are unchanged.
