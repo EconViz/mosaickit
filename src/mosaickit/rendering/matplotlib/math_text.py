@@ -20,7 +20,7 @@ from typing import Any, cast
 
 import numpy as np
 from glyphkit import FontLibrary, FontSource, GlyphKitError, SourceRange
-from glyphkit.math import Limits, MathBox, MathStyle, Script, Sequence, Symbol, parse_math
+from glyphkit.math import MathBox, MathStyle, Symbol, parse_math
 from glyphkit.outlines import ClosePath, CubicTo, LineTo, MoveTo, QuadraticTo
 from matplotlib.path import Path
 from matplotlib.text import Text
@@ -33,7 +33,6 @@ _MOVETO, _LINETO, _CURVE3, _CURVE4, _CLOSEPOLY = (
     int(code) for code in (Path.MOVETO, Path.LINETO, Path.CURVE3, Path.CURVE4, Path.CLOSEPOLY)
 )
 _UNESCAPED_DOLLAR = re.compile(r"(?<!\\)\$")
-_MINUS = 0x2212
 _ITALIC_CAPITAL_A = 0x1D434
 _ITALIC_SMALL_A = 0x1D44E
 _ITALIC_SMALL_ALPHA = 0x1D6FC
@@ -79,64 +78,24 @@ def _italic(symbol: Symbol, coverage: frozenset[int]) -> Symbol:
     return replace(symbol, value=chr(target)) if target in coverage else symbol
 
 
-_RELATIONS = "=<>"
-_BINARY = "+\u2212-\u00d7\u00f7"
-_SPACES = (0x2005, 0x20)  # four-per-em, then the plain space
+def _typeset_symbols(node: Any, coverage: frozenset[int], italic: bool) -> Any:
+    """Set letters in the Mathematical Italic alphabet when the font has it.
 
+    Spacing, the true minus and the rest of the layout are GlyphKit's.
+    """
 
-def _spaced(children: tuple[Any, ...], space: str | None) -> tuple[Any, ...]:
-    """Add a space around relations and binary operators; GlyphKit sets atoms back to back."""
-    if space is None:
-        return children
-    result: list[Any] = []
-    for child in children:
-        operator = isinstance(child, Symbol) and child.role == "operator"
-        value = child.value if isinstance(child, Symbol) else ""
-        before = result[-1] if result else None
-        binary = (
-            value in _BINARY
-            and before is not None
-            and not (isinstance(before, Symbol) and before.role == "operator" or _opens(before))
-        )
-        if operator and (value in _RELATIONS or binary):
-            gap = Symbol(space, child.source_range)
-            result.extend((gap, child, gap))
-        else:
-            result.append(child)
-    return tuple(result)
-
-
-def _opens(node: Any) -> bool:
-    return isinstance(node, Symbol) and node.value in "([{,"
-
-
-def _typeset_symbols(node: Any, coverage: frozenset[int], italic: bool, tight: bool = False) -> Any:
-    """Set letters in the Mathematical Italic alphabet, ``-`` as a true minus, and
-    operators with space around them (not inside scripts, where TeX keeps them tight)."""
-    space = next((chr(c) for c in _SPACES if c in coverage), None)
-
-    def walk(value: Any, tight: bool) -> Any:
+    def walk(value: Any) -> Any:
         if isinstance(value, Symbol):
-            if value.value == "-" and value.role == "operator" and _MINUS in coverage:
-                return replace(value, value=chr(_MINUS))
             return _italic(value, coverage) if italic else value
         if isinstance(value, tuple):
-            return tuple(walk(item, tight) for item in value)
+            return tuple(walk(item) for item in value)
         if not is_dataclass(value) or isinstance(value, (type, SourceRange)):
             return value
-        scripts = isinstance(value, (Script, Limits))
-        changes = {}
-        for slot in fields(value):
-            part = getattr(value, slot.name)
-            inside = tight or (
-                scripts and slot.name in {"subscript", "superscript", "lower", "upper"}
-            )
-            changes[slot.name] = walk(part, inside)
-        if isinstance(value, Sequence) and not tight:
-            changes["children"] = _spaced(changes["children"], space)
-        return replace(value, **changes)
+        return replace(
+            value, **{slot.name: walk(getattr(value, slot.name)) for slot in fields(value)}
+        )
 
-    return walk(node, tight)
+    return walk(node)
 
 
 class MathTypesetter:

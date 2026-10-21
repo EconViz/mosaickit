@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Math is spaced and set by GlyphKit 1.0.0b3, which now follows TeX's layout rules: fractions, scripts,
+  limits, radicals, delimiters and accents, with TeX's spacing around operators, relations and
+  punctuation. MosaicKit no longer adds spaces around operators or converts the minus sign itself.
+  Formulas that used to fail now work, for example `\le`, `\cdot`, `\infty`, `\partial`,
+  `\mathrm{...}`, `\sin` and the whole Greek alphabet. Requires `glyphkit>=1.0.0b3,<2`.
+
 - Text is set in three generic fonts, chosen with the new `TextStyle.font` (`"sans"` by default,
   `"serif"`, `"mono"`) and laid out by GlyphKit. MosaicKit supplies DejaVu Sans, DejaVu Serif and
   DejaVu Sans Mono from the files Matplotlib installs, so every font has a default and no

@@ -674,7 +674,7 @@ wheels = [
 
 [[package]]
 name = "glyphkit"
-version = "1.0.0b2"
+version = "1.0.0b3"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fonttools", version = "4.65.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
@@ -683,9 +683,9 @@ dependencies = [
     { name = "uharfbuzz" },
     { name = "uniseg" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/97/a9/9f49b4666c20428a4f1691ae10c94863a4cde1cfd70790e550101bd96d3c/glyphkit-1.0.0b2.tar.gz", hash = "sha256:3f0b2cdeb4b201ecd08a3bca1b9ee230857c6cbf7df301a2b7cdd1dfc14254af", size = 110408, upload-time = "2026-10-13T08:49:24.855Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/41/da/f5ecdb9a6948e39cb6c4c27320b41b5f047daf3fa0b921ff2b788be8ef65/glyphkit-1.0.0b3.tar.gz", hash = "sha256:cbf459c9b76c3ed702179003b23aa392d22d536e0150aa0820fc69d064af831e", size = 120964, upload-time = "2026-10-21T05:07:56.189Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/7d/9f/b579713e92c1c4f0ca52d7ea151a3ea5470f277990a58a8a7e6917eea096/glyphkit-1.0.0b2-py3-none-any.whl", hash = "sha256:9a0abfb1dc4947a4ff2231ab3a0138e71fbb7193038362b9d9937b0e2374e2bc", size = 47565, upload-time = "2026-10-13T08:49:23.61Z" },
+    { url = "https://files.pythonhosted.org/packages/62/64/fde015f678019650c426e59f641a85ca9a62d1774369ccb9fe1afd268ad9/glyphkit-1.0.0b3-py3-none-any.whl", hash = "sha256:f0d4372db584682e968a3ab2dfe54d074c64910f39183095132447baf5cd023c", size = 53339, upload-time = "2026-10-21T05:07:54.826Z" },
 ]
 
 [[package]]
@@ -1334,7 +1334,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "glyphkit", specifier = ">=1.0.0b2,<2" },
+    { name = "glyphkit", specifier = ">=1.0.0b3,<2" },
     { name = "matplotlib", specifier = ">=3.6,<4" },
     { name = "numpy", specifier = ">=1.24" },
     { name = "tomli", marker = "python_full_version < '3.11'", specifier = ">=2" },
