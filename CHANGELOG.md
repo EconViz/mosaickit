@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased
+
+- TikZ export sets the generic font of a text style: `\sffamily` for `"sans"` (the default),
+  `\rmfamily` for `"serif"` and `\ttfamily` for `"mono"`. A style that still sets the deprecated
+  `family` keeps deciding when it names a known family.
+
 ## 0.9.1 — 2026-10-21
 
 - Math is spaced and set by GlyphKit 1.0.0b3, which now follows TeX's layout rules: fractions, scripts,

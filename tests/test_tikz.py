@@ -15,6 +15,7 @@ from mosaickit import (
     Stroke,
     StyleBundle,
     TextLayer,
+    TextStyle,
 )
 from mosaickit.rendering.tikz import register_path_serializer
 
@@ -81,3 +82,24 @@ def test_canvas_grid_saves_a_standalone_tikz_layout(tmp_path):
     assert "% row 1 of 2" in source
     assert "% row 2 of 2" in source
     assert r"\hspace{1em}" in source
+
+
+def _tikz_text(tmp_path, **style):
+    canvas = Canvas().add(TextLayer((1, 1), "label", style=TextStyle(size=12, **style)))
+    target = tmp_path / "text.tex"
+    canvas.save(target)
+    return target.read_text(encoding="utf-8")
+
+
+def test_tikz_sets_the_generic_font_of_a_text_style(tmp_path):
+    assert r"\sffamily" in _tikz_text(tmp_path)  # sans is the default
+    assert r"\rmfamily" in _tikz_text(tmp_path, font="serif")
+    assert r"\ttfamily" in _tikz_text(tmp_path, font="mono")
+
+
+def test_tikz_prefers_a_deprecated_family_when_the_style_sets_one(tmp_path):
+    import pytest
+
+    with pytest.warns(DeprecationWarning, match="family"):
+        source = _tikz_text(tmp_path, family="monospace", font="serif")
+    assert r"\ttfamily" in source and r"\rmfamily" not in source
