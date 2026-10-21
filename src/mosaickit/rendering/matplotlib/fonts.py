@@ -6,7 +6,7 @@ from mosaickit.rendering.matplotlib.typesetting import typeset
 
 
 def font_properties(style) -> FontProperties:
-    return FontProperties(family=style.family, size=style.size, weight=style.weight)
+    return FontProperties(size=style.size, weight=style.weight)
 
 
 def measure_text(ax: Any, text: str, style: Any, renderer: Any) -> tuple[float, float]:

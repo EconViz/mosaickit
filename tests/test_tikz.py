@@ -95,11 +95,3 @@ def test_tikz_sets_the_generic_font_of_a_text_style(tmp_path):
     assert r"\sffamily" in _tikz_text(tmp_path)  # sans is the default
     assert r"\rmfamily" in _tikz_text(tmp_path, font="serif")
     assert r"\ttfamily" in _tikz_text(tmp_path, font="mono")
-
-
-def test_tikz_prefers_a_deprecated_family_when_the_style_sets_one(tmp_path):
-    import pytest
-
-    with pytest.warns(DeprecationWarning, match="family"):
-        source = _tikz_text(tmp_path, family="monospace", font="serif")
-    assert r"\ttfamily" in source and r"\rmfamily" not in source

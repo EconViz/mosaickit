@@ -1,40 +1,20 @@
 from __future__ import annotations
 
 import math
-import re
-import warnings
-from collections.abc import Iterator
-from contextlib import contextmanager
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any
 
 from mosaickit.colors import Color
 from mosaickit.errors import ConfigurationError
 from mosaickit.styles.base import SparseStyle, _check_size, _coerce_color, check_opacity
 
-_DEPRECATION_MESSAGE = (
-    "TextStyle.family is deprecated; choose fonts with Config(fonts=TextFonts(...)), which "
-    "GlyphKit lays out. This compatibility field may be removed in the next release."
-)
 _NAMED_WEIGHTS = ("normal", "bold")
-T = TypeVar("T", bound="TextStyle")
-
-
-@contextmanager
-def _legacy_font_values() -> Iterator[None]:
-    """Keep existing font values during internal construction and copying."""
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore", message=f"^{re.escape(_DEPRECATION_MESSAGE)}$", category=DeprecationWarning
-        )
-        yield
 
 
 @dataclass(frozen=True, slots=True)
 class TextStyle(SparseStyle):
     color: Color | str | None = None
     size: float | None = None
-    family: str | None = None
     weight: str | int | None = None
     opacity: float | None = None
     rotation: float | None = None
@@ -48,16 +28,6 @@ class TextStyle(SparseStyle):
             raise ConfigurationError("TextStyle.rotation must be finite")
         _check_weight(self.weight)
         _check_font(self.font)
-        if self.family is not None:
-            warnings.warn(
-                _DEPRECATION_MESSAGE,
-                DeprecationWarning,
-                stacklevel=3,  # Skip __post_init__ and the generated dataclass __init__.
-            )
-
-    def _replace(self: T, **changes: Any) -> T:
-        with _legacy_font_values():
-            return SparseStyle._replace(self, **changes)
 
 
 def _check_weight(weight: Any) -> None:

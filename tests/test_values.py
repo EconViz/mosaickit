@@ -1,6 +1,5 @@
 import warnings
 from dataclasses import FrozenInstanceError, fields
-from pathlib import Path
 
 import pytest
 
@@ -103,7 +102,6 @@ def test_sparse_merge_preserves_every_field(style):
         "arrow": "open",
         "hatch": "x",
         "shape": "s",
-        "family": "serif",
         "weight": "bold",
         "font": "serif",
         "rotation": 0,
@@ -125,17 +123,9 @@ def test_styles_do_not_cross_merge():
         Marker(size=3).merged_over(TextStyle(size=12))
 
 
-@pytest.mark.parametrize(
-    "font_fields", [{"family": "serif"}, {"family": "serif", "weight": "bold"}]
-)
-def test_legacy_family_warns_once_at_caller_and_preserves_fields(font_fields):
-    with pytest.warns(DeprecationWarning, match="GlyphKit") as caught:
-        style = TextStyle(**font_fields)
-    assert len(caught) == 1
-    assert caught[0].category is DeprecationWarning
-    assert Path(caught[0].filename) == Path(__file__)
-    for name, value in font_fields.items():
-        assert getattr(style, name) == value
+def test_text_style_has_no_family_field():
+    with pytest.raises(TypeError, match="family"):
+        TextStyle(family="serif")
 
 
 @pytest.mark.parametrize("weight", ["normal", "bold", 1, 400, 700, 1000])
@@ -156,7 +146,7 @@ def test_weight_rejects_values_glyphkit_cannot_resolve(weight):
     "values",
     [
         {},
-        {"family": None, "weight": None},
+        {"font": "serif", "weight": None},
         {"weight": "bold"},
         {"color": "#123456", "size": 12, "opacity": 0.5, "rotation": 45},
     ],
@@ -168,19 +158,15 @@ def test_default_and_non_font_text_styles_remain_warning_free(values):
     assert not caught
 
 
-def test_internal_text_style_copies_preserve_fonts_without_repeating_warning():
+def test_internal_text_style_copies_preserve_fonts_and_weight():
     from mosaickit import Canvas, Parameter, TextLayer
     from mosaickit.rendering.plan import _build_render_plan
 
-    with pytest.warns(DeprecationWarning, match="GlyphKit"):
-        style = TextStyle(color="blue", family="DejaVu Serif", weight="bold")
+    style = TextStyle(color="blue", font="serif", weight="bold")
     p = Parameter("x")
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        merged = TextStyle(size=14).merged_over(style)
-        canvas = Canvas().add(TextLayer((p, 5), "text", style=merged)).bind(p, 2)
-        plan = _build_render_plan(canvas.snapshot(), canvas._context())
-    assert not caught
-    assert plan.layers[0].style.text.family == "DejaVu Serif"
+    merged = TextStyle(size=14).merged_over(style)
+    canvas = Canvas().add(TextLayer((p, 5), "text", style=merged)).bind(p, 2)
+    plan = _build_render_plan(canvas.snapshot(), canvas._context())
+    assert plan.layers[0].style.text.font == "serif"
     assert plan.layers[0].style.text.weight == "bold"
     assert plan.layers[0].style.text.size == 14

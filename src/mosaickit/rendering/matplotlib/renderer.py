@@ -156,8 +156,3 @@ class MatplotlibRenderer:
         bbox = _expanded_bbox(result.figure) if options.expand else None
         result.figure.savefig(target, transparent=options.transparent, bbox_inches=bbox)
         return [target]
-
-    def save_animation(self, animation, path, cache):
-        from mosaickit.rendering.matplotlib.animation import save_animation
-
-        return save_animation(animation, path, self, cache)

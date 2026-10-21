@@ -6,8 +6,7 @@ drawn as the same ``MathText`` artist the math path uses, so label placement, wi
 tight bounding boxes see it like any other text, and measuring and drawing share one layout.
 
 The fonts are DejaVu Sans, Serif and Sans Mono from the files Matplotlib installs, and a
-``TextFonts`` replaces any of the three. A style that still sets the deprecated ``family`` is
-left to Matplotlib, as is text mixed with ``$...$`` math.
+``TextFonts`` replaces any of the three. Text mixed with ``$...$`` math is left to Matplotlib.
 """
 
 from __future__ import annotations
@@ -154,11 +153,10 @@ def typeset_text(text: str, style) -> MathLayout | None:
     """The GlyphKit layout of ``text`` in ``style``, or None when Matplotlib should draw it.
 
     That is the case outside ``text_typesetting``, when ``text`` has a ``$...$`` span (math,
-    or text mixed with math, is the math path's business), and when the style still sets the
-    deprecated ``family``.
+    or text mixed with math, is the math path's business).
     """
     typesetter = _ACTIVE.get()
-    if typesetter is None or style.family is not None or _UNESCAPED_DOLLAR.search(text):
+    if typesetter is None or _UNESCAPED_DOLLAR.search(text):
         return None
     return typesetter.layout(
         text, float(style.size), glyph_weight(style.weight), style.font or "sans"
