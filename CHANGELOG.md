@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.9.1 — 2026-10-21
 
 - Math is spaced and set by GlyphKit 1.0.0b3, which now follows TeX's layout rules: fractions, scripts,
   limits, radicals, delimiters and accents, with TeX's spacing around operators, relations and
