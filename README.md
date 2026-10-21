@@ -350,7 +350,7 @@ mono = ["fonts/JetBrainsMono-Regular.ttf"]
 - **Which text.** Strings without `$...$` in `TextLayer`, labels, axis marks and notes, and brace
   labels. Math keeps using the math font, text mixed with math, legends, arrow labels and the title
   keep using Matplotlib's default font.
-- **`TextStyle.family` is gone** (removed in 0.10.0). Choose a generic font with `font` and replace
+- **`TextStyle.family` is gone** (removed in 1.0.0). Choose a generic font with `font` and replace
   it with files through `TextFonts`.
 - **`TextFonts(paths)`** from 0.9.0 still works: the first argument is the `sans` slot, and
   `[fonts] files` is another name for `sans`.
@@ -376,7 +376,7 @@ binding, and stable structural equality.
 
 ### Migrating from 0.9
 
-0.10.0 removes what 0.6.0 deprecated:
+1.0.0 removes what 0.6.0 deprecated:
 
 - `Animation`, `Animation.sweep()` and the Matplotlib playback helper. Use KineticKit for
   animation; install it separately, MosaicKit does not depend on it. `CanvasGrid.sweep()` and
