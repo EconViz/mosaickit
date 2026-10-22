@@ -59,7 +59,7 @@ from mosaickit.styles import (
 from mosaickit.text_fonts import TextFonts
 from mosaickit.themes import RolePack, StyleBundle, Theme, ThemeRegistry, expand_roles
 
-__version__ = "1.0.0rc2"
+__version__ = "1.0.0rc3"
 __all__ = [
     "ArrowLayer",
     "ArrowPlacement",
