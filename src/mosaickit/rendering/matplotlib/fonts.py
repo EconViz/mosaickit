@@ -2,10 +2,15 @@ from typing import Any
 
 from matplotlib.font_manager import FontProperties
 
+from mosaickit.rendering.matplotlib.text_layout import configured_file
 from mosaickit.rendering.matplotlib.typesetting import typeset
 
 
 def font_properties(style) -> FontProperties:
+    """Matplotlib's font for ``style``: your file for its generic font when you gave one."""
+    path = configured_file(style.font or "sans")
+    if path is not None:
+        return FontProperties(fname=path, size=style.size, weight=style.weight)
     return FontProperties(size=style.size, weight=style.weight)
 
 

@@ -149,6 +149,17 @@ def text_typesetting(fonts: TextFonts | None) -> Iterator[None]:
         _ACTIVE.reset(token)
 
 
+def configured_file(slot: str) -> FilePath | None:
+    """The first file you gave for the generic font ``slot`` while drawing, if any.
+
+    Matplotlib draws the text GlyphKit does not (text mixed with ``$...$`` math); it needs
+    a file with the characters, which its own fonts may lack (Chinese, for example).
+    """
+    typesetter = _ACTIVE.get()
+    files = getattr(typesetter.fonts, slot, None) if typesetter is not None else None
+    return FilePath(files[0]) if files else None
+
+
 def typeset_text(text: str, style) -> MathLayout | None:
     """The GlyphKit layout of ``text`` in ``style``, or None when Matplotlib should draw it.
 

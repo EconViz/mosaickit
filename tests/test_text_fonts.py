@@ -186,3 +186,28 @@ def test_font_is_validated_and_survives_style_merging():
     merged = TextStyle(size=12).merged_over(TextStyle(font="serif", weight="bold"))
     assert (merged.font, merged.weight, merged.size) == ("serif", "bold", 12)
     assert StyleBundle(text=TextStyle(font="mono")).text.font == "mono"
+
+
+def test_a_title_is_set_in_your_text_fonts():
+    spec = CanvasSpec(width=4, height=3, dpi=100, title="Title")
+    plain = Canvas(spec).render()
+    yours = Canvas(spec, config=Config(fonts=TextFonts(STIX))).render()
+
+    # Matplotlib keeps drawing the title when no fonts are given
+    assert plain.axes.get_title() == "Title"
+    assert yours.axes.get_title() == ""
+    title = _text(yours.axes, "canvas.title")
+    assert isinstance(title, MathText)
+    box = title.get_window_extent(yours.figure.canvas.get_renderer())
+    axes = yours.axes.get_window_extent()
+    assert box.y0 >= axes.y1 and abs((box.x0 + box.x1) / 2 - (axes.x0 + axes.x1) / 2) < 1
+
+
+def test_text_mixed_with_math_uses_your_file():
+    from mosaickit.rendering.matplotlib.fonts import font_properties
+
+    style = TextStyle(size=12, font="serif")
+    assert font_properties(style).get_file() is None
+    with text_typesetting(TextFonts(serif=SERIF)):
+        assert Path(font_properties(style).get_file()) == SERIF
+        assert font_properties(TextStyle(size=12)).get_file() is None  # sans not given
