@@ -1,5 +1,17 @@
 # Changelog
 
+## Unreleased
+
+- Faster drawing with identical output. Label placement tests a candidate against 32 or more
+  segments or polygon edges on arrays instead of one at a time, plain numeric point lists are
+  validated as one array, and plain values skip the parameter search. Matplotlib's data-limit
+  bookkeeping, which MosaicKit never reads because it sets both axis limits, is skipped while a
+  scene is drawn. A cache keyed by the font properties and the relevant `rcParams` sits in front of
+  Matplotlib's mathtext parser while a scene is drawn and saved; Matplotlib's own cache is keyed by
+  parser instance and never hits across figures. Both are scoped to one draw or save and restore
+  Matplotlib afterwards. SVG output is byte for byte unchanged (compared on 14 figures and with
+  tests of each kernel against the loop it replaces).
+
 ## 1.0.0rc1 — 2026-10-21
 
 - Remove `Animation`, `Animation.sweep()` and the Matplotlib animation helper (deprecated in 0.6.0).
