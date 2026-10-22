@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0rc3 — 2026-10-22
+
+- Titles and text that mixes words with `$...$` math are set in the configured text fonts.
+  With `Config.fonts` given, the canvas title is laid out by GlyphKit like every text layer,
+  centred above the axes at Matplotlib's title padding, and text Matplotlib draws uses your file
+  for the style's generic font; before, both used Matplotlib's own fonts, so Chinese came out as
+  boxes. Without `Config.fonts` the output is byte for byte unchanged.
+
 ## 1.0.0rc2 — 2026-10-22
 
 - Faster drawing with identical output. Label placement tests a candidate against 32 or more
