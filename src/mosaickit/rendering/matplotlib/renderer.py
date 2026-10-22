@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from matplotlib import rcParams
 from matplotlib.backends.backend_agg import FigureCanvasAgg
 from matplotlib.figure import Figure
 from matplotlib.transforms import Bbox
@@ -18,6 +19,7 @@ from mosaickit.rendering.matplotlib import (
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
 from mosaickit.rendering.matplotlib.grid_links import draw_grid_links
+from mosaickit.rendering.matplotlib.math_text import draw_math
 from mosaickit.rendering.matplotlib.registry import (
     PassContext,
     builder_for,
@@ -25,7 +27,7 @@ from mosaickit.rendering.matplotlib.registry import (
     passes,
 )
 from mosaickit.rendering.matplotlib.speedups import mathtext_cache, without_data_limits
-from mosaickit.rendering.matplotlib.typesetting import typesetting
+from mosaickit.rendering.matplotlib.typesetting import typeset, typesetting
 from mosaickit.rendering.plan import _build_render_plan, _resolve_role
 from mosaickit.rendering.protocol import SaveOptions
 
@@ -97,11 +99,7 @@ class MatplotlibRenderer:
         title_style = _resolve_role(context, "title", "text").text
         assert title_style is not None
         assert isinstance(title_style.color, Color) and title_style.opacity is not None
-        ax.set_title(
-            spec.title or "",
-            fontproperties=font_properties(title_style),
-            color=rgba(title_style.color, title_style.opacity),
-        )
+        self._draw_title(ax, spec, title_style, context)
         ax.set_axis_off()
         plan = _build_render_plan(scene, context)
         handles: dict[str, Any] = {}
@@ -120,6 +118,34 @@ class MatplotlibRenderer:
         for kind, run in passes():
             if kind in deferred:
                 run(ax, deferred[kind], pass_context)
+
+    @staticmethod
+    def _draw_title(ax, spec, style, context) -> None:
+        """The canvas title, set in the configured text fonts when there are any.
+
+        Matplotlib knows only its own fonts, so a title in Chinese, say, would come out as
+        boxes. With ``Config.fonts`` set the title is laid out by GlyphKit like every text
+        layer, centred above the axes at Matplotlib's title padding; otherwise Matplotlib
+        draws it as before.
+        """
+        color = rgba(style.color, style.opacity)
+        title = spec.title or ""
+        layout = typeset(title, style) if title and context.text_fonts is not None else None
+        if layout is None:
+            ax.set_title(title, fontproperties=font_properties(style), color=color)
+            return
+        ax.set_title("")
+        draw_math(
+            ax,
+            layout,
+            ((spec.x_range[0] + spec.x_range[1]) / 2, spec.y_range[1]),
+            color=color,
+            rotation=style.rotation,
+            zorder=3,
+            align=("center", "bottom"),
+            offset_pt=(0, rcParams["axes.titlepad"]),
+            gid="canvas.title",
+        )
 
     def render(self, scene, context) -> MatplotlibResult:
         spec = context.spec
