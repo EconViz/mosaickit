@@ -9,6 +9,8 @@ from numbers import Real
 from typing import Any, ClassVar
 from uuid import uuid4
 
+import numpy as np
+
 from mosaickit.errors import ConfigurationError
 from mosaickit.parameter import Expression
 
@@ -59,9 +61,37 @@ def _point(value: Any) -> Any:
     return point
 
 
+# NumPy's fixed cost outweighs the per-point loop below this many points.
+_PLAIN_MINIMUM = 8
+
+
+def _plain_points(value: Any, minimum: int) -> tuple[tuple[float, float], ...] | None:
+    """A long list of plain numeric points, validated as one array, or None.
+
+    Returns what :func:`_point` would build for every point: floats, all finite. Anything
+    else (expressions, ragged input, too few points, non-finite values) goes through the
+    per-point path, which also raises the errors.
+    """
+    if type(value) not in (tuple, list) or len(value) < max(minimum, _PLAIN_MINIMUM):
+        return None
+    try:
+        array = np.asarray(value)
+    except (TypeError, ValueError):
+        return None
+    if array.ndim != 2 or array.shape[1] != 2 or array.dtype.kind not in "fiub":
+        return None
+    as_float = array.astype(float)
+    if not np.all(np.isfinite(as_float)):
+        return None
+    return tuple((x, y) for x, y in as_float.tolist())
+
+
 def _geometry(value: Any, *, minimum: int = 2) -> Any:
     if isinstance(value, Expression):
         return value
+    plain = _plain_points(value, minimum)
+    if plain is not None:
+        return plain
     if isinstance(value, (tuple, list)):
         points = tuple(_point(point) for point in value)
         if len(points) < minimum:

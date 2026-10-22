@@ -24,6 +24,7 @@ from mosaickit.rendering.matplotlib.registry import (
     deferred_kind,
     passes,
 )
+from mosaickit.rendering.matplotlib.speedups import mathtext_cache, without_data_limits
 from mosaickit.rendering.matplotlib.typesetting import typesetting
 from mosaickit.rendering.plan import _build_render_plan, _resolve_role
 from mosaickit.rendering.protocol import SaveOptions
@@ -84,7 +85,8 @@ class MatplotlibRenderer:
 
     def _draw(self, ax, scene, context) -> None:
         with typesetting(context.math_font, context.text_fonts):
-            self._draw_scene(ax, scene, context)
+            with mathtext_cache.installed(), without_data_limits(ax):
+                self._draw_scene(ax, scene, context)
 
     def _draw_scene(self, ax, scene, context) -> None:
         spec = context.spec
@@ -153,6 +155,7 @@ class MatplotlibRenderer:
             raise RenderError("Cannot save a closed result")
         if target.suffix.lower() not in {".png", ".pdf", ".svg"}:
             raise RenderError(f"Matplotlib does not support {target.suffix!r}")
-        bbox = _expanded_bbox(result.figure) if options.expand else None
-        result.figure.savefig(target, transparent=options.transparent, bbox_inches=bbox)
+        with mathtext_cache.installed():
+            bbox = _expanded_bbox(result.figure) if options.expand else None
+            result.figure.savefig(target, transparent=options.transparent, bbox_inches=bbox)
         return [target]

@@ -6,6 +6,8 @@ not cross any line, point, text, or other region.
 
 import math
 
+import numpy as np
+
 from mosaickit.layout.geometry import (
     Point,
     Rect,
@@ -15,6 +17,13 @@ from mosaickit.layout.geometry import (
     ray_exit,
     rect_hits_segment,
     segments_intersect,
+)
+from mosaickit.layout.geometry.arrays import (
+    SMALL,
+    point_in_edges,
+    polygon_array,
+    segment_array,
+    segments_intersect_many,
 )
 from mosaickit.layout.placement.obstacles import Obstacles
 
@@ -49,6 +58,26 @@ def leader_violations(leader: Segment, obstacles: Obstacles, own: tuple[Point, .
     if outside is None:
         return 0
     a, b = outside
+    if len(obstacles.segments) < SMALL and all(len(p) < SMALL for p in obstacles.polygons):
+        return _violations_loop(a, b, obstacles, own)
+    (ax, ay), (bx, by) = a, b
+    count = 0
+    if obstacles.segments:
+        s = segment_array(obstacles.segments)
+        hits = segments_intersect_many(ax, ay, bx, by, s[:, 0], s[:, 1], s[:, 2], s[:, 3])
+        count += int(np.count_nonzero(hits))
+    count += sum(1 for rect in obstacles.rects if rect_hits_segment(rect, a, b))
+    for polygon in obstacles.polygons:
+        if polygon == own:
+            continue
+        e = polygon_array(polygon)
+        crossing = segments_intersect_many(ax, ay, bx, by, e[:, 0], e[:, 1], e[:, 2], e[:, 3])
+        if point_in_edges(b, e) or bool(np.any(crossing)):
+            count += 1
+    return count
+
+
+def _violations_loop(a: Point, b: Point, obstacles: Obstacles, own: tuple[Point, ...]) -> int:
     count = sum(1 for c, d in obstacles.segments if segments_intersect(a, b, c, d))
     count += sum(1 for rect in obstacles.rects if rect_hits_segment(rect, a, b))
     count += sum(
