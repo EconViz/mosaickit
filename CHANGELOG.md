@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.0.0rc2 — 2026-10-22
 
 - Faster drawing with identical output. Label placement tests a candidate against 32 or more
   segments or polygon edges on arrays instead of one at a time, plain numeric point lists are
