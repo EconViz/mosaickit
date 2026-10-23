@@ -1,5 +1,38 @@
 # Changelog
 
+## 1.0.0rc6 — 2026-10-23
+
+- Packages no longer parse `econ-viz.toml` themselves. A package declares an
+  `econ_toml.Schema`: its built-in themes (`base`), the keys of its own table with the attribute
+  each sets (`color`, `number`, `positive`, `length`, `boolean`, `string`, `choice`, `path`,
+  `transform`; `length` takes points or strings such as `"2mm"` and `"0.1in"`), tables with free
+  names such as `[utility.stroke.<name>]` (`pattern`), and which shared settings it uses.
+  mosaickit reads the file, checks every value, resolves relative paths against the file's
+  directory and reports mistakes with the file and table they are in, suggesting the closest key
+  for a typo or listing the valid keys when none is close: `econ-viz.toml: [principle.color]
+  unknown key 'demnad'; did you mean 'demand'?`. Unknown top-level keys are an error; other
+  packages' tables are skipped.
+- `Schema.config_class()` gives the package's `Config` class (`load`, `discover`, `from_dict`,
+  `use`, `reset`, `active`, and the built object's attributes), and `Schema.template()` writes the
+  package's commented section.
+- utility-viz settings left at the top level (`[color] ic`, `[stroke.*]`, ...) are read as if they
+  were under `[utility]`, with one warning naming the new place; `[utility]` wins when both set a
+  key.
+- `econ_toml.register()`, `registered()` and `load()` build every registered package from one file;
+  `econ_toml.use()` loads and activates every installed package that declares an `econviz.config`
+  entry point.
+- `utility` is now a package table like the others (`econ_toml.PACKAGES`, also `PACKAGE_TABLES`).
+- Shared themes: `mosaickit.themes` defines the themes every EconViz package offers (`manual`,
+  `default`, `colorblind`, `monochrome`, `nord`, `paper`, `presentation`) as colours for named roles
+  (`ink`, `primary`, `secondary`, `constraint`, `accent`, the region fills, ...) plus line, marker and
+  label scales. A package maps its own elements to roles once, so one theme name looks the same in
+  every package. `get_tokens()`, `list_shared_themes()`, `SHARED_THEMES`, `ThemeTokens`, `ROLES`.
+- Label nudges: point, region, brace and text labels take `nudge=Nudge(dx, dy)` in points, applied
+  after automatic placement, so a single label can be moved a little without giving up placement;
+  leaders follow the moved label and later labels avoid it. `parse_length()` reads `"10pt"`,
+  `"0.5em"`, `"2mm"`, `"0.1in"`, and `nudge_from(top=, bottom=, left=, right=)` builds a nudge.
+  Without a nudge the output is unchanged.
+
 ## 1.0.0rc5 — 2026-10-23
 
 - `mosaickit.econ_toml` reads the sections of `econ-viz.toml` that every EconViz package shares:
