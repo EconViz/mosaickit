@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.0.0rc4 — 2026-10-23
+
+- Parsed fonts are shared across symbolic links: the text and math typesetter caches are keyed
+  by the fonts' real paths, so the same files reached through different links are parsed once.
+- A title set in the configured fonts puts its baseline where Matplotlib puts a title's, the title
+  padding above the axes. In 1.0.0rc3 its bottom sat there, about 5 pt higher than before.
+
 ## 1.0.0rc3 — 2026-10-22
 
 - Titles and text that mixes words with `$...$` math are set in the configured text fonts.
