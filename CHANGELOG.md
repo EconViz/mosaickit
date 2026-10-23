@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0rc5 — 2026-10-23
+
+- `mosaickit.econ_toml` reads the sections of `econ-viz.toml` that every EconViz package shares:
+  `base`, `[font]`, `[fonts]` and the `background`, `axis` and `label` colours, with relative
+  paths resolved against the file. Packages other than utility-viz keep their own settings in
+  one table each (`[principle]`, `[micro]`, `[macro]`, `[trade]`, `[dsge]`, `[game]`), listed in
+  `econ_toml.PACKAGE_TABLES`, and skip the others'.
+
 ## 1.0.0rc4 — 2026-10-23
 
 - Parsed fonts are shared across symbolic links: the text and math typesetter caches are keyed
