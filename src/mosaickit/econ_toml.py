@@ -48,6 +48,7 @@ from typing import Any, ClassVar
 
 from mosaickit.errors import ConfigurationError
 from mosaickit.palette import DEFAULT_PALETTE
+from mosaickit.styles.nudge import POINTS_PER_UNIT, parse_length
 from mosaickit.text_fonts import GENERIC_FONTS, TextFonts
 
 if sys.version_info >= (3, 11):
@@ -235,27 +236,22 @@ def positive(attr: str) -> Field:
     return number(attr, minimum=0, exclusive_minimum=True)
 
 
-_LENGTH = re.compile(r"\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*([a-z]+)\s*")
-_POINTS_PER = {"pt": 1.0, "mm": 72 / 25.4, "cm": 72 / 2.54, "in": 72.0}
-
-
 def length(attr: str) -> Field:
     """A length set in points: a number (pt) or ``"10pt"``, ``"2mm"``, ``"0.5cm"``, ``"0.1in"``.
 
-    ``em`` is not accepted: there is no font size to measure it against.
+    ``em`` is not accepted: there is no font size to measure it against. The units and their
+    conversion are those of :func:`mosaickit.styles.nudge.parse_length`.
     """
-    units = ", ".join(_POINTS_PER)
+    units = ", ".join(POINTS_PER_UNIT)
 
     def convert(value: Any, ctx: Context, key: str) -> Any:
-        if isinstance(value, (int, float)) and not isinstance(value, bool):
-            if math.isfinite(value):
-                return float(value)
-        elif isinstance(value, str) and (match := _LENGTH.fullmatch(value)):
-            amount, unit = match.groups()
-            if unit == "em":
-                raise ctx.error(f"{key} cannot be in em here (no font size); use {units}")
-            if unit in _POINTS_PER:
-                return float(amount) * _POINTS_PER[unit]
+        if isinstance(value, str) and value.strip().lower().endswith("em"):
+            raise ctx.error(f"{key} cannot be in em here (no font size); use {units}")
+        if isinstance(value, (int, float, str)) and not isinstance(value, bool):
+            try:
+                return parse_length(value)
+            except ConfigurationError:
+                pass
         raise ctx.error(
             f"{key} must be a length (a number of points or a string in {units}), got {value!r}"
         )

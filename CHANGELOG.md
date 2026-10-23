@@ -22,6 +22,16 @@
   `econ_toml.use()` loads and activates every installed package that declares an `econviz.config`
   entry point.
 - `utility` is now a package table like the others (`econ_toml.PACKAGES`, also `PACKAGE_TABLES`).
+- Shared themes: `mosaickit.themes` defines the themes every EconViz package offers (`manual`,
+  `default`, `colorblind`, `monochrome`, `nord`, `paper`, `presentation`) as colours for named roles
+  (`ink`, `primary`, `secondary`, `constraint`, `accent`, the region fills, ...) plus line, marker and
+  label scales. A package maps its own elements to roles once, so one theme name looks the same in
+  every package. `get_tokens()`, `list_shared_themes()`, `SHARED_THEMES`, `ThemeTokens`, `ROLES`.
+- Label nudges: point, region, brace and text labels take `nudge=Nudge(dx, dy)` in points, applied
+  after automatic placement, so a single label can be moved a little without giving up placement;
+  leaders follow the moved label and later labels avoid it. `parse_length()` reads `"10pt"`,
+  `"0.5em"`, `"2mm"`, `"0.1in"`, and `nudge_from(top=, bottom=, left=, right=)` builds a nudge.
+  Without a nudge the output is unchanged.
 
 ## 1.0.0rc5 — 2026-10-23
 
