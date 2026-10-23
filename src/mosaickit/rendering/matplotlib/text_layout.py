@@ -127,9 +127,26 @@ class TextTypesetter:
         return MathLayout(text, path, box)
 
 
-@lru_cache(maxsize=8)
 def typesetter_for(fonts: TextFonts) -> TextTypesetter:
-    return TextTypesetter(fonts)
+    """The typesetter for ``fonts``, shared by every ``TextFonts`` naming the same files.
+
+    The cache is keyed by the files' real paths, so the same fonts reached through
+    different symbolic links (one link per sandboxed workspace, say) are parsed once.
+    """
+    return _typesetter(*(_real(getattr(fonts, slot)) for slot in GENERIC_FONTS))
+
+
+def _real(files: tuple[FilePath, ...] | None) -> tuple[FilePath, ...] | None:
+    return None if files is None else tuple(path.resolve() for path in files)
+
+
+@lru_cache(maxsize=8)
+def _typesetter(
+    sans: tuple[FilePath, ...] | None,
+    serif: tuple[FilePath, ...] | None,
+    mono: tuple[FilePath, ...] | None,
+) -> TextTypesetter:
+    return TextTypesetter(TextFonts(sans=sans, serif=serif, mono=mono))
 
 
 _ACTIVE: ContextVar[TextTypesetter | None] = ContextVar("mosaickit_text_typesetter", default=None)
