@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.0.0rc6 — 2026-10-23
+
+- Packages no longer parse `econ-viz.toml` themselves. A package declares an
+  `econ_toml.Schema`: its built-in themes (`base`), the keys of its own table with the attribute
+  each sets (`color`, `number`, `positive`, `boolean`, `string`, `choice`, `path`, `transform`),
+  tables with free names such as `[utility.stroke.<name>]` (`pattern`), and which shared settings
+  it uses. mosaickit reads the file, checks every value, resolves relative paths against the
+  file's directory and reports mistakes with the file and table they are in, suggesting the
+  closest key for a typo: `econ-viz.toml: [principle.color] unknown key 'demnad'; did you mean
+  'demand'?`. Unknown top-level keys are an error; other packages' tables are skipped.
+- `Schema.config_class()` gives the package's `Config` class (`load`, `discover`, `from_dict`,
+  `use`, `reset`, `active`, and the built object's attributes), and `Schema.template()` writes the
+  package's commented section.
+- utility-viz settings left at the top level (`[color] ic`, `[stroke.*]`, ...) are read as if they
+  were under `[utility]`, with one warning naming the new place; `[utility]` wins when both set a
+  key.
+- `econ_toml.register()`, `registered()` and `load()` build every registered package from one file;
+  `econ_toml.use()` loads and activates every installed package that declares an `econviz.config`
+  entry point.
+- `utility` is now a package table like the others (`econ_toml.PACKAGES`, also `PACKAGE_TABLES`).
+
 ## 1.0.0rc5 — 2026-10-23
 
 - `mosaickit.econ_toml` reads the sections of `econ-viz.toml` that every EconViz package shares:

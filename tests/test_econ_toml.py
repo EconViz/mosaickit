@@ -63,8 +63,9 @@ def test_rejects_bad_shared_values(data):
 
 
 def test_package_table_names_are_checked():
+    assert econ_toml.package_table({"utility": {"a": 1}}, "utility") == {"a": 1}
     with pytest.raises(ConfigurationError):
-        econ_toml.package_table({}, "utility")
+        econ_toml.package_table({}, "colour")
     with pytest.raises(ConfigurationError):
         econ_toml.package_table({"principle": 1}, "principle")
 
