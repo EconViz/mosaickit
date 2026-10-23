@@ -7,7 +7,7 @@ from mosaickit.errors import RenderError
 from mosaickit.layout import Obstacles, Rect, fits_inside, place_callout, polylabel
 from mosaickit.layout.geometry import Segment
 from mosaickit.rendering.matplotlib.fonts import measure_text
-from mosaickit.rendering.matplotlib.labels import draw_label, draw_leader, warn_unplaced
+from mosaickit.rendering.matplotlib.labels import draw_label, draw_leader, nudged, warn_unplaced
 from mosaickit.rendering.matplotlib.obstacles import to_display
 
 PAD_PT = 2.0
@@ -58,6 +58,7 @@ def draw_region_label(
     layer, style, stroke = resolved.layer, resolved.style.text, resolved.style.stroke
     polygon = _polygon(ax, layer, regions)
     text, rect, leader = _choose(ax, layer, style, polygon, obstacles, renderer)
+    rect, leader = nudged(ax, layer.nudge, rect, leader)
 
     draw_label(ax, style, text, rect.center, gid=layer.id, z_index=layer.z_index)
     if leader is None:

@@ -4,7 +4,8 @@ from typing import Any, ClassVar
 
 from mosaickit.errors import ConfigurationError
 from mosaickit.scene.layer import Layer, _geometry
-from mosaickit.styles import Stroke, TextStyle
+from mosaickit.styles import Nudge, Stroke, TextStyle
+from mosaickit.styles.nudge import check_nudge
 
 REGION_LABEL_PLACEMENTS = ("auto", "inside", "callout")
 
@@ -14,6 +15,7 @@ class RegionLabelLayer(Layer):
     """Name a filled region: inside it when the text fits, otherwise as a callout.
 
     ``region`` is a ``FillLayer`` id or a polygon. ``stroke`` styles the callout leader.
+    ``nudge`` moves the placed text by a few points; a callout leader follows it.
     """
 
     role: str = field(default="text", kw_only=True)
@@ -23,6 +25,7 @@ class RegionLabelLayer(Layer):
     placement: str = "auto"
     style: TextStyle | None = None
     stroke: Stroke | None = Stroke(width=0.8)
+    nudge: Nudge | None = field(default=None, kw_only=True)
     fallback_category: ClassVar[str] = "text"
     style_slots: ClassVar[Mapping[str, str]] = {"text": "style", "stroke": "stroke"}
 
@@ -41,3 +44,4 @@ class RegionLabelLayer(Layer):
             raise ConfigurationError("RegionLabelLayer.short_text must be a non-empty string")
         if self.placement not in REGION_LABEL_PLACEMENTS:
             raise ConfigurationError(f"Unsupported region label placement: {self.placement}")
+        check_nudge("RegionLabelLayer", self.nudge)

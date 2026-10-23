@@ -95,3 +95,12 @@ forbidden_modules = [
     "mosaickit.rendering", "mosaickit.canvas", "mosaickit.layout", "mosaickit.themes",
     "mosaickit.config", "matplotlib",
 ]
+
+[[tool.importlinter.contracts]]
+name = "Shared theme tokens are pure data"
+type = "forbidden"
+source_modules = ["mosaickit.themes.shared"]
+forbidden_modules = [
+    "mosaickit.econ_toml", "mosaickit.config", "mosaickit.palette", "mosaickit.styles",
+    "mosaickit.scene", "mosaickit.canvas", "mosaickit.rendering", "matplotlib",
+]

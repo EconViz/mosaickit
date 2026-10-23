@@ -37,6 +37,9 @@ class Rect:
     def center(self) -> Point:
         return ((self.x0 + self.x1) / 2, (self.y0 + self.y1) / 2)
 
+    def shifted(self, dx: float, dy: float) -> Rect:
+        return Rect(self.x0 + dx, self.y0 + dy, self.x1 + dx, self.y1 + dy)
+
     def inflate(self, pad: float) -> Rect:
         return Rect(self.x0 - pad, self.y0 - pad, self.x1 + pad, self.y1 + pad)
 

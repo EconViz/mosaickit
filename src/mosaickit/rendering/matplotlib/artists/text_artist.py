@@ -23,12 +23,12 @@ def build(ax: Any, resolved: Any) -> Any:
             rotation=style.rotation,
             zorder=layer.z_index,
             align=(horizontal, vertical),
-            offset_pt=layer.offset,
+            offset_pt=layer.total_offset,
         )
     return ax.annotate(
         text,
         layer.position,
-        xytext=layer.offset,
+        xytext=layer.total_offset,
         textcoords="offset points",
         ha=horizontal,
         va=vertical,
