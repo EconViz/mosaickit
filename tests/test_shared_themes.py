@@ -68,6 +68,10 @@ def test_every_role_has_a_valid_colour(name):
     assert tuple(tokens.colors) == ROLES
     for role in ROLES:
         value = tokens.color(role)
+        if role == "background" and name != "manual":
+            assert value is None
+            continue
+        assert isinstance(value, str)
         assert re.fullmatch(r"#[0-9A-Fa-f]{6}([0-9A-Fa-f]{2})?", value), (role, value)
         Color.from_hex(value)
     for scale in (tokens.line_scale, tokens.marker_scale, tokens.label_scale):
@@ -93,6 +97,31 @@ def test_scales():
             assert (tokens.line_scale, tokens.marker_scale, tokens.label_scale) == (1.0,) * 3
 
 
+@pytest.mark.parametrize("name", ["default", "colorblind", "nord", "paper", "presentation"])
+def test_fills_follow_the_curves(name):
+    tokens = get_tokens(name)
+    assert tokens.color("fill.light") == tokens.color("primary")
+    assert tokens.color("fill.mid") == tokens.color("secondary")
+    assert tokens.color("fill.dark") == tokens.color("accent")
+    assert tokens.color("fill.faint") == tokens.color("intervention")
+
+
+def test_monochrome_fill_ladder():
+    tokens = get_tokens("monochrome")
+    assert [tokens.color(f"fill.{k}") for k in ("light", "mid", "dark", "faint")] == [
+        "#E0E0E0",
+        "#BDBDBD",
+        "#636363",
+        "#969696",
+    ]
+
+
+def test_background_none_only_for_background():
+    assert ThemeTokens("custom", {**MANUAL, "background": None}).color("background") is None
+    with pytest.raises(ConfigurationError, match="'ink'"):
+        ThemeTokens("custom", {**MANUAL, "ink": None})
+
+
 def test_default_matches_colorblind():
     assert get_tokens("default").colors == get_tokens("colorblind").colors
 
@@ -102,8 +131,9 @@ def test_subtle_is_primary_at_45_percent():
         if name == "manual":
             continue
         tokens = get_tokens(name)
-        assert tokens.color("subtle") == tokens.color("primary") + "73"
-        assert Color.from_hex(tokens.color("subtle")).alpha == pytest.approx(0.45, abs=0.005)
+        subtle = tokens.color("subtle")
+        assert subtle == f"{tokens.color('primary')}73"
+        assert Color.from_hex(subtle).alpha == pytest.approx(0.45, abs=0.005)
 
 
 def test_get_tokens_normalises_name():
