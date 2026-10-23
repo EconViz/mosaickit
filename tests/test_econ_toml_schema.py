@@ -18,6 +18,7 @@ from mosaickit.econ_toml import (
     boolean,
     choice,
     color,
+    length,
     number,
     path,
     pattern,
@@ -417,8 +418,33 @@ def test_unknown_key_in_a_package_table_suggests_a_close_one():
     assert message == "<dict>: [principle.color] unknown key 'demnad'; did you mean 'demand'?"
 
 
-def test_unknown_key_without_a_close_match_has_no_suggestion():
-    assert error({"principle": {"zzz": 1}}) == "<dict>: [principle] unknown key 'zzz'"
+def test_unknown_key_without_a_close_match_lists_the_valid_keys():
+    assert error({"principle": {"zzz": 1}}) == (
+        "<dict>: [principle] unknown key 'zzz'; choose from color, grid, language, logo, "
+        "marker, ratio, stroke, title, width"
+    )
+    assert error({"principle": {"color": {"zzz": "#000"}}}) == (
+        "<dict>: [principle.color] unknown key 'zzz'; choose from demand, supply"
+    )
+    assert error({"fonts": {"zzz": "a.otf"}}) == (
+        "<dict>: [fonts] unknown key 'zzz'; choose from mono, sans, serif"
+    )
+    assert error({"fonts": {"sanss": "a.otf"}}) == (
+        "<dict>: [fonts] unknown key 'sanss'; did you mean 'sans'?"
+    )
+    assert error({"zzz": 1}).startswith(
+        "<dict>: unknown top-level key 'zzz'; choose from base, color, dsge, font, fonts,"
+    )
+
+
+def test_font_file_errors_name_the_source_and_table(tmp_path):
+    with pytest.raises(ConfigurationError) as info:
+        SCHEMA.build({"fonts": {"sans": []}}, source="econ-viz.toml")
+    assert str(info.value) == "econ-viz.toml: [fonts] sans needs at least one font file"
+    with pytest.raises(ConfigurationError) as info:
+        SCHEMA.build({"fonts": {"serif": "missing.otf"}}, source="s.toml", base_dir=tmp_path)
+    assert str(info.value).startswith("s.toml: [fonts] serif ")
+    assert "TextFonts" not in str(info.value)
 
 
 def test_unknown_top_level_key_suggests_a_close_one():
@@ -715,7 +741,7 @@ def test_template_lists_every_key_with_its_default():
         "# ratio = 0.5\n"
         "# grid = false\n"
         '# title = ""\n'
-        '# logo = "path/to/file"\n'
+        "# logo = ...  # (no default)\n"
         "# marker = 4.0\n"
         "\n"
         "# [principle.color]\n"
@@ -729,8 +755,21 @@ def test_template_lists_every_key_with_its_default():
 
 def test_template_is_valid_toml_once_uncommented():
     head = SCHEMA.template().split("# [principle.stroke")[0]
-    data = econ_toml.tomllib.loads("\n".join(line[2:] for line in head.splitlines()))
-    assert SCHEMA.build(data | {"principle": {**data["principle"], "logo": "x"}}).colors == Colors()
+    lines = [line[2:] for line in head.splitlines() if "= ..." not in line]
+    data = econ_toml.tomllib.loads("\n".join(lines))
+    # marker is a transform (diameter -> area), so its default does not round-trip.
+    assert replace(SCHEMA.build(data), marker=4.0) == Theme()
+
+
+def test_template_shows_no_invented_colour_for_a_missing_default():
+    @dataclass(frozen=True)
+    class Bare:
+        ic: str | None = None
+
+    schema = Schema(
+        "utility", {"default": Bare}, fields={"color.ic": color("ic")}, docs={"color.ic": "IC."}
+    )
+    assert schema.template() == "# [utility.color]\n# ic = ...  # IC. (no default)\n"
 
 
 def test_template_of_an_empty_schema_and_odd_defaults():
@@ -826,3 +865,47 @@ def test_use_activates_every_installed_package(tmp_path, monkeypatch):
 def test_use_without_installed_packages_does_nothing(monkeypatch):
     monkeypatch.setattr(econ_toml.metadata, "entry_points", lambda *, group: [])
     econ_toml.use("/does/not/matter.toml")
+
+
+# ---- length
+
+
+@pytest.mark.parametrize(
+    ("value", "points"),
+    [
+        (3, 3.0),
+        (2.5, 2.5),
+        (-1, -1.0),
+        ("10pt", 10.0),
+        ("-3pt", -3.0),
+        ("+1.5pt", 1.5),
+        (" 4 pt ", 4.0),
+        (".5pt", 0.5),
+        ("0.1in", 7.2),
+        ("1in", 72.0),
+        ("25.4mm", 72.0),
+        ("2mm", 2 * 72 / 25.4),
+        ("2.54cm", 72.0),
+    ],
+)
+def test_length_returns_points(value, points):
+    schema = make_schema(fields={"gap": length("width")})
+    assert schema.build({"principle": {"gap": value}}).width == pytest.approx(points)
+
+
+@pytest.mark.parametrize(
+    "value", ["10", "10px", "pt", "1.2.3pt", "", True, None, float("nan"), [1]]
+)
+def test_length_rejects_other_values(value):
+    schema = make_schema(fields={"gap": length("width")})
+    assert error({"principle": {"gap": value}}, schema).startswith(
+        "<dict>: [principle] gap must be a length "
+        "(a number of points or a string in pt, mm, cm, in)"
+    )
+
+
+def test_length_rejects_em():
+    schema = make_schema(fields={"gap": length("width")})
+    assert error({"principle": {"gap": "1.5em"}}, schema) == (
+        "<dict>: [principle] gap cannot be in em here (no font size); use pt, mm, cm, in"
+    )

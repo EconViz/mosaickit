@@ -177,7 +177,6 @@ class Field:
     attr: str
     kind: str
     convert: Callable[[Any, Context, str], Any] = field(repr=False)
-    placeholder: Any = None
 
 
 @dataclass(frozen=True)
@@ -196,7 +195,7 @@ def color(attr: str) -> Field:
             raise ctx.error(f"{key} must be a colour (#rrggbb or a colour name), got {value!r}")
         return value
 
-    return Field(attr, "color", convert, "#000000")
+    return Field(attr, "color", convert)
 
 
 def number(
@@ -228,12 +227,40 @@ def number(
             raise ctx.error(f"{key} must be {wanted}, got {value!r}")
         return value
 
-    return Field(attr, "number", convert, 0)
+    return Field(attr, "number", convert)
 
 
 def positive(attr: str) -> Field:
     """A number greater than zero."""
     return number(attr, minimum=0, exclusive_minimum=True)
+
+
+_LENGTH = re.compile(r"\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))\s*([a-z]+)\s*")
+_POINTS_PER = {"pt": 1.0, "mm": 72 / 25.4, "cm": 72 / 2.54, "in": 72.0}
+
+
+def length(attr: str) -> Field:
+    """A length set in points: a number (pt) or ``"10pt"``, ``"2mm"``, ``"0.5cm"``, ``"0.1in"``.
+
+    ``em`` is not accepted: there is no font size to measure it against.
+    """
+    units = ", ".join(_POINTS_PER)
+
+    def convert(value: Any, ctx: Context, key: str) -> Any:
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            if math.isfinite(value):
+                return float(value)
+        elif isinstance(value, str) and (match := _LENGTH.fullmatch(value)):
+            amount, unit = match.groups()
+            if unit == "em":
+                raise ctx.error(f"{key} cannot be in em here (no font size); use {units}")
+            if unit in _POINTS_PER:
+                return float(amount) * _POINTS_PER[unit]
+        raise ctx.error(
+            f"{key} must be a length (a number of points or a string in {units}), got {value!r}"
+        )
+
+    return Field(attr, "length", convert)
 
 
 def boolean(attr: str) -> Field:
@@ -244,7 +271,7 @@ def boolean(attr: str) -> Field:
             raise ctx.error(f"{key} must be true or false, got {value!r}")
         return value
 
-    return Field(attr, "boolean", convert, False)
+    return Field(attr, "boolean", convert)
 
 
 def string(attr: str) -> Field:
@@ -255,7 +282,7 @@ def string(attr: str) -> Field:
             raise ctx.error(f"{key} must be a string, got {value!r}")
         return value
 
-    return Field(attr, "string", convert, "")
+    return Field(attr, "string", convert)
 
 
 def choice(attr: str, options: Iterable[str]) -> Field:
@@ -270,7 +297,7 @@ def choice(attr: str, options: Iterable[str]) -> Field:
             raise ctx.error(f"{key} must be one of {listed}, got {value!r}{_hint(value, allowed)}")
         return value
 
-    return Field(attr, "choice", convert, allowed[0])
+    return Field(attr, "choice", convert)
 
 
 def path(attr: str) -> Field:
@@ -281,7 +308,7 @@ def path(attr: str) -> Field:
             raise ctx.error(f"{key} must be a file path, got {value!r}")
         return ctx.resolve(value)
 
-    return Field(attr, "path", convert, "path/to/file")
+    return Field(attr, "path", convert)
 
 
 def transform(attr: str, convert: Callable[[Any, Context], Any]) -> Field:
@@ -297,7 +324,7 @@ def transform(attr: str, convert: Callable[[Any, Context], Any]) -> Field:
         except ConfigurationError as error:
             raise _relocated(error, ctx, f"{key} ") from None
 
-    return Field(attr, "transform", run, None)
+    return Field(attr, "transform", run)
 
 
 def pattern(
@@ -422,10 +449,13 @@ class Schema:
         for key, item in self.fields.items():
             *parents, last = key.split(".")
             section = ".".join([self.package, *parents])
-            value = _toml_value(_dotted_get(default, item.attr), item.placeholder)
-            line = f"# {last} = {value}"
-            if key in self.docs:
-                line += f"  # {self.docs[key]}"
+            current = _dotted_get(default, item.attr)
+            line = f"# {last} = {_toml_value(current)}"
+            notes = [self.docs[key]] if key in self.docs else []
+            if current is None:
+                notes.append("(no default)")
+            if notes:
+                line += f"  # {' '.join(notes)}"
             sections.setdefault(section, []).append(line)
         for prefix in self.patterns:
             section = f"{self.package}.{prefix}.<name>"
@@ -465,7 +495,7 @@ class Schema:
                     elif self.legacy_top_level or key != "color":
                         choices = sorted(_SHARED_KEYS[key] | self._subkeys(key))
                         raise ConfigurationError(
-                            f"{source}: [{key}] unknown key {sub!r}{_hint(sub, choices)}"
+                            f"{source}: [{key}] unknown key {sub!r}{_unknown(sub, choices)}"
                         )
                 continue
             if key in SHARED_SECTIONS:
@@ -480,7 +510,7 @@ class Schema:
                 SHARED_SECTIONS | PACKAGES | (firsts if self.legacy_top_level else set())
             )
             raise ConfigurationError(
-                f"{source}: unknown top-level key {key!r}{_hint(key, choices)}"
+                f"{source}: unknown top-level key {key!r}{_unknown(key, choices)}"
             )
         if not legacy:
             return table, moved
@@ -563,7 +593,7 @@ class Schema:
                 updates.extend(self._walk(value, (*parts, key), root))
             else:
                 choices = sorted(self._next_segments(parts))
-                raise ctx.error(f"unknown key {key!r}{_hint(key, choices)}")
+                raise ctx.error(f"unknown key {key!r}{_unknown(key, choices)}")
         return updates
 
     def _pattern(
@@ -755,6 +785,12 @@ def _hint(value: Any, choices: Iterable[str], *, prefix: str = "; ") -> str:
     return f"{prefix}did you mean {close[0]!r}?" if close else ""
 
 
+def _unknown(value: str, choices: Iterable[str]) -> str:
+    """A did-you-mean suggestion, or the list of valid keys when nothing is close."""
+    names = sorted(choices)
+    return _hint(value, names) or (f"; choose from {', '.join(names)}" if names else "")
+
+
 def _is_color(value: str) -> bool:
     if value.startswith("#"):
         return _HEX.fullmatch(value) is not None
@@ -826,7 +862,7 @@ def _dotted_get(obj: Any, attr: str) -> Any:
     return obj
 
 
-def _toml_value(value: Any, placeholder: Any) -> str:
+def _toml_value(value: Any) -> str:
     if hasattr(value, "to_hex"):
         value = value.to_hex()
     if isinstance(value, (bool, str)) or (isinstance(value, (int, float)) and math.isfinite(value)):
@@ -835,7 +871,7 @@ def _toml_value(value: Any, placeholder: Any) -> str:
         isinstance(item, (bool, str, int, float)) for item in value
     ):
         return "[" + ", ".join(_toml_scalar(item) for item in value) + "]"
-    return _toml_scalar(placeholder) if placeholder is not None else "..."
+    return "..."
 
 
 def _toml_scalar(value: Any) -> str:
@@ -868,7 +904,11 @@ def _fonts(table: Mapping[str, Any], directory: Path | None, source: str) -> Tex
         if not isinstance(files, list) or not all(isinstance(item, str) for item in files):
             raise ConfigurationError(f"{source}: [fonts] {slot} must be a path or a list of paths")
         slots[slot] = tuple(Path(_path(item, directory)) for item in files)
-    return TextFonts(**slots)  # type: ignore[arg-type]  # keys checked above
+    try:
+        return TextFonts(**slots)  # type: ignore[arg-type]  # keys checked above
+    except ConfigurationError as error:
+        problem = str(error).removeprefix("TextFonts.")
+        raise ConfigurationError(f"{source}: [fonts] {problem}") from None
 
 
 def _path(value: str, directory: Path | None) -> str:
@@ -897,6 +937,7 @@ __all__ = [
     "choice",
     "color",
     "find",
+    "length",
     "load",
     "number",
     "package_table",

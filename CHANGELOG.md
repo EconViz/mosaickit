@@ -4,11 +4,12 @@
 
 - Packages no longer parse `econ-viz.toml` themselves. A package declares an
   `econ_toml.Schema`: its built-in themes (`base`), the keys of its own table with the attribute
-  each sets (`color`, `number`, `positive`, `boolean`, `string`, `choice`, `path`, `transform`),
+  each sets (`color`, `number`, `positive`, `length`, `boolean`, `string`, `choice`, `path`,
+  `transform`; `length` takes points or `"2mm"`, `"0.1in"`, ...),
   tables with free names such as `[utility.stroke.<name>]` (`pattern`), and which shared settings
   it uses. mosaickit reads the file, checks every value, resolves relative paths against the
   file's directory and reports mistakes with the file and table they are in, suggesting the
-  closest key for a typo: `econ-viz.toml: [principle.color] unknown key 'demnad'; did you mean
+  closest key for a typo, or listing the valid keys when none is close: `econ-viz.toml: [principle.color] unknown key 'demnad'; did you mean
   'demand'?`. Unknown top-level keys are an error; other packages' tables are skipped.
 - `Schema.config_class()` gives the package's `Config` class (`load`, `discover`, `from_dict`,
   `use`, `reset`, `active`, and the built object's attributes), and `Schema.template()` writes the
