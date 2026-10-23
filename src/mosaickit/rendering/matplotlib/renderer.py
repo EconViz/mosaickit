@@ -125,7 +125,7 @@ class MatplotlibRenderer:
 
         Matplotlib knows only its own fonts, so a title in Chinese, say, would come out as
         boxes. With ``Config.fonts`` set the title is laid out by GlyphKit like every text
-        layer, centred above the axes at Matplotlib's title padding; otherwise Matplotlib
+        layer, with its baseline where Matplotlib puts a title's; otherwise Matplotlib
         draws it as before.
         """
         color = rgba(style.color, style.opacity)
@@ -142,7 +142,8 @@ class MatplotlibRenderer:
             color=color,
             rotation=style.rotation,
             zorder=3,
-            align=("center", "bottom"),
+            # Matplotlib puts the title's baseline the title padding above the axes
+            align=("center", "baseline"),
             offset_pt=(0, rcParams["axes.titlepad"]),
             gid="canvas.title",
         )

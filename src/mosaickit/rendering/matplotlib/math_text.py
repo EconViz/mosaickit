@@ -16,6 +16,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from dataclasses import dataclass, fields, is_dataclass, replace
 from functools import lru_cache
+from pathlib import Path as FilePath
 from typing import Any, cast
 
 import numpy as np
@@ -212,9 +213,18 @@ def _append_outline(
             codes.append(_CLOSEPOLY)
 
 
-@lru_cache(maxsize=8)
 def typesetter_for(font: MathFont) -> MathTypesetter:
-    return MathTypesetter(font)
+    """The typesetter for ``font``, shared by every ``MathFont`` naming the same file.
+
+    Keyed by the file's real path, so one font reached through different symbolic links
+    is parsed once.
+    """
+    return _typesetter(font.path.resolve(), font.italic)
+
+
+@lru_cache(maxsize=8)
+def _typesetter(path: FilePath, italic: bool) -> MathTypesetter:
+    return MathTypesetter(MathFont(path, italic=italic))
 
 
 _ACTIVE: ContextVar[MathTypesetter | None] = ContextVar("mosaickit_math_typesetter", default=None)

@@ -211,3 +211,33 @@ def test_text_mixed_with_math_uses_your_file():
     with text_typesetting(TextFonts(serif=SERIF)):
         assert Path(font_properties(style).get_file()) == SERIF
         assert font_properties(TextStyle(size=12)).get_file() is None  # sans not given
+
+
+def test_fonts_reached_through_different_links_share_one_typesetter(tmp_path, monkeypatch):
+    from mosaickit import MathFont
+    from mosaickit.rendering.matplotlib import math_text
+
+    first, second = tmp_path / "a", tmp_path / "b"
+    first.mkdir()
+    second.mkdir()
+    for folder in (first, second):
+        (folder / "sans.ttf").symlink_to(REGULAR)
+        (folder / "math.ttf").symlink_to(SERIF)
+
+    assert typesetter_for(TextFonts(first / "sans.ttf")) is typesetter_for(
+        TextFonts(second / "sans.ttf")
+    )
+    monkeypatch.setattr(math_text, "_typesetter", lambda path, italic: (path, italic))
+    assert math_text.typesetter_for(MathFont(first / "math.ttf")) == (SERIF.resolve(), True)
+    assert math_text.typesetter_for(MathFont(second / "math.ttf")) == (SERIF.resolve(), True)
+
+
+def test_the_title_baseline_sits_where_matplotlib_puts_it():
+    spec = CanvasSpec(width=6, height=4, dpi=150, title="Title gyp")
+    plain = Canvas(spec).render()
+    yours = Canvas(spec, config=Config(fonts=TextFonts(REGULAR))).render()
+    renderer = yours.figure.canvas.get_renderer()
+
+    expected = plain.axes.title.get_window_extent(plain.figure.canvas.get_renderer())
+    actual = _text(yours.axes, "canvas.title").get_window_extent(renderer)
+    assert abs(actual.y0 - expected.y0) < 1  # same baseline and descent with the same face
