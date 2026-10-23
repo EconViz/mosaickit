@@ -5,7 +5,8 @@ from typing import Any, ClassVar
 
 from mosaickit.errors import ConfigurationError
 from mosaickit.scene.layer import Layer, _point
-from mosaickit.styles import TextStyle
+from mosaickit.styles import Nudge, TextStyle
+from mosaickit.styles.nudge import check_nudge
 
 TEXT_ANCHORS: dict[str, tuple[str, str]] = {
     "center": ("center", "center"),
@@ -23,6 +24,8 @@ TEXT_ANCHORS: dict[str, tuple[str, str]] = {
 
 @dataclass(frozen=True, slots=True)
 class TextLayer(Layer):
+    """Text at ``position``, moved by ``offset`` points; ``nudge`` adds a further move."""
+
     role: str = field(default="text", kw_only=True)
     position: Any
     text: Any
@@ -30,6 +33,7 @@ class TextLayer(Layer):
     offset: tuple[float, float] = (0, 0)
     anchor: str = "center"
     math: bool = False
+    nudge: Nudge | None = field(default=None, kw_only=True)
     fallback_category: ClassVar[str] = "text"
     style_slots: ClassVar[Mapping[str, str]] = {"text": "style"}
 
@@ -41,3 +45,11 @@ class TextLayer(Layer):
             raise ConfigurationError("TextLayer.offset must contain two finite values")
         if self.anchor not in TEXT_ANCHORS:
             raise ConfigurationError(f"Unsupported text anchor: {self.anchor}")
+        check_nudge("TextLayer", self.nudge)
+
+    @property
+    def total_offset(self) -> tuple[float, float]:
+        """``offset`` plus ``nudge``, in points; just ``offset`` when there is no nudge."""
+        if self.nudge is None:
+            return self.offset
+        return (self.offset[0] + self.nudge.dx, self.offset[1] + self.nudge.dy)

@@ -5,7 +5,7 @@ from typing import Any
 
 from mosaickit.layout import Obstacles, Rect, place_point_label
 from mosaickit.rendering.matplotlib.fonts import measure_text
-from mosaickit.rendering.matplotlib.labels import draw_label, warn_unplaced
+from mosaickit.rendering.matplotlib.labels import draw_label, nudged, warn_unplaced
 from mosaickit.rendering.matplotlib.obstacles import collect_obstacles, marker_rects, to_display
 from mosaickit.rendering.matplotlib.registry import PassContext
 
@@ -40,8 +40,9 @@ def _draw(ax: Any, resolved: Any, obstacles: Obstacles, renderer: Any) -> Obstac
     )
     if placement.violations:
         warn_unplaced(layer, placement.violations, "position beside the point")
-    draw_label(ax, style, layer.text, placement.rect.center, gid=layer.id, z_index=layer.z_index)
-    return obstacles.extended(rects=(placement.rect,))
+    rect, _ = nudged(ax, layer.nudge, placement.rect)
+    draw_label(ax, style, layer.text, rect.center, gid=layer.id, z_index=layer.z_index)
+    return obstacles.extended(rects=(rect,))
 
 
 def point_label_pass(ax: Any, labels: Sequence[Any], context: PassContext) -> None:

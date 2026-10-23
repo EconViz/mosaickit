@@ -52,9 +52,12 @@ from mosaickit.styles import (
     Fill,
     LegendStyle,
     Marker,
+    Nudge,
     SparseStyle,
     Stroke,
     TextStyle,
+    nudge_from,
+    parse_length,
 )
 from mosaickit.text_fonts import TextFonts
 from mosaickit.themes import RolePack, StyleBundle, Theme, ThemeRegistry, expand_roles
@@ -95,6 +98,7 @@ __all__ = [
     "Marker",
     "MarkerLayer",
     "MathFont",
+    "Nudge",
     "TextFonts",
     "Parameter",
     "Palette",
@@ -124,6 +128,8 @@ __all__ = [
     "build_axes",
     "crosshair_axes",
     "expand_roles",
+    "nudge_from",
+    "parse_length",
     "quadrant_axes",
     "use_config",
 ]

@@ -10,7 +10,7 @@ from mosaickit.layout import Obstacles, Rect
 from mosaickit.layout.geometry import Point
 from mosaickit.layout.placement.beside import place_beside
 from mosaickit.layout.placement.callout import place_callout
-from mosaickit.rendering.matplotlib.labels import draw_label, draw_leader, warn_unplaced
+from mosaickit.rendering.matplotlib.labels import draw_label, draw_leader, nudged, warn_unplaced
 from mosaickit.rendering.matplotlib.obstacles import window_rect
 
 
@@ -60,6 +60,7 @@ def place_brace_label(
             rect, violations, leader = callout.rect, callout.violations, callout.leader
     if violations:
         warn_unplaced(layer, violations, "label position")
+    rect, leader = nudged(ax, layer.nudge, rect, leader)
     if leader is not None:
         draw_leader(
             ax, leader, resolved.style.stroke, gid=f"{layer.id}.leader", z_index=layer.z_index

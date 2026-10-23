@@ -208,8 +208,8 @@ def _text_command(layer: TextLayer, bundle: Any, colors: _Colors) -> str:
     opts = [
         f"text={colors.name(style.color)}",  # type: ignore[arg-type]
         f"font={{{font}}}",
-        f"xshift={_number(layer.offset[0])}pt",
-        f"yshift={_number(layer.offset[1])}pt",
+        f"xshift={_number(layer.total_offset[0])}pt",
+        f"yshift={_number(layer.total_offset[1])}pt",
     ]
     if style.opacity is not None and style.opacity < 1:
         opts.append(f"text opacity={_number(style.opacity)}")
