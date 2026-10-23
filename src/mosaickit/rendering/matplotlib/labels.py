@@ -6,6 +6,7 @@ from typing import Any
 from matplotlib.lines import Line2D
 
 from mosaickit.errors import LayoutWarning
+from mosaickit.layout import Rect, follow_leader
 from mosaickit.layout.geometry import Point, Segment
 from mosaickit.rendering.matplotlib.artists.path_artist import rgba
 from mosaickit.rendering.matplotlib.fonts import font_properties
@@ -50,6 +51,21 @@ def draw_label(
         zorder=z_index,
         gid=gid,
     )
+
+
+def nudged(
+    ax: Any, nudge: Any, rect: Rect, leader: Segment | None = None
+) -> tuple[Rect, Segment | None]:
+    """``rect`` (and the ``leader`` pointing at it) moved by ``nudge`` points, in display pixels.
+
+    Placement has already happened; the nudge only fine-tunes it. Points become pixels at the
+    figure DPI, the scale placement itself uses. No nudge, or a zero one, changes nothing.
+    """
+    if nudge is None or nudge.is_zero:
+        return rect, leader
+    scale = ax.figure.dpi / 72
+    moved = rect.shifted(nudge.dx * scale, nudge.dy * scale)
+    return moved, None if leader is None else follow_leader(leader, moved, scale=scale)
 
 
 def draw_leader(ax: Any, leader: Segment, stroke: Any, *, gid: str, z_index: float) -> Any:

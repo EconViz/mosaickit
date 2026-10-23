@@ -46,6 +46,7 @@ from mosaickit.styles import (
     Fill,
     LegendStyle,
     Marker,
+    Nudge,
     Stroke,
     TextStyle,
 )
@@ -79,6 +80,7 @@ _DATACLASSES: dict[str, type] = {
         Fill,
         LegendStyle,
         Marker,
+        Nudge,
         Stroke,
         TextStyle,
     )
@@ -88,6 +90,8 @@ _ENUMS: dict[str, type[Enum]] = {
 }
 _VALUE_TYPES: dict[str, type] = {"int": int, "float": float, "str": str, "bool": bool}
 _NOT_SERIALIZED = frozenset({"model"})  # a layer's link back to the object that made it
+# Fields added after version 1 shipped: left out while unset, so older documents stay the same.
+_OMITTED_WHEN_NONE = frozenset({"nudge"})
 
 
 class _Budget:
@@ -152,6 +156,8 @@ def _encode(value: Any, where: str, budget: _Budget, depth: int = 0) -> Any:
         out: dict[str, Any] = {"$": name}
         for slot in fields(value):
             if slot.name in _NOT_SERIALIZED or not slot.init:
+                continue
+            if slot.name in _OMITTED_WHEN_NONE and getattr(value, slot.name) is None:
                 continue
             out[slot.name] = _encode(
                 getattr(value, slot.name), f"{where}.{slot.name}", budget, depth + 1

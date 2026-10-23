@@ -10,7 +10,7 @@ directions from +x counter-clockwise, near gaps first), so results are determini
 
 import math
 
-from mosaickit.layout.geometry import Polygon, Rect, polylabel, ray_exit
+from mosaickit.layout.geometry import Polygon, Rect, Segment, polylabel, ray_exit
 from mosaickit.layout.placement.candidates import anchored_rect, direction
 from mosaickit.layout.placement.crossings import beyond_crossings, region_crossings
 from mosaickit.layout.placement.leader import build_leader, leader_violations
@@ -63,3 +63,8 @@ def place_callout(
             break
     assert best is not None
     return best[1]
+
+
+def follow_leader(leader: Segment, rect: Rect, *, scale: float = 1.0) -> Segment:
+    """``leader`` redrawn from its start to ``rect``, after the label it points at moved."""
+    return build_leader(leader[0], rect, LEADER_GAP * scale)

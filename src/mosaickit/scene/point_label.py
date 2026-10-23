@@ -4,7 +4,8 @@ from typing import Any, ClassVar
 
 from mosaickit.errors import ConfigurationError
 from mosaickit.scene.layer import Layer, _point
-from mosaickit.styles import TextStyle
+from mosaickit.styles import Nudge, TextStyle
+from mosaickit.styles.nudge import check_nudge
 
 
 @dataclass(frozen=True, slots=True)
@@ -13,12 +14,14 @@ class PointLabelLayer(Layer):
 
     The renderer picks the nearest position around ``point`` where the text stays
     inside the axes and touches no line, marker, filled region, or other text.
+    ``nudge`` then moves the placed text by a few points; later labels avoid it there.
     """
 
     role: str = field(default="text", kw_only=True)
     point: Any
     text: str
     style: TextStyle | None = None
+    nudge: Nudge | None = field(default=None, kw_only=True)
     fallback_category: ClassVar[str] = "text"
     style_slots: ClassVar[Mapping[str, str]] = {"text": "style"}
 
@@ -27,3 +30,4 @@ class PointLabelLayer(Layer):
         object.__setattr__(self, "point", _point(self.point))
         if not isinstance(self.text, str) or not self.text:
             raise ConfigurationError("PointLabelLayer.text must be a non-empty string")
+        check_nudge("PointLabelLayer", self.nudge)

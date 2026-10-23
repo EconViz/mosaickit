@@ -5,6 +5,7 @@ from mosaickit.layout.placement import (
     Obstacles,
     Placement,
     fits_inside,
+    follow_leader,
     place_callout,
     place_point_label,
 )
@@ -14,6 +15,7 @@ __all__ = [
     "Placement",
     "Rect",
     "fits_inside",
+    "follow_leader",
     "place_callout",
     "place_point_label",
     "polylabel",
