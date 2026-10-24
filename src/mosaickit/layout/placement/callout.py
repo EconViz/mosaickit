@@ -3,7 +3,8 @@
 Principle: cover nothing. The text may not touch any line, point, text, or region
 (its own included), must sit in open space rather than a small enclosed pocket,
 and must stay on the region's side of any crossing the region touches. The leader
-may not cross anything after leaving its own region. Among positions that
+may not cross anything after leaving its own region. It ends at the one of the label's eight
+anchors (corners, edge midpoints) that faces the region. Among positions that
 cover nothing, the shortest leader wins; ties keep the earlier candidate (16
 directions from +x counter-clockwise, near gaps first), so results are deterministic.
 """
