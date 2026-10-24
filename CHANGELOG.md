@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.0.0rc8 — 2026-10-24
+
+- Fix: the label of an axis-gutter `BraceLayer` (`side="outside"`, e.g. tax-wedge, trade and
+  policy braces) ignored its `nudge`. It now moves by the nudge, in points, like every other
+  label, and so does the `[figure.<stem>.label."<id>"]` override of `econ-viz.toml` (by `<id>` or
+  `<id>.label`). Only the label moves: the brace outline stays. Axis mark and note labels have no
+  `nudge` and stay where they are spread. Without a nudge the output is unchanged.
+
 ## 1.0.0rc7 — 2026-10-24
 
 - Per-figure label overrides in the shared part of `econ-viz.toml`:

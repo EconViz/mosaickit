@@ -1,4 +1,5 @@
 import itertools
+import re
 
 import pytest
 
@@ -9,6 +10,7 @@ from mosaickit import (
     BraceLayer,
     Canvas,
     CanvasSpec,
+    Nudge,
     PathLayer,
     build_axes,
     quadrant_axes,
@@ -263,3 +265,48 @@ def test_unknown_axis_layer_subclass_is_rejected():
     canvas = Canvas().add(Tick("y"))
     with pytest.raises(RenderError, match="Tick"):
         canvas.render()
+
+
+def _outside_brace(axis, nudge=None):
+    canvas = Canvas(CanvasSpec(width=6, height=5, dpi=100)).extend(quadrant_axes(10, 10))
+    canvas.add(BraceLayer(axis, 5.0, 7.0, "Span", side="outside", id="brace", nudge=nudge))
+    return canvas
+
+
+def _label_and_outline(canvas):
+    result = canvas.render()
+    try:
+        ax = result.axes
+        label = _rect(ax, _texts(ax, "brace.label")["brace.label"])
+        outline = [
+            tuple(map(tuple, line.get_xydata())) for line in ax.lines if line.get_gid() == "brace"
+        ]
+        patches = [p.get_path().vertices.tolist() for p in ax.patches if p.get_gid() == "brace"]
+        return label, outline, patches
+    finally:
+        result.close()
+
+
+@pytest.mark.parametrize("axis", ["x", "y"])
+def test_outside_brace_label_follows_its_nudge_but_the_outline_stays(axis):
+    plain, outline, patches = _label_and_outline(_outside_brace(axis))
+    moved, outline2, patches2 = _label_and_outline(_outside_brace(axis, Nudge(6, 10)))
+    scale = 100 / 72
+    assert moved.x0 == pytest.approx(plain.x0 + 6 * scale)
+    assert moved.y0 == pytest.approx(plain.y0 + 10 * scale)
+    assert moved.width == pytest.approx(plain.width)
+    assert (outline, patches) == (outline2, patches2)
+    assert outline or patches
+
+
+def test_zero_or_missing_nudge_changes_nothing(tmp_path):
+    import matplotlib
+
+    def svg(nudge):
+        path = tmp_path / "b.svg"
+        with matplotlib.rc_context({"svg.hashsalt": "gutter"}):
+            _outside_brace("y", nudge).save(path)
+        return re.sub(r"<dc:date>.*?</dc:date>", "", path.read_text(encoding="utf-8"), flags=re.S)
+
+    assert svg(Nudge(0, 0)) == svg(None)
+    assert svg(Nudge(0, 5)) != svg(None)
