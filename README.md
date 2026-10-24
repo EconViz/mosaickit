@@ -80,6 +80,22 @@ The scene graph is deliberately small:
   placed after everything else is drawn so they cover no line, marker, filled
   region, or other text; a `LayoutWarning` names any label that cannot avoid
   everything.
+  A callout leader runs from the region to one of the label box's eight anchors, never to
+  an arbitrary point of an edge. The anchor is the one facing the region:
+
+  ```
+  1------2------3
+  |             |
+  4             5
+  |             |
+  6------7------8
+  ```
+
+  Take the direction from the box center to the start of the leader and round it to one of
+  eight 45 degree sectors (a label right of the region gets anchor 4, one above it gets 7,
+  and so on); the leader stops 2 pt short of that anchor. It is still one straight segment,
+  and a `nudge` re-picks the anchor from the label's new position.
+  `mosaickit.layout.leader_anchor(pole, rect)` is that rule as a pure function.
 - `LegendLayer` builds legends from stable layer IDs.
 - `AxisMarkLayer`, `AxisNoteLayer`, and `BraceLayer` annotate values and spans on an axis.
 - `SpanBraceLayer` braces a horizontal or vertical span between two points inside the

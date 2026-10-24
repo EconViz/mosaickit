@@ -30,9 +30,45 @@ from mosaickit.layout.placement.obstacles import Obstacles
 _ON_BOUNDARY = 1.5  # px past the exit, so touching the region's own edge is not a crossing
 
 
+_TAN_HALF_OCTANT = math.tan(math.pi / 8)  # tan 22.5 deg: where a direction changes octant
+
+
+def _octant_step(major: float, minor: float) -> int:
+    """-1, 0 or 1 along one axis for a direction of ``major`` by ``minor``."""
+    if abs(major) < _TAN_HALF_OCTANT * abs(minor):
+        return 0
+    return 1 if major > 0 else -1 if major < 0 else 0
+
+
+def leader_anchor(pole: Point, rect: Rect) -> Point:
+    """The one of the label box's eight anchors that faces ``pole``.
+
+    The anchors are the four corners and the four edge midpoints::
+
+        1------2------3
+        |             |
+        4             5
+        |             |
+        6------7------8
+
+    (display pixels, so y points up and 1-2-3 is the top edge). The direction from the box
+    center to ``pole`` falls in one of eight 45 degree octants, each owning the anchor on that
+    side: ``sx`` and ``sy`` are -1, 0 or 1, and the anchor is the center plus
+    ``(sx * width / 2, sy * height / 2)``. An axis is 0 when the direction is within 22.5 degrees
+    of the other axis. A pole at the exact center has no direction; the nearest point of the box
+    (the pole itself) is returned.
+    """
+    cx, cy = rect.center
+    dx, dy = pole[0] - cx, pole[1] - cy
+    sx, sy = _octant_step(dx, dy), _octant_step(dy, dx)
+    if sx == 0 and sy == 0:
+        return rect.nearest_point(pole)
+    return (cx + sx * rect.width / 2, cy + sy * rect.height / 2)
+
+
 def build_leader(pole: Point, rect: Rect, gap: float) -> Segment:
-    """From ``pole`` to the nearest point of ``rect``, stopping ``gap`` short."""
-    end = rect.nearest_point(pole)
+    """From ``pole`` to the box anchor facing it (``leader_anchor``), stopping ``gap`` short."""
+    end = leader_anchor(pole, rect)
     length = math.dist(pole, end)
     if length <= gap:
         return (pole, end)

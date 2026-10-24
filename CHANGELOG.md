@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.0.0rc9 — 2026-10-24
+
+- Callout leaders (`RegionLabelLayer` callouts, and the callout a `BraceLayer`/`SpanBraceLayer`
+  label falls back to) now end at one of the label box's eight anchors, the four corners and
+  four edge midpoints, instead of the nearest point anywhere along an edge. The anchor is the
+  one facing the start of the leader: the direction from the box center to the start is rounded
+  to one of eight 45 degree sectors, so a label to the right of its region gets the left-edge
+  midpoint, one above it the bottom-edge midpoint, and so on. The leader still stops 2 pt short
+  and is still one straight segment (`<id>.leader` in the SVG, same attributes). The same rule
+  runs when the callout position is searched, so the search ranks the leaders that get drawn,
+  and again after a `nudge` or an `econ-viz.toml` override moves the label.
+- New `mosaickit.layout.leader_anchor(pole, rect)`: the rule as a pure function.
+- Figures without a callout are unchanged; with one, only the end of the leader moves.
+
 ## 1.0.0rc8 — 2026-10-24
 
 - Fix: the label of an axis-gutter `BraceLayer` (`side="outside"`, e.g. tax-wedge, trade and

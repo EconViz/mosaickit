@@ -3,6 +3,7 @@
 from mosaickit.layout.placement.beside import place_beside
 from mosaickit.layout.placement.callout import follow_leader, place_callout
 from mosaickit.layout.placement.inside import fits_inside
+from mosaickit.layout.placement.leader import leader_anchor
 from mosaickit.layout.placement.obstacles import Obstacles, Placement
 from mosaickit.layout.placement.point import place_point_label
 
@@ -11,6 +12,7 @@ __all__ = [
     "Placement",
     "fits_inside",
     "follow_leader",
+    "leader_anchor",
     "place_beside",
     "place_callout",
     "place_point_label",
