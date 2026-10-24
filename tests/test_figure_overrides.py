@@ -64,9 +64,7 @@ def clean():
 
 
 def parse(text: str) -> Any:
-    import tomllib
-
-    return figure_labels(tomllib.loads(text), source="econ-viz.toml")
+    return figure_labels(econ_toml.tomllib.loads(text), source="econ-viz.toml")
 
 
 def error(text: str) -> str:
@@ -109,9 +107,7 @@ def test_overrides_are_read_only():
 
 
 def test_shared_settings_carry_the_overrides():
-    import tomllib
-
-    shared = econ_toml.shared_settings(tomllib.loads(TOML))
+    shared = econ_toml.shared_settings(econ_toml.tomllib.loads(TOML))
     assert shared.figures == parse(TOML)
 
 

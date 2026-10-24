@@ -115,7 +115,7 @@ class SharedSettings:
     background: str | None = None
     axis: str | None = None
     label: str | None = None
-    figures: FigureLabels = field(default=_NO_FIGURES)
+    figures: FigureLabels = field(default_factory=lambda: _NO_FIGURES)
 
 
 def find(directory: str | Path | None = None) -> Path | None:
