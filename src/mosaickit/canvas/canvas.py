@@ -7,6 +7,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
+from mosaickit import label_overrides
 from mosaickit.canvas_spec import CanvasSpec
 from mosaickit.config import Config, current_config
 from mosaickit.errors import RenderError
@@ -14,6 +15,7 @@ from mosaickit.parameter import Parameter, bind
 from mosaickit.rendering import RenderCache, Renderer, RendererRegistry, SaveOptions
 from mosaickit.rendering.context import _RenderContext
 from mosaickit.scene import Layer, Scene
+from mosaickit.scene.label_nudges import with_label_nudges
 from mosaickit.themes import StyleBundle, Theme
 
 
@@ -93,6 +95,20 @@ class Canvas:
     ) -> Any:
         return self._renderer(renderer).render(self.snapshot(), self._context(cache))
 
+    def _for_file(self, target: Path) -> Canvas:
+        """This canvas with the active ``[figure.<stem>.label]`` overrides for ``target``.
+
+        Those replace the nudge of the label layers they name. This canvas itself when
+        nothing is active for the file's stem, so the output is then unchanged.
+        """
+        nudges = label_overrides.active_for(target.stem)
+        scene = with_label_nudges(self._scene, nudges) if nudges else self._scene
+        if scene is self._scene:
+            return self
+        canvas = self.copy()
+        canvas._scene = scene
+        return canvas
+
     def save(
         self,
         target: str | Path,
@@ -101,7 +117,14 @@ class Canvas:
         cache: RenderCache | None = None,
         **options: Any,
     ) -> list[Path]:
+        """Write the canvas to ``target`` (``.png``, ``.pdf``, ``.svg`` or ``.tex``).
+
+        The label overrides active for the file's stem (``[figure.<stem>.label."<id>"]`` in
+        ``econ-viz.toml``, see :mod:`mosaickit.econ_toml`) replace the nudges of the labels
+        they name before drawing. ``render()`` never applies them.
+        """
         target = Path(target)
+        canvas = self._for_file(target)
         if target.suffix.lower() == ".tex":
             from mosaickit.rendering.tikz import canvas_to_tikz
 
@@ -110,12 +133,12 @@ class Canvas:
                 names = ", ".join(sorted(options))
                 raise TypeError(f"unsupported TikZ export options: {names}")
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(canvas_to_tikz(self, standalone=standalone), encoding="utf-8")
+            target.write_text(canvas_to_tikz(canvas, standalone=standalone), encoding="utf-8")
             return [target]
         if target.suffix.lower() not in {".png", ".pdf", ".svg"}:
             raise RenderError(f"Unsupported output format: {target.suffix!r}")
-        selected = self._renderer(renderer)
-        result = selected.render(self.snapshot(), self._context(cache))
+        selected = canvas._renderer(renderer)
+        result = selected.render(canvas.snapshot(), canvas._context(cache))
         try:
             return selected.save(result, target, SaveOptions(**options))
         finally:

@@ -29,6 +29,24 @@ the commented template of each table.
 
 The lower-level readers of the shared sections, :func:`shared_settings` and
 :func:`package_table`, stay available.
+
+Per-figure label overrides
+--------------------------
+The shared part of the file can also move single labels of single figures, so a tool can
+store "this label of this figure was dragged" without touching the user's Python code::
+
+    [figure.tax_welfare.label."market.welfare.dwl.label"]
+    top = "12pt"
+    right = "8pt"
+
+``figure.<stem>`` is the stem of the output file (``tax_welfare`` for
+``principle/tax_welfare.svg``); the quoted key is the id of the label layer; ``top``,
+``bottom``, ``left`` and ``right`` are lengths (a number of points or a string in ``pt``,
+``mm``, ``cm``, ``in``; ``em`` is rejected because the file has no font size) that combine
+like :func:`~mosaickit.styles.nudge.nudge_from`. :func:`figure_labels` parses them,
+:func:`figure_overrides` reads the active ones, and ``Canvas.save`` / ``CanvasGrid.save`` apply
+them to the file they write. Activating a package config with ``Config.use()`` (or
+:func:`use`) activates the overrides of the file it was read from.
 """
 
 from __future__ import annotations
@@ -46,9 +64,12 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any, ClassVar
 
+from mosaickit import label_overrides
 from mosaickit.errors import ConfigurationError
+from mosaickit.label_overrides import NO_FIGURES as _NO_FIGURES
+from mosaickit.label_overrides import FigureLabels
 from mosaickit.palette import DEFAULT_PALETTE
-from mosaickit.styles.nudge import POINTS_PER_UNIT, parse_length
+from mosaickit.styles.nudge import POINTS_PER_UNIT, Nudge, parse_length
 from mosaickit.text_fonts import GENERIC_FONTS, TextFonts
 
 if sys.version_info >= (3, 11):
@@ -62,7 +83,7 @@ PACKAGES = frozenset({"utility", "principle", "micro", "macro", "trade", "dsge",
 # The tables that belong to one package each; a package skips the others' tables.
 PACKAGE_TABLES = PACKAGES
 # The top-level keys every package understands.
-SHARED_SECTIONS = frozenset({"base", "font", "fonts", "color"})
+SHARED_SECTIONS = frozenset({"base", "font", "fonts", "color", "figure"})
 SHARED_COLORS = ("background", "axis", "label")
 # The shared settings a Schema can map onto its target.
 SHARED_NAMES = ("font", "fonts", "math_font", "background", "axis", "label")
@@ -81,7 +102,11 @@ _HEX = re.compile(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})")
 
 @dataclass(frozen=True, slots=True)
 class SharedSettings:
-    """What the shared sections of ``econ-viz.toml`` set; ``None`` keeps a default."""
+    """What the shared sections of ``econ-viz.toml`` set; ``None`` keeps a default.
+
+    ``figures`` holds the ``[figure.<stem>.label."<id>"]`` overrides (see
+    :func:`figure_labels`); it is empty when the file has none.
+    """
 
     base: str | None = None
     font: str | None = None
@@ -90,6 +115,7 @@ class SharedSettings:
     background: str | None = None
     axis: str | None = None
     label: str | None = None
+    figures: FigureLabels = field(default_factory=lambda: _NO_FIGURES)
 
 
 def find(directory: str | Path | None = None) -> Path | None:
@@ -148,7 +174,89 @@ def shared_settings(
         background=colors.get("background"),
         axis=colors.get("axis"),
         label=colors.get("label"),
+        figures=figure_labels(data, source=source),
     )
+
+
+# ------------------------------------------------------------------ figure label overrides
+
+LABEL_SIDES = ("top", "bottom", "left", "right")
+_BARE_KEY = re.compile(r"[A-Za-z0-9_-]+")
+
+
+def figure_labels(data: Mapping[str, Any], *, source: str = "config") -> FigureLabels:
+    """The ``[figure.<stem>.label."<id>"]`` overrides of parsed TOML ``data``.
+
+    Returns ``{stem: {label id: Nudge}}``, empty when the file has no ``[figure]`` table.
+    Each table sets ``top``, ``bottom``, ``left`` and ``right`` as lengths (a number of
+    points, or ``"12pt"``, ``"2mm"``, ``"0.5cm"``, ``"0.1in"``; ``em`` is rejected because
+    the file has no font size). ``dy = top - bottom`` and ``dx = right - left``, as for
+    :func:`~mosaickit.styles.nudge.nudge_from`. An empty table is a zero nudge, which
+    cancels the label's own. Anything malformed raises ``ConfigurationError`` naming the
+    file and the table; label ids that no figure has are not checked here.
+    """
+    figure = data.get("figure")
+    if figure is None:
+        return _NO_FIGURES
+    if not isinstance(figure, Mapping):
+        raise ConfigurationError(f"{source}: [figure] must be a table")
+    convert = length("nudge").convert
+    stems: dict[str, Mapping[str, Nudge]] = {}
+    for stem, table in figure.items():
+        where = f"[figure.{_toml_key(stem)}]"
+        root = Context(source, None, where)
+        if not isinstance(table, Mapping):
+            raise root.error("must be a table")
+        for key in table:
+            if key != "label":
+                raise root.error(f"unknown key {key!r}{_unknown(key, ['label'])}")
+        labels = table.get("label", {})
+        if not isinstance(labels, Mapping):
+            raise Context(source, None, where).error("label must be a table")
+        nudges: dict[str, Nudge] = {}
+        for label_id, sides in labels.items():
+            ctx = Context(source, None, f"{where[:-1]}.label.{_toml_key(label_id)}]")
+            if not isinstance(sides, Mapping):
+                raise Context(source, None, f"{where[:-1]}.label]").error(
+                    f"{label_id!r} must be a table"
+                )
+            for key in sides:
+                if key not in LABEL_SIDES:
+                    raise ctx.error(f"unknown key {key!r}{_unknown(key, LABEL_SIDES)}")
+            amounts = {side: convert(sides.get(side, 0), ctx, side) for side in LABEL_SIDES}
+            nudges[label_id] = Nudge(
+                dx=amounts["right"] - amounts["left"], dy=amounts["top"] - amounts["bottom"]
+            )
+        stems[stem] = MappingProxyType(nudges)
+    return MappingProxyType(stems)
+
+
+def _toml_key(key: str) -> str:
+    return key if _BARE_KEY.fullmatch(key) else json.dumps(key, ensure_ascii=False)
+
+
+def figure_overrides(stem: str | None = None) -> Any:
+    """The active per-figure label overrides, read-only.
+
+    With no ``stem``: ``{stem: {label id: Nudge}}`` for every figure. With a ``stem``:
+    ``{label id: Nudge}`` for that figure, empty when it has none. Overrides become active
+    through ``Config.use()`` of any package config read from a file (or :func:`use`), or
+    :func:`activate_figure_overrides`; until then nothing is active.
+    """
+    return label_overrides.active() if stem is None else label_overrides.active_for(stem)
+
+
+def activate_figure_overrides(figures: FigureLabels | None) -> None:
+    """Make ``figures`` (as :func:`figure_labels` returns) the active overrides, replacing any.
+
+    ``None`` or an empty mapping clears them.
+    """
+    label_overrides.activate(figures)
+
+
+def clear_figure_overrides() -> None:
+    """Drop the active per-figure label overrides (tests call this to start clean)."""
+    label_overrides.activate(None)
 
 
 # --------------------------------------------------------------------------- schema
@@ -360,6 +468,12 @@ class Schema:
         ``finalize(target, ctx)`` -> the final target.
     docs : mapping
         Field key or pattern prefix -> one-line comment for :meth:`template`.
+
+    Notes
+    -----
+    The top-level ``[figure]`` table (per-figure label overrides, see :func:`figure_labels`)
+    belongs to mosaickit, like ``[font]`` and ``[color]``: a schema neither declares nor
+    receives it, but every :meth:`build` checks it and :class:`ConfigBase` keeps it.
     """
 
     package: str
@@ -645,24 +759,35 @@ class ConfigBase:
     ``config.theme`` works when the target has ``theme``.
     """
 
-    __slots__ = ("value",)
+    __slots__ = ("figure_labels", "value")
     schema: ClassVar[Schema]
     _active: ClassVar[ConfigBase | None]
 
-    def __init__(self, value: Any = None) -> None:
+    def __init__(self, value: Any = None, *, figure_labels: FigureLabels | None = None) -> None:
         if value is None:
             value = self.schema.build({}, source="<defaults>")
         object.__setattr__(self, "value", value)
+        object.__setattr__(self, "figure_labels", figure_labels)
 
     @classmethod
     def load(cls, path: str | Path | None = None) -> Any:
         """Read ``path``, or ``econ-viz.toml`` in the working directory (which must exist)."""
-        return cls(cls.schema.load(path))
+        file = Path(path) if path is not None else find()
+        if file is None:
+            raise ConfigurationError(f"config file not found: {FILE_NAME}")
+        return cls._from_file(file)
 
     @classmethod
     def discover(cls, directory: str | Path | None = None) -> Any:
         """Read ``econ-viz.toml`` in ``directory`` if present, else the defaults."""
-        return cls(cls.schema.discover(directory))
+        file = find(directory)
+        if file is None:
+            return cls(cls.schema.build({}, source="<defaults>"), figure_labels=_NO_FIGURES)
+        return cls._from_file(file)
+
+    @classmethod
+    def _from_file(cls, file: Path) -> Any:
+        return cls.from_dict(read(file), source=str(file), base_dir=file.parent)
 
     @classmethod
     def from_dict(
@@ -673,17 +798,31 @@ class ConfigBase:
         base_dir: str | Path | None = None,
     ) -> Any:
         """Build from already-parsed TOML data."""
-        return cls(cls.schema.build(data, source=source, base_dir=base_dir))
+        return cls(
+            cls.schema.build(data, source=source, base_dir=base_dir),
+            figure_labels=figure_labels(data, source=source),
+        )
 
     def use(self) -> Any:
-        """Make this the package's active config; returns ``self``."""
+        """Make this the package's active config; returns ``self``.
+
+        A config read from a file (``load``, ``discover``, ``from_dict``) also makes that
+        file's ``[figure.*]`` label overrides the active ones (:func:`figure_overrides`),
+        replacing those of any earlier activation, also when the file has none. A config
+        made directly with ``Config(value)`` has no file and leaves them alone.
+        """
         _owner(type(self))._active = self
+        if self.figure_labels is not None:
+            label_overrides.activate(self.figure_labels, _owner(type(self)))
         return self
 
     @classmethod
     def reset(cls) -> None:
-        """Clear the package's active config."""
-        _owner(cls)._active = None
+        """Clear the package's active config, and the label overrides it activated."""
+        owner = _owner(cls)
+        owner._active = None
+        if label_overrides.owned_by(owner):
+            label_overrides.activate(None)
 
     @classmethod
     def active(cls) -> Any:
@@ -917,6 +1056,7 @@ def _path(value: str, directory: Path | None) -> str:
 __all__ = [
     "ENTRY_POINT_GROUP",
     "FILE_NAME",
+    "LABEL_SIDES",
     "LEGACY_SECTIONS",
     "PACKAGES",
     "PACKAGE_TABLES",
@@ -926,12 +1066,17 @@ __all__ = [
     "ConfigBase",
     "Context",
     "Field",
+    "FigureLabels",
     "Pattern",
     "Schema",
     "SharedSettings",
+    "activate_figure_overrides",
     "boolean",
     "choice",
+    "clear_figure_overrides",
     "color",
+    "figure_labels",
+    "figure_overrides",
     "find",
     "length",
     "load",

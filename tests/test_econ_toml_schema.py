@@ -433,7 +433,7 @@ def test_unknown_key_without_a_close_match_lists_the_valid_keys():
         "<dict>: [fonts] unknown key 'sanss'; did you mean 'sans'?"
     )
     assert error({"zzz": 1}).startswith(
-        "<dict>: unknown top-level key 'zzz'; choose from base, color, dsge, font, fonts,"
+        "<dict>: unknown top-level key 'zzz'; choose from base, color, dsge, figure, font, fonts,"
     )
 
 
