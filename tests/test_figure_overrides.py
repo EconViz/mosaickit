@@ -12,6 +12,7 @@ import matplotlib
 import pytest
 
 from mosaickit import (
+    BraceLayer,
     Canvas,
     CanvasGrid,
     ConfigurationError,
@@ -508,3 +509,44 @@ def test_a_label_id_marks_the_group_that_draws_the_text(tmp_path):
             break
     else:
         pytest.fail("dot.label not found")
+
+
+# ---- braces drawn in the axis gutter
+
+
+def braced(**nudges: Nudge | None) -> list[Any]:
+    return [
+        BraceLayer("y", 2, 6, "Wedge", side="outside", id="wedge", nudge=nudges.get("wedge")),
+        BraceLayer("x", 2, 6, "Policy", side="outside", id="policy", nudge=nudges.get("policy")),
+        BraceLayer("y", 7, 9, "Inner", side="inside", id="inner", nudge=nudges.get("inner")),
+    ]
+
+
+def test_override_moves_a_gutter_brace_label_as_if_nudged_in_code(tmp_path):
+    outer_plain = save(tmp_path, "o.svg", braced()[:2])
+    assert save(tmp_path, "o.svg", braced(wedge=Nudge(0, 8))[:2]) != outer_plain
+    assert save(tmp_path, "o.svg", braced(policy=Nudge(0, 8))[:2]) != outer_plain
+    plain = save(tmp_path, "brace_fig.svg", braced())
+    expected = save(
+        tmp_path, "expected.svg", braced(wedge=Nudge(-3, 8), policy=Nudge(0, -4), inner=Nudge(5, 0))
+    )
+    assert expected != plain
+    spec = {
+        "wedge": {"top": 8, "left": 3},
+        "policy.label": {"bottom": 4},  # the id the label has in the SVG
+        "inner": {"right": 5},
+    }
+    activate({"brace_fig": {"label": spec}})
+    assert save(tmp_path, "brace_fig.svg", braced()) == expected
+    assert save(tmp_path, "other.svg", braced()) == plain
+
+
+def test_gutter_brace_override_leaves_the_outline_in_place(tmp_path):
+    def outline(text: str, gid: str) -> str:
+        root = ET.fromstring(text)
+        return next(ET.tostring(e) for e in root.iter() if e.get("id") == gid).decode()
+
+    plain = save(tmp_path, "brace_fig.svg", braced())
+    moved = save(tmp_path, "moved.svg", braced(wedge=Nudge(0, 12)))
+    assert outline(moved, "wedge") == outline(plain, "wedge")
+    assert outline(moved, "wedge.label") != outline(plain, "wedge.label")
