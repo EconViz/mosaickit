@@ -355,6 +355,36 @@ mono = ["fonts/JetBrainsMono-Regular.ttf"]
 - **`TextFonts(paths)`** from 0.9.0 still works: the first argument is the `sans` slot, and
   `[fonts] files` is another name for `sans`.
 
+## Moving single labels from `econ-viz.toml`
+
+A label can be moved without touching the Python that draws the figure. In the shared part of
+`econ-viz.toml` (top level, outside any package table) name the figure by its output file's stem
+and the label by its layer id:
+
+```toml
+[figure.tax_welfare.label."market.welfare.dwl.label"]
+top = "12pt"
+right = "8pt"
+```
+
+- **Keys.** `top`, `bottom`, `left`, `right` are lengths: a number of points or a string in `pt`,
+  `mm`, `cm` or `in` (`em` is rejected: the file has no font size). Opposite sides combine, as in
+  `nudge_from()`. Quote ids that contain dots, and stems too (`[figure."fig.v2".label.x]`).
+- **When.** `Canvas.save(path)` and `CanvasGrid.save(path)` (also `.tex`) apply the overrides of
+  `Path(path).stem` to the labels whose layer id matches: point, region and text labels by their
+  own id, braces by the brace id or by `<id>.label`, the id of their label in the SVG. `render()`,
+  `show()` and `MatplotlibResult.save()` never apply them, and nothing happens until a config read
+  from the file is activated with `Config.use()` (or `econ_toml.use()`), or
+  `econ_toml.activate_figure_overrides(econ_toml.figure_labels(data))` is called.
+- **Replace, not add.** An override replaces the label's own `nudge`, including one a theme or a
+  group default set earlier. An empty table cancels that nudge. Leaders follow, as with any nudge.
+- **Forgiving and strict.** Ids no layer has are ignored (a figure may change); malformed values
+  raise `ConfigurationError` naming the file and table when the file is read.
+- **Reading back.** `econ_toml.figure_overrides()` returns `{stem: {id: Nudge}}` for the active
+  overrides, `figure_overrides(stem)` those of one figure; `clear_figure_overrides()` drops them.
+- **Identifying labels in the SVG.** Every label is drawn in an element whose `id` is its layer id
+  (a brace's label: `<id>.label`; a callout's leader: `<id>.leader`).
+
 ## Grids and parameters
 
 ```python

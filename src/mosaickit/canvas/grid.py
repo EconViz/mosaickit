@@ -2,9 +2,10 @@
 
 from __future__ import annotations
 
+import copy
 import math
 from collections.abc import Sequence
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
 
@@ -172,6 +173,20 @@ class CanvasGrid:
             raise RenderError(f"Renderer {selected.name!r} does not support grids")
         return selected.render_grid(self, cache if cache is not None else RenderCache())
 
+    def _for_file(self, target: Path) -> CanvasGrid:
+        """This grid with the active label overrides for ``target`` applied to every cell.
+
+        The grid itself when nothing is active for the file's stem.
+        """
+        canvases = [placement.canvas._for_file(target) for placement in self.placements]
+        if all(new is p.canvas for new, p in zip(canvases, self.placements, strict=True)):
+            return self
+        grid = copy.copy(self)
+        grid.placements = tuple(
+            replace(p, canvas=canvas) for p, canvas in zip(self.placements, canvases, strict=True)
+        )
+        return grid
+
     def save(
         self,
         target: str | Path,
@@ -180,7 +195,13 @@ class CanvasGrid:
         cache: RenderCache | None = None,
         **options: Any,
     ) -> list[Path]:
+        """Write the grid to ``target`` (``.png``, ``.pdf``, ``.svg`` or ``.tex``).
+
+        The label overrides active for the file's stem (see :meth:`Canvas.save`) apply to
+        the labels of every cell. ``render()`` never applies them.
+        """
         target = Path(target)
+        grid = self._for_file(target)
         if target.suffix.lower() == ".tex":
             from mosaickit.rendering.tikz import grid_to_tikz
 
@@ -189,12 +210,12 @@ class CanvasGrid:
                 names = ", ".join(sorted(options))
                 raise TypeError(f"unsupported TikZ export options: {names}")
             target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(grid_to_tikz(self, standalone=standalone), encoding="utf-8")
+            target.write_text(grid_to_tikz(grid, standalone=standalone), encoding="utf-8")
             return [target]
         if target.suffix.lower() not in {".png", ".pdf", ".svg"}:
             raise RenderError(f"Unsupported output format: {target.suffix!r}")
-        selected = self._renderer(renderer)
-        result = self.render(renderer=selected, cache=cache)
+        selected = grid._renderer(renderer)
+        result = grid.render(renderer=selected, cache=cache)
         try:
             return selected.save(result, target, SaveOptions(**options))
         finally:

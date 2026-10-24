@@ -1,5 +1,22 @@
 # Changelog
 
+## 1.0.0rc7 — 2026-10-24
+
+- Per-figure label overrides in the shared part of `econ-viz.toml`:
+  `[figure.<stem>.label."<layer id>"]` with `top`, `bottom`, `left`, `right` lengths (points, `pt`,
+  `mm`, `cm`, `in`; `em` is rejected) moves one label of the figure saved as `<stem>.<ext>`, so a
+  tool can store "this label was dragged" without editing the user's Python. `Canvas.save()` and
+  `CanvasGrid.save()` apply them (also to `.tex`); an override replaces the label's own `nudge`
+  (it wins over theme and group defaults, an empty table cancels it), the leader follows, ids no
+  layer has are ignored, and braces also match `<id>.label`. `render()` and
+  `MatplotlibResult.save()` never apply them, and without overrides the output is unchanged.
+- `Config.use()` of any package config read from a file activates that file's overrides;
+  `Config.reset()` drops what that package activated. `econ_toml.figure_labels(data)` parses them,
+  `figure_overrides(stem=None)` reads the active ones, `activate_figure_overrides()` and
+  `clear_figure_overrides()` set and drop them, `SharedSettings.figures` and `Config.figure_labels`
+  carry them. Malformed values raise `ConfigurationError` naming the file and table.
+- `figure` is a shared top-level table (`econ_toml.SHARED_SECTIONS`), not an unknown key.
+
 ## 1.0.0rc6 — 2026-10-23
 
 - Packages no longer parse `econ-viz.toml` themselves. A package declares an
