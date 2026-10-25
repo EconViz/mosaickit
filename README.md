@@ -113,6 +113,31 @@ curve type with `register_path_serializer`, which lets it emit native Bézier
 segments without MosaicKit depending on it. Curve construction itself stays
 outside MosaicKit.
 
+Rotation annotations use the same boundary between geometry and layout. The
+domain package supplies two display-space paths and a pivot, while a curve
+package supplies the connector callback:
+
+```python
+from mosaickit.layout import Rect, place_rotation_marker
+
+placed = place_rotation_marker(
+    old_path,
+    new_path,
+    pivot,
+    Rect(0, 0, width_px, height_px),
+    connector,
+    accepted=earlier_marker_paths,
+    clearance=label_size_px,
+)
+```
+
+The search begins at the shorter usable tail and moves inward until the sampled
+connector fits and clears every obstacle. `extend_polyline_tail()` provides a
+physical amount of visible line beyond a marker, and `tail_label_position()`
+places a label's bottom-center anchor on the invisible continuation of that
+tail. Their distances are display units, so callers can derive them from the
+active font and stroke metrics.
+
 ## Axis marks, notes, and braces
 
 ```python

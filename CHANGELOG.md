@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- New display-space rotation layout helpers in `mosaickit.layout`:
+  `place_rotation_marker()` searches from the usable path tails inward, respects panel bounds and
+  obstacles, and keeps multiple accepted markers apart; `extend_polyline_tail()` adds physical
+  tail clearance; and `tail_label_position()` puts a label's bottom-center anchor on the continued
+  tail tangent. The connector geometry is injected, preserving MosaicKit's independence from
+  curve and domain packages.
+
 ## 1.0.0rc9 — 2026-10-24
 
 - Callout leaders (`RegionLabelLayer` callouts, and the callout a `BraceLayer`/`SpanBraceLayer`
