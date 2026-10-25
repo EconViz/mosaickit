@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0rc10 — 2026-10-25
+
 - New display-space rotation layout helpers in `mosaickit.layout`:
   `place_rotation_marker()` searches from the usable path tails inward, respects panel bounds and
   obstacles, and keeps multiple accepted markers apart; `extend_polyline_tail()` adds physical
