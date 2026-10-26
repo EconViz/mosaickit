@@ -153,4 +153,4 @@ def feasible_options(
             cost += options.leader_weight + options.leader_crossing_weight * crossing
         free.append((cost, index, Option(candidate, leader, cost)))
     free.sort(key=lambda item: (item[0], item[1]))
-    return [item[2] for item in free], everything
+    return [item[2] for item in free[: options.domain_limit]], everything

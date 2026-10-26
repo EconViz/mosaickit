@@ -66,8 +66,10 @@ class LabelOptions:
     """Cost of each line a leader crosses."""
     unplaced_cost: float = 10_000.0
     """Cost of leaving a label without a free position; large, so it is the last resort."""
-    search_budget: int = 20_000
+    search_budget: int = 1_500
     """Most search nodes expanded before the best placement found so far is returned."""
+    domain_limit: int = 48
+    """Most free positions kept per label, cheapest first; bounds the search time."""
     tick_strategy: str = "stagger+opposite"
     """One of :data:`TICK_STRATEGIES`: what a colliding tick label does."""
     stack_rows: int = 3
@@ -83,5 +85,5 @@ class LabelOptions:
                 raise ConfigurationError(f"LabelOptions.{name} must not be negative")
         if self.rings < 0 or self.ring_directions < 1 or self.stack_rows < 0:
             raise ConfigurationError("LabelOptions needs rings >= 0, ring_directions >= 1")
-        if self.search_budget < 1:
-            raise ConfigurationError("LabelOptions.search_budget must be at least 1")
+        if self.search_budget < 1 or self.domain_limit < 1:
+            raise ConfigurationError("LabelOptions.search_budget, domain_limit must be >= 1")
