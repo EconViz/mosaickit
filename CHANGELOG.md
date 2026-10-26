@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0rc14 — 2026-10-26
+
 - `estimate_text_size`, and so the `Diagram` name placement, sizes stacked TeX: `\frac` and `\dfrac` put the numerator over the denominator, `\left`/`\right` delimiters are as tall as what they enclose, and `^`/`_` arguments are smaller and raise the line. A label such as `$LM\,\left(\frac{M}{p_1}\right)$` is no longer estimated at one line. The factors are the named `TextSizeFactors` (`DEFAULT_TEXT_SIZE_FACTORS`, `factors=` argument); commands in `strip_commands` still count for nothing (#84).
 - Internal: `mosaickit.econ_toml` and `mosaickit.diagram.builder` are now packages of smaller
   modules, and a test keeps every source file at 450 lines or fewer (#82). Every public name and
