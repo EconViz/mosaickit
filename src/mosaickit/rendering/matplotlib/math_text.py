@@ -29,6 +29,7 @@ from matplotlib.transforms import Affine2D, Bbox, Transform, offset_copy
 
 from mosaickit.errors import ConfigurationError, RenderError
 from mosaickit.math_font import MathFont
+from mosaickit.rendering.matplotlib.ink import InkBox, glyph_ink, union_ink
 
 _MOVETO, _LINETO, _CURVE3, _CURVE4, _CLOSEPOLY = (
     int(code) for code in (Path.MOVETO, Path.LINETO, Path.CURVE3, Path.CURVE4, Path.CLOSEPOLY)
@@ -118,6 +119,7 @@ class MathTypesetter:
                 "use a math font such as STIX Two Math, Libertinus Math, or Fira Math"
             )
         self._layouts: dict[tuple[str, float], MathLayout] = {}
+        self._ink: dict[Any, InkBox | None] = {}
 
     def layout(self, source: str, size: float) -> MathLayout:
         key = (source, size)
@@ -134,20 +136,16 @@ class MathTypesetter:
             raise RenderError(f"Cannot set math {source!r} in {self._face.family}: {exc}") from exc
         vertices: list[tuple[float, float]] = []
         codes: list[int] = []
-        self._collect(box, 0.0, 0.0, vertices, codes)
+        boxes: list[InkBox] = []
+        self._collect(box, 0.0, 0.0, vertices, codes, boxes)
         if not vertices:
             raise RenderError(f"Math {source!r} has nothing to draw")
         path = Path(vertices, codes)
-        ink = path.get_extents()
+        x0, y0, x1, y1 = union_ink(boxes)
         return MathLayout(
             f"${source}$",
             path,
-            (
-                min(0.0, float(ink.x0)),
-                float(ink.y0),
-                max(box.bounds.x_max, float(ink.x1)),
-                float(ink.y1),
-            ),
+            (min(0.0, float(x0)), float(y0), max(box.bounds.x_max, float(x1)), float(y1)),
         )
 
     def _collect(
@@ -157,6 +155,7 @@ class MathTypesetter:
         dy: float,
         vertices: list[tuple[float, float]],
         codes: list[int],
+        boxes: list[InkBox],
     ) -> None:
         x, y = dx + box.origin[0], dy + box.origin[1]
         if box.text_layout is not None:
@@ -167,6 +166,9 @@ class MathTypesetter:
                         scale = run.size / outline.units_per_em
                         gx, gy = x + glyph.x, y + line.baseline + glyph.y
                         _append_outline(outline.commands, scale, gx, gy, vertices, codes)
+                        ink = glyph_ink(self._ink, glyph, outline.commands, scale, gx, gy)
+                        if ink is not None:
+                            boxes.append(ink)
         for rule in box.rules:
             (x0, y0), (x1, y1) = rule.start, rule.end
             half = rule.thickness / 2
@@ -175,8 +177,16 @@ class MathTypesetter:
             codes.extend([_MOVETO, _LINETO, _LINETO, _LINETO])
             vertices.append(vertices[-4])
             codes.append(_CLOSEPOLY)
+            boxes.append(
+                (
+                    x + min(c[0] for c in corners),
+                    y + min(c[1] for c in corners),
+                    x + max(c[0] for c in corners),
+                    y + max(c[1] for c in corners),
+                )
+            )
         for child in box.children:
-            self._collect(child, x, y, vertices, codes)
+            self._collect(child, x, y, vertices, codes, boxes)
 
 
 def _append_outline(
