@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0rc13 — 2026-10-26
+
 - `Diagram` takes `name_gap`, `name_diagonal` (share of the gap used on a diagonal side) and a
   `text_size(label, font_size)` estimator, so downstream packages can match their own placement;
   the defaults reproduce the previous behaviour exactly (#79). New public
