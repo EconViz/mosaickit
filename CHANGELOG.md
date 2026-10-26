@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0rc16 — 2026-10-26
+
 - Faster callout placement with identical results (#92). `open_area` rasterises segments, polygons and rects with numpy and labels the free areas by column runs instead of cell by cell (about 20 to 60 times faster); `place_callout` looks for the winner nearest leader first and stops at the first candidate that covers nothing, instead of counting every candidate; `rect_hits_segments` tests the four rect edges in one array call. Tests compare the old implementations with the new ones on random scenes.
 
 ## 1.0.0rc15 — 2026-10-26
