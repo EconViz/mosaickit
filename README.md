@@ -494,6 +494,52 @@ binding, and stable structural equality.
   `TextStyle` now takes `color, size, weight, opacity, rotation, font`, so pass them by name.
   A version 1 scene document that holds `"family": null` still loads; a name is refused.
 
+## Theory diagrams
+
+`mosaickit.diagram` declares a textbook derivation figure without hand-assembling layers. It is
+domain-neutral: roles are plain strings your theme resolves, label offsets come from an optional
+callback, and every number is a keyword with a documented default.
+
+```python
+from mosaickit import GridSpacing, Nudge
+from mosaickit.diagram import Diagram, link_points, stack
+from mosaickit.layout import centered_view
+
+view = centered_view([(8, 3), (5, 5)], gap_share=0.5)  # shifted-origin window
+top = Diagram(
+    view=view,
+    x_label="$Y$",
+    y_label="$i$",
+    origin_label="0",
+    rising_names_upper_right=True,
+    nudge=lambda layer: None,
+)
+top.line("is", [(9, 3), (5, 5)], tail=0.2, role="curve.primary", label="IS")
+top.curve("lm", [(6, 3), (10, 6)], label="LM")  # name placed clear of lines
+top.point("A", (8, 3), "$A$").drop("A", x="$Y_0$", y="$i_0$")  # dashed guides + axis marks
+top.arrow("shift", "A", (6, 3), label="$\\Delta$")  # movement arrow
+bottom = Diagram(6, 6, x_label="$Y$", y_label="$p$").point("A", (3, 2), "$A$")
+grid = stack([top, bottom], link_points(0, 1, ["A"]), spacing=GridSpacing(row_gap=0.2))
+grid.save("derivation.png")
+```
+
+- `Diagram(x_max, y_max | view=, x_label=, y_label=, origin_label=, title=, width=, height=,
+  theme=, config=, nudge=, id_prefix=, headroom=, axes_role=, rising_names_upper_right=,
+  name_order=, plot_share=, font_size=)` is one panel; `.canvas()` builds the `Canvas`.
+- `.curve(name, points, role=, label=, side=, floor=, trim=)` and
+  `.line(name, points, tail=, ...)` (the chord through the first and last point, `tail` of its
+  length longer at each end). Names go to the first free side of `name_order` (collision-aware,
+  using `mosaickit.layout` obstacles); `rising_names_upper_right` puts the name of a rising curve
+  upper-right first; `side=` forces one.
+- `.point(name, at, label, role=, nudge=)`, `.axis_mark(axis, value, label, name=)`,
+  `.guide(start, end, name=)`, `.drop(point, x=, y=)`, `.arrow(name, start, end, label)`. Points
+  are referred to by name or `(x, y)`; with a `view`, coordinates stay in data units and
+  `Diagram.at(ref)` gives the shifted panel coordinates a `GridLink` needs.
+- `stack(panels, links, cols=1, spacing=GridSpacing(...))` builds the `CanvasGrid`;
+  `link_points(upper, lower, names, role=)` declares a `PointLink` per shared point name.
+- `nudge(layer) -> Nudge | None` is added to the layer's own nudge for every label layer.
+  `indexed("$Y$", 1)` and `primed("$A$")` build subscripted and primed symbols.
+
 ## Rendering
 
 PNG, SVG, and PDF use the built-in Matplotlib renderer:

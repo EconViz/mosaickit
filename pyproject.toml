@@ -70,6 +70,13 @@ forbidden_modules = [
 ]
 
 [[tool.importlinter.contracts]]
+name = "The diagram builder composes scene and layout only"
+type = "forbidden"
+source_modules = ["mosaickit.diagram"]
+forbidden_modules = ["mosaickit.rendering", "matplotlib", "bezierkit"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
 name = "Scene models know nothing about themes, layout, or config"
 type = "forbidden"
 source_modules = ["mosaickit.scene"]
