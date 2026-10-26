@@ -8,10 +8,11 @@ names that pocket. Free areas smaller than ``MIN_FRACTION`` of the bounds are po
 from __future__ import annotations
 
 import math
-from collections import deque
 from dataclasses import dataclass
 
-from mosaickit.layout.geometry import Point, Rect, point_in_polygon
+import numpy as np
+
+from mosaickit.layout.geometry import Point, Rect, polygon_edges
 from mosaickit.layout.placement.obstacles import Obstacles
 
 Cell = tuple[int, int]
@@ -34,57 +35,109 @@ class OpenArea:
         )
 
 
+def _block_segments(blocked: np.ndarray, bounds: Rect, cell: float, segments: tuple) -> None:
+    """Mark the cells each segment passes, sampled every half cell (``k / steps`` along it)."""
+    cols, rows = blocked.shape
+    steps = np.asarray(
+        [max(1, math.ceil(math.hypot(b[0] - a[0], b[1] - a[1]) / (cell / 2))) for a, b in segments],
+        dtype=np.int64,
+    )
+    ends = np.asarray([(a[0], a[1], b[0], b[1]) for a, b in segments], dtype=float)
+    owner = np.repeat(np.arange(len(segments)), steps + 1)
+    first = np.cumsum(steps + 1) - (steps + 1)
+    k = np.arange(len(owner)) - first[owner]
+    t = k / steps[owner]
+    ax, ay, bx, by = (ends[owner, i] for i in range(4))
+    i = ((ax + (bx - ax) * t - bounds.x0) // cell).astype(np.int64)
+    j = ((ay + (by - ay) * t - bounds.y0) // cell).astype(np.int64)
+    keep = (i >= 0) & (i < cols) & (j >= 0) & (j < rows)
+    blocked[i[keep], j[keep]] = True
+
+
+def _block_polygon(blocked: np.ndarray, bounds: Rect, cell: float, polygon: tuple) -> None:
+    """Mark the cells whose centre is inside the polygon (the ray-crossing test of
+    :func:`~mosaickit.layout.geometry.point_in_polygon`, on the cells in its bounding box)."""
+    cols, rows = blocked.shape
+    xs = [p[0] for p in polygon]
+    ys = [p[1] for p in polygon]
+    i0 = max(0, int((min(xs) - bounds.x0) // cell))
+    i1 = min(cols, int((max(xs) - bounds.x0) // cell) + 1)
+    j0 = max(0, int((min(ys) - bounds.y0) // cell))
+    j1 = min(rows, int((max(ys) - bounds.y0) // cell) + 1)
+    if i0 >= i1 or j0 >= j1:
+        return
+    cx = (bounds.x0 + (np.arange(i0, i1) + 0.5) * cell)[:, None]
+    cy = (bounds.y0 + (np.arange(j0, j1) + 0.5) * cell)[None, :]
+    inside = np.zeros((i1 - i0, j1 - j0), dtype=bool)
+    for (x0, y0), (x1, y1) in polygon_edges(polygon):
+        straddles = (y0 > cy) != (y1 > cy)
+        if not straddles.any():
+            continue
+        with np.errstate(divide="ignore", invalid="ignore"):
+            crossing = cx < x0 + (cy - y0) * (x1 - x0) / (y1 - y0)
+        inside ^= straddles & crossing
+    blocked[i0:i1, j0:j1] |= inside
+
+
+def _runs(blocked: np.ndarray) -> list[list[tuple[int, int]]]:
+    """Per column, the ``[start, end)`` runs of free cells."""
+    found: list[list[tuple[int, int]]] = []
+    for column in blocked:
+        free = np.concatenate(([False], ~column, [False]))
+        edges = np.flatnonzero(free[1:] != free[:-1])
+        found.append(list(zip(edges[::2].tolist(), edges[1::2].tolist(), strict=True)))
+    return found
+
+
+def _components(blocked: np.ndarray) -> list[tuple[int, list[tuple[int, int, int]]]]:
+    """Connected free areas (4-neighbour) as ``(cell count, [(column, start, end), ...])``."""
+    columns = _runs(blocked)
+    parent: list[int] = []
+    owner: list[tuple[int, int, int]] = []
+    ids: list[list[int]] = []
+
+    def find(a: int) -> int:
+        while parent[a] != a:
+            parent[a] = parent[parent[a]]
+            a = parent[a]
+        return a
+
+    for i, runs in enumerate(columns):
+        ids.append([])
+        for start, end in runs:
+            index = len(parent)
+            parent.append(index)
+            owner.append((i, start, end))
+            ids[i].append(index)
+        if i == 0:
+            continue
+        for index, (start, end) in zip(ids[i], runs, strict=True):
+            for other, (s, e) in zip(ids[i - 1], columns[i - 1], strict=True):
+                if s < end and start < e:
+                    parent[find(other)] = find(index)
+    groups: dict[int, list[tuple[int, int, int]]] = {}
+    for index, run in enumerate(owner):
+        groups.setdefault(find(index), []).append(run)
+    return [(sum(e - s for _, s, e in runs), runs) for runs in groups.values()]
+
+
 def open_area(bounds: Rect, obstacles: Obstacles, cell: float) -> OpenArea:
     cols = max(1, math.ceil(bounds.width / cell))
     rows = max(1, math.ceil(bounds.height / cell))
-
-    def cell_of(x: float, y: float) -> Cell:
-        return (int((x - bounds.x0) // cell), int((y - bounds.y0) // cell))
-
-    def center(i: int, j: int) -> Point:
-        return (bounds.x0 + (i + 0.5) * cell, bounds.y0 + (j + 0.5) * cell)
-
-    blocked: set[Cell] = set()
-    for (ax, ay), (bx, by) in obstacles.segments:
-        steps = max(1, math.ceil(math.hypot(bx - ax, by - ay) / (cell / 2)))
-        for k in range(steps + 1):
-            t = k / steps
-            blocked.add(cell_of(ax + (bx - ax) * t, ay + (by - ay) * t))
+    blocked = np.zeros((cols, rows), dtype=bool)
+    if obstacles.segments:
+        _block_segments(blocked, bounds, cell, obstacles.segments)
     for rect in obstacles.rects:
-        i0, j0 = cell_of(rect.x0, rect.y0)
-        i1, j1 = cell_of(rect.x1, rect.y1)
-        blocked.update((i, j) for i in range(i0, i1 + 1) for j in range(j0, j1 + 1))
+        i0 = int((rect.x0 - bounds.x0) // cell)
+        j0 = int((rect.y0 - bounds.y0) // cell)
+        i1 = int((rect.x1 - bounds.x0) // cell)
+        j1 = int((rect.y1 - bounds.y0) // cell)
+        blocked[max(0, i0) : max(0, i1 + 1), max(0, j0) : max(0, j1 + 1)] = True
     for polygon in obstacles.polygons:
-        i0, j0 = cell_of(min(p[0] for p in polygon), min(p[1] for p in polygon))
-        i1, j1 = cell_of(max(p[0] for p in polygon), max(p[1] for p in polygon))
-        for i in range(max(0, i0), min(cols, i1 + 1)):
-            for j in range(max(0, j0), min(rows, j1 + 1)):
-                if point_in_polygon(center(i, j), polygon):
-                    blocked.add((i, j))
-
-    seen: set[Cell] = set()
-    open_cells: set[Cell] = set()
+        _block_polygon(blocked, bounds, cell, polygon)
     minimum = MIN_FRACTION * cols * rows
-    for i in range(cols):
-        for j in range(rows):
-            if (i, j) in blocked or (i, j) in seen:
-                continue
-            component = {(i, j)}
-            queue = deque([(i, j)])
-            seen.add((i, j))
-            while queue:
-                ci, cj = queue.popleft()
-                for ni, nj in ((ci + 1, cj), (ci - 1, cj), (ci, cj + 1), (ci, cj - 1)):
-                    neighbour = (ni, nj)
-                    if (
-                        0 <= ni < cols
-                        and 0 <= nj < rows
-                        and neighbour not in blocked
-                        and neighbour not in seen
-                    ):
-                        seen.add(neighbour)
-                        component.add(neighbour)
-                        queue.append(neighbour)
-            if len(component) >= minimum:
-                open_cells |= component
+    open_cells: set[Cell] = set()
+    for size, runs in _components(blocked):
+        if size >= minimum:
+            open_cells.update((i, j) for i, start, end in runs for j in range(start, end))
     return OpenArea(bounds, cell, frozenset(open_cells))

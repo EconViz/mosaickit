@@ -42,26 +42,47 @@ def place_callout(
     everything = Obstacles(obstacles.segments, obstacles.rects, polygons)
     area = open_area(bounds, everything, OPEN_AREA_CELL * scale)
     crossings = region_crossings(own, obstacles.segments, tolerance=CROSSING_TOLERANCE)
+
+    def violations_of(rect: Rect, leader: Segment, *, stop: bool) -> int:
+        """Hard-constraint failures of a candidate; with ``stop`` the first failing kind ends
+        the count (enough to know that it is not clean)."""
+        total = 0
+        for check in (
+            lambda: 0 if area.contains(rect.center) else 1,
+            lambda: beyond_crossings(rect.center, pole, crossings),
+            lambda: count_violations(rect, obstacles, bounds, polygons),
+            lambda: leader_violations(leader, everything, own),
+        ):
+            total += check()
+            if stop and total:
+                break
+        return total
+
     best: tuple[tuple[int, float], Placement] | None = None
     for gaps in (GAPS, FAR_GAPS):
+        candidates: list[tuple[float, Rect, Segment]] = []
         for k in range(DIRECTIONS):
             unit = direction(k, DIRECTIONS)
             exit_distance = ray_exit(pole, unit, own)
             for gap in gaps:
                 rect = anchored_rect(pole, unit, exit_distance + gap * scale, size)
                 leader = build_leader(pole, rect, LEADER_GAP * scale)
-                violations = (
-                    count_violations(rect, obstacles, bounds, polygons)
-                    + (0 if area.contains(rect.center) else 1)
-                    + leader_violations(leader, everything, own)
-                    + beyond_crossings(rect.center, pole, crossings)
-                )
-                key = (violations, math.dist(*leader))
-                if best is None or key < best[0]:
-                    best = (key, Placement(rect, leader, violations))
-        assert best is not None
-        if best[1].violations == 0:
+                candidates.append((math.dist(*leader), rect, leader))
+        # The winner is the shortest leader among the candidates that cover nothing (the
+        # earliest on a tie), so look for it nearest first and stop at the first clean one.
+        order = sorted(range(len(candidates)), key=lambda n: candidates[n][0])
+        clean = next((n for n in order if violations_of(*candidates[n][1:], stop=True) == 0), None)
+        if clean is not None:
+            length, rect, leader = candidates[clean]
+            key = (0, length)
+            if best is None or key < best[0]:
+                best = (key, Placement(rect, leader, 0))
             break
+        for length, rect, leader in candidates:
+            violations = violations_of(rect, leader, stop=False)
+            key = (violations, length)
+            if best is None or key < best[0]:
+                best = (key, Placement(rect, leader, violations))
     assert best is not None
     return best[1]
 

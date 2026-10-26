@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Faster callout placement with identical results (#92). `open_area` rasterises segments, polygons and rects with numpy and labels the free areas by column runs instead of cell by cell (about 20 to 60 times faster); `place_callout` looks for the winner nearest leader first and stops at the first candidate that covers nothing, instead of counting every candidate; `rect_hits_segments` tests the four rect edges in one array call. Tests compare the old implementations with the new ones on random scenes.
+
 ## 1.0.0rc15 — 2026-10-26
 
 - New `mosaickit.layout.labels`: one global label placer (#87). `place_labels(labels, obstacles, bounds, options)` places curve names, point labels and tick labels together: fixed-size boxes (the font size is never changed), inside the bounds, clear of every line, marker and box by a named clearance, never on another label, each beside its own anchor. It tries the preferred sides, then widening rings, then a displaced position with a leader line, and searches for the cheapest conflict-free assignment (most constrained first, branch and bound, deterministic). A label with no free position is returned with `ok=False` and a structured `PlacementWarning`. Tick labels stagger in rows or flip to the opposite side (`tick_strategy`). Every number is a documented field of the frozen `LabelOptions`.
