@@ -6,7 +6,8 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 from mosaickit.config import Config
-from mosaickit.diagram._names import DEFAULT_NAME_ORDER, SIDES, TextSize, estimate_text_size
+from mosaickit.diagram._names import DEFAULT_NAME_ORDER, SIDES, TextSize
+from mosaickit.diagram._text_size import estimate_text_size
 from mosaickit.diagram.builder.constants import (
     HEADROOM,
     NAME_CHARACTER_WIDTH,

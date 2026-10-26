@@ -6,6 +6,7 @@ from mosaickit import CanvasGrid, GridSpacing, Nudge, TextLayer
 from mosaickit.diagram import (
     TEX_LAYOUT_COMMANDS,
     Diagram,
+    TextSizeFactors,
     estimate_text_size,
     indexed,
     link_points,
@@ -241,10 +242,8 @@ def test_custom_text_size_is_used_for_every_name():
     assert seen == [("$D$", 9.0)]
 
 
-def test_estimate_text_size_defaults_and_stripping():
+def test_estimate_text_size_stripping_leaves_arguments_as_plain_text():
     label = r"$\frac{M}{P}$"
-    width, height = estimate_text_size(label, 10)
-    assert (width, height) == (0.8 * 10 * 3, 12.5)  # \frac counts as one glyph
     stripped = estimate_text_size(label, 10, strip_commands=TEX_LAYOUT_COMMANDS)
     assert stripped == (0.8 * 10 * 2, 12.5)
     assert estimate_text_size(
@@ -254,6 +253,61 @@ def test_estimate_text_size_defaults_and_stripping():
         line_height=1.0,
         strip_commands=["left", "right"],
     ) == (0.5 * 10 * 4, 10.0)
+
+
+def test_estimate_text_size_plain_text_and_markup():
+    assert estimate_text_size("abc", 10) == (0.8 * 10 * 3, 12.5)
+    assert estimate_text_size(r"$a\,b\{c\}$", 10) == (0.8 * 10 * 3, 12.5)
+    assert estimate_text_size(r"$\alpha\beta$", 10) == (0.8 * 10 * 2, 12.5)
+
+
+def test_estimate_text_size_stacks_fractions():
+    f = TextSizeFactors()
+    width, height = estimate_text_size(r"$\frac{M}{P}$", 10)
+    assert width == pytest.approx(0.8 * 10 * (f.script_scale + f.fraction_padding))
+    assert height == pytest.approx(12.5 * 2 * f.script_scale)
+    _, display = estimate_text_size(r"$\dfrac{M}{P}$", 10)
+    assert display == pytest.approx(12.5 * 2 * f.display_scale)
+    assert display > height > estimate_text_size("M", 10)[1]
+
+
+def test_estimate_text_size_wider_part_sets_fraction_width():
+    narrow, _ = estimate_text_size(r"\frac{a}{b}", 10)
+    wide, _ = estimate_text_size(r"\frac{a}{bcd}", 10)
+    assert wide > narrow
+    assert estimate_text_size(r"\frac{abc}{d}", 10)[0] == wide
+
+
+def test_estimate_text_size_large_delimiters_follow_their_content():
+    f = TextSizeFactors()
+    small_w, small_h = estimate_text_size(r"\left(x\right)", 10)
+    assert (small_w, small_h) == (0.8 * 10 * (1 + 2 * f.delimiter_width), 12.5)
+    frac_w, frac_h = estimate_text_size(r"\left(\frac{M}{P}\right)", 10)
+    inner_w, inner_h = estimate_text_size(r"\frac{M}{P}", 10)
+    assert frac_h == inner_h
+    assert frac_w == pytest.approx(inner_w + 0.8 * 10 * 2 * f.large_delimiter_width)
+    assert estimate_text_size(r"\left.x\right|", 10)[0] == pytest.approx(
+        0.8 * 10 * (1 + 2 * f.delimiter_width)
+    )
+
+
+def test_estimate_text_size_scripts_shrink_and_raise():
+    f = TextSizeFactors()
+    width, height = estimate_text_size("p_1", 10)
+    assert width == pytest.approx(0.8 * 10 * (1 + f.script_scale))
+    assert height == pytest.approx(12.5 * (1 + f.script_rise))
+    assert estimate_text_size("x^{ab}", 10)[0] == pytest.approx(0.8 * 10 * (1 + 2 * f.script_scale))
+
+
+def test_estimate_text_size_factors_are_configurable():
+    flat = TextSizeFactors(script_scale=1.0, script_rise=0.0, fraction_padding=0.0)
+    assert estimate_text_size(r"\frac{a}{b}", 10, factors=flat) == (8.0, 25.0)
+
+
+def test_the_lm_label_is_taller_than_one_line():
+    label = r"$LM\,\left(\frac{M}{p_1}\right)$"
+    _, height = estimate_text_size(label, 10)
+    assert height > 1.5 * 12.5
 
 
 def test_tail_label_sits_at_a_fixed_offset_from_the_curve_end():

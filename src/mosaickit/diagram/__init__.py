@@ -5,6 +5,10 @@ from mosaickit.diagram._names import (
     RISING_NAME_ORDER,
     TEX_LAYOUT_COMMANDS,
     TextSize,
+)
+from mosaickit.diagram._text_size import (
+    DEFAULT_TEXT_SIZE_FACTORS,
+    TextSizeFactors,
     estimate_text_size,
 )
 from mosaickit.diagram.builder import (
@@ -19,11 +23,13 @@ from mosaickit.diagram.builder import (
 
 __all__ = [
     "DEFAULT_NAME_ORDER",
+    "DEFAULT_TEXT_SIZE_FACTORS",
     "RISING_NAME_ORDER",
     "TEX_LAYOUT_COMMANDS",
     "Diagram",
     "PointLink",
     "TextSize",
+    "TextSizeFactors",
     "estimate_text_size",
     "indexed",
     "is_symbol",
