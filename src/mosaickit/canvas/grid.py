@@ -11,6 +11,7 @@ from typing import Any
 
 from mosaickit.canvas.canvas import Canvas
 from mosaickit.canvas.grid_link import GridLink
+from mosaickit.canvas.grid_spacing import GridSpacing
 from mosaickit.canvas.layout import Layout
 from mosaickit.canvas.span import Span
 from mosaickit.errors import ConfigurationError, RenderError
@@ -35,7 +36,10 @@ class CanvasGrid:
         cols: int | None = None,
         shape: tuple[int, int] | None = None,
         links: Sequence[GridLink] = (),
+        spacing: GridSpacing | None = None,
     ) -> None:
+        if spacing is not None and not isinstance(spacing, GridSpacing):
+            raise ConfigurationError("CanvasGrid.spacing must be a GridSpacing")
         if shape is not None:
             if rows is not None or cols is not None or len(shape) != 2:
                 raise ConfigurationError("Use shape=(rows, cols) or rows/cols, not both")
@@ -130,23 +134,39 @@ class CanvasGrid:
         for link in links:
             link.check(len(self.placements))
         self.links = tuple(links)
+        self.spacing = spacing if spacing is not None else GridSpacing()
 
     @classmethod
     def sweep(
-        cls, template: Canvas, values: ParameterValues, *, cols: int | None = None
+        cls,
+        template: Canvas,
+        values: ParameterValues,
+        *,
+        cols: int | None = None,
+        spacing: GridSpacing | None = None,
     ) -> CanvasGrid:
-        return cls([template.bind(values.parameter, value) for value in values.values], cols=cols)
+        return cls(
+            [template.bind(values.parameter, value) for value in values.values],
+            cols=cols,
+            spacing=spacing,
+        )
 
     @classmethod
-    def from_layout(cls, canvases: list[Canvas], layout: Layout) -> CanvasGrid:
+    def from_layout(
+        cls,
+        canvases: list[Canvas],
+        layout: Layout,
+        *,
+        spacing: GridSpacing | None = None,
+    ) -> CanvasGrid:
         if layout == Layout.TOP_TWO_BOTTOM_ONE:
             if len(canvases) != 3:
                 raise ConfigurationError("TOP_TWO_BOTTOM_ONE requires 3 canvases")
-            return cls([[canvases[0], canvases[1]], [Span(canvases[2], cols=2)]])
+            return cls([[canvases[0], canvases[1]], [Span(canvases[2], cols=2)]], spacing=spacing)
         if layout == Layout.TOP_ONE_BOTTOM_TWO:
             if len(canvases) != 3:
                 raise ConfigurationError("TOP_ONE_BOTTOM_TWO requires 3 canvases")
-            return cls([[Span(canvases[0], cols=2)], [canvases[1], canvases[2]]])
+            return cls([[Span(canvases[0], cols=2)], [canvases[1], canvases[2]]], spacing=spacing)
         shapes = {
             Layout.SINGLE: (1, 1),
             Layout.STACKED: (2, 1),
@@ -154,7 +174,7 @@ class CanvasGrid:
             Layout.GRID_2X2: (2, 2),
             Layout.GRID_3X3: (3, 3),
         }
-        return cls(canvases, shape=shapes[layout])
+        return cls(canvases, shape=shapes[layout], spacing=spacing)
 
     def _renderer(self, renderer: Renderer | str | None) -> Renderer:
         if renderer is None:

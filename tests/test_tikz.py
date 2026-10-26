@@ -7,6 +7,7 @@ from mosaickit import (
     CanvasGrid,
     Fill,
     FillLayer,
+    GridSpacing,
     GroupLayer,
     Marker,
     MarkerLayer,
@@ -82,6 +83,24 @@ def test_canvas_grid_saves_a_standalone_tikz_layout(tmp_path):
     assert "% row 1 of 2" in source
     assert "% row 2 of 2" in source
     assert r"\hspace{1em}" in source
+
+
+def test_canvas_grid_tikz_export_uses_custom_proportional_spacing(tmp_path):
+    canvas = Canvas()
+    grid = CanvasGrid(
+        [[canvas, canvas], [canvas, canvas]],
+        spacing=GridSpacing(column_gap=0.25, row_gap=0.5, outer=0.1),
+    )
+
+    target = tmp_path / "spaced-grid.tex"
+    grid.save(target)
+
+    source = target.read_text(encoding="utf-8")
+    assert r"\hspace{1.5in}" in source
+    assert r"\par\vspace{3in}" in source
+    assert source.count(r"\hspace*{1.2in}") == 4
+    assert source.count(r"\vspace*{1.2in}") == 2
+    assert r"\hspace{1em}" not in source
 
 
 def _tikz_text(tmp_path, **style):

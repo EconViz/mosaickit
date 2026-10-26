@@ -2,7 +2,16 @@ from pathlib import Path
 
 import pytest
 
-from mosaickit import Canvas, CanvasGrid, ConfigurationError, Layout, Parameter, Span, TextLayer
+from mosaickit import (
+    Canvas,
+    CanvasGrid,
+    ConfigurationError,
+    GridSpacing,
+    Layout,
+    Parameter,
+    Span,
+    TextLayer,
+)
 
 
 class RecordingRenderer:
@@ -68,6 +77,35 @@ def test_flat_shape_inference_sweep_and_empty_cells():
     assert [item.canvas.snapshot().layers[0].position[0] for item in grid.placements] == [1, 2, 3]
 
 
+def test_grid_spacing_is_public_and_propagates_through_factories():
+    spacing = GridSpacing(column_gap=0.2, row_gap=0.1, outer=0.04)
+    assert CanvasGrid([Canvas()], spacing=spacing).spacing is spacing
+    parameter = Parameter("x")
+    swept = CanvasGrid.sweep(Canvas(), parameter.values([1]), spacing=spacing)
+    laid_out = CanvasGrid.from_layout([Canvas()], Layout.SINGLE, spacing=spacing)
+    assert swept.spacing is spacing
+    assert laid_out.spacing is spacing
+
+
+@pytest.mark.parametrize(
+    "kwargs,match",
+    [
+        ({"column_gap": -0.1}, "column_gap.*negative"),
+        ({"row_gap": float("inf")}, "row_gap.*finite"),
+        ({"outer": 0.5}, "outer.*less than 0.5"),
+        ({"outer": True}, "outer.*finite number"),
+    ],
+)
+def test_grid_spacing_rejects_invalid_values(kwargs, match):
+    with pytest.raises(ConfigurationError, match=match):
+        GridSpacing(**kwargs)
+
+
+def test_canvas_grid_rejects_an_untyped_spacing_value():
+    with pytest.raises(ConfigurationError, match="CanvasGrid.spacing.*GridSpacing"):
+        CanvasGrid([Canvas()], spacing={"column_gap": 0.2})
+
+
 @pytest.mark.parametrize(
     "factory,match",
     [
@@ -107,6 +145,34 @@ def test_grid_link_joins_points_in_two_cells_over_the_gap():
         assert start[1] == pytest.approx(end[1])
         assert patch.get_linestyle() == "dashed"
         assert patch.xy1 == (10, 4) and patch.xy2 == (0, 4)
+    finally:
+        result.close()
+
+
+def test_custom_spacing_moves_axes_and_grid_link_endpoints_together():
+    from matplotlib.patches import ConnectionPatch
+
+    from mosaickit import CanvasSpec, GridLink
+
+    spec = CanvasSpec(x_range=(0, 10), y_range=(0, 10))
+    grid = CanvasGrid(
+        [Canvas(spec), Canvas(spec)],
+        rows=1,
+        links=(GridLink(0, (10, 5), 1, (0, 5)),),
+        spacing=GridSpacing(column_gap=0.5, row_gap=0.25, outer=0.1),
+    )
+    result = grid.render()
+    try:
+        left, right = result.axes
+        assert result.figure.subplotpars.wspace == pytest.approx(0.5)
+        assert result.figure.subplotpars.hspace == pytest.approx(0.25)
+        assert result.figure.subplotpars.left == pytest.approx(0.1)
+        assert result.figure.subplotpars.right == pytest.approx(0.9)
+        assert right.get_position().x0 - left.get_position().x1 > 0.1
+        (patch,) = [a for a in result.figure.artists if isinstance(a, ConnectionPatch)]
+        assert patch.xy1 == (10, 5) and patch.xy2 == (0, 5)
+        assert patch.coords1 is left.transData
+        assert patch.coords2 is right.transData
     finally:
         result.close()
 

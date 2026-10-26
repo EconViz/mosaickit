@@ -341,7 +341,27 @@ def grid_to_tikz(grid: CanvasGrid, *, standalone: bool = True) -> str:
         definitions.update(line for line in source[:picture_at].splitlines() if line)
         pictures[(placement.row, placement.col)] = source[picture_at:]
 
-    lines = [r"\begin{center}"]
+    spacing = grid.spacing
+    custom_outer = spacing.outer is not None
+    unit_width = max(
+        (placement.canvas.spec.width / placement.cols for placement in grid.placements), default=6
+    )
+    unit_height = max(
+        (placement.canvas.spec.height / placement.rows for placement in grid.placements), default=6
+    )
+    column_separator = (
+        rf"\hspace{{{_number(spacing.column_gap * unit_width)}in}}"
+        if spacing.column_gap is not None
+        else r"\hspace{1em}"
+    )
+    row_separator = (
+        rf"\par\vspace{{{_number(spacing.row_gap * unit_height)}in}}"
+        if spacing.row_gap is not None
+        else r"\par\medskip"
+    )
+    outer_x = (spacing.outer or 0) * unit_width * grid.cols
+    outer_y = (spacing.outer or 0) * unit_height * grid.rows
+    lines = [r"\begin{center}" if not custom_outer else rf"\vspace*{{{_number(outer_y)}in}}"]
     for row in range(grid.rows):
         row_pictures = [
             pictures[(placement.row, placement.col)]
@@ -351,10 +371,17 @@ def grid_to_tikz(grid: CanvasGrid, *, standalone: bool = True) -> str:
         if not row_pictures:
             continue
         lines.append(f"% row {row + 1} of {grid.rows}")
-        lines.append(r"\hspace{1em}".join(row_pictures))
+        row_body = column_separator.join(row_pictures)
+        if custom_outer:
+            row_body = (
+                rf"\noindent\hspace*{{{_number(outer_x)}in}}"
+                + row_body
+                + rf"\hspace*{{{_number(outer_x)}in}}"
+            )
+        lines.append(row_body)
         if any(placement.row > row for placement in grid.placements):
-            lines.append(r"\par\medskip")
-    lines.append(r"\end{center}")
+            lines.append(row_separator)
+    lines.append(r"\end{center}" if not custom_outer else rf"\vspace*{{{_number(outer_y)}in}}")
     body = "\n".join(sorted(definitions)) + "\n" + "\n".join(lines)
     if not standalone:
         return body

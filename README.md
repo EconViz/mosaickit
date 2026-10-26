@@ -429,18 +429,27 @@ right = "8pt"
 ## Grids and parameters
 
 ```python
-from mosaickit import Canvas, CanvasGrid, Parameter, TextLayer
+from mosaickit import Canvas, CanvasGrid, GridSpacing, Parameter, TextLayer
 
 position = Parameter("position", value_type=float)
 template = Canvas().add(TextLayer((position, 5), "moving"))
 values = position.values([1.0, 3.0, 5.0])
 
-CanvasGrid.sweep(template, values, cols=3).save("sweep.svg")
+CanvasGrid.sweep(
+    template,
+    values,
+    cols=3,
+    spacing=GridSpacing(column_gap=0.2, row_gap=0.15, outer=0.04),
+).save("sweep.svg")
 ```
 
 `CanvasGrid` accepts flat canvases, nested rows, `None` cells, and
 `Span(canvas, rows=..., cols=...)`. A flat list infers a roughly square grid;
 explicit `rows` and `cols` may leave trailing cells empty.
+`GridSpacing` controls renderer-neutral gaps: `column_gap` and `row_gap` are
+fractions of one cell, while `outer` is a symmetric fraction of the whole grid.
+Omitted fields retain each renderer's existing default, so `CanvasGrid(cells)`
+continues to produce the same layout.
 
 Parameters and expressions support arithmetic, ordered comparisons, partial
 binding, and stable structural equality.

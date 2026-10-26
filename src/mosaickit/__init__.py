@@ -1,6 +1,6 @@
 """Domain-neutral diagram construction and rendering."""
 
-from mosaickit.canvas import Canvas, CanvasGrid, GridLink, Layout, Span
+from mosaickit.canvas import Canvas, CanvasGrid, GridLink, GridSpacing, Layout, Span
 from mosaickit.canvas_spec import CanvasSpec
 from mosaickit.colors import TRANSPARENT, Color
 from mosaickit.config import Config, use_config
@@ -78,6 +78,7 @@ __all__ = [
     "Canvas",
     "CanvasGrid",
     "GridLink",
+    "GridSpacing",
     "CanvasSpec",
     "Color",
     "Config",

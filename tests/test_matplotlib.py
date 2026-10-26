@@ -118,6 +118,21 @@ def test_grid_span_axes_size_and_repeated_saves(tmp_path):
         assert grid.save(tmp_path / "grid.png") == [tmp_path / "grid.png"]
 
 
+def test_default_grid_spacing_preserves_matplotlib_defaults():
+    from matplotlib.figure import Figure
+
+    expected = Figure().subplotpars
+    result = CanvasGrid([Canvas(), Canvas()], rows=1).render()
+    try:
+        actual = result.figure.subplotpars
+        assert (actual.left, actual.right, actual.bottom, actual.top) == pytest.approx(
+            (expected.left, expected.right, expected.bottom, expected.top)
+        )
+        assert (actual.wspace, actual.hspace) == pytest.approx((expected.wspace, expected.hspace))
+    finally:
+        result.close()
+
+
 @pytest.mark.parametrize(
     "anchor,ha,va",
     [
