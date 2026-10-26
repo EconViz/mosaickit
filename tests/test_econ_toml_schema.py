@@ -278,7 +278,7 @@ class Outer:
 
 def test_dotted_attrs_rebuild_each_nested_object_once(monkeypatch):
     calls: list[type] = []
-    import mosaickit.econ_toml as module
+    import mosaickit.econ_toml._apply as module
 
     real = module.replace
 
@@ -799,7 +799,7 @@ def test_template_of_an_empty_schema_and_odd_defaults():
 
 @pytest.fixture
 def clean_registry(monkeypatch):
-    monkeypatch.setattr(econ_toml, "_REGISTRY", {})
+    monkeypatch.setattr("mosaickit.econ_toml.registry._REGISTRY", {})
 
 
 def test_register_and_registered(clean_registry):

@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Internal: `mosaickit.econ_toml` and `mosaickit.diagram.builder` are now packages of smaller
+  modules, and a test keeps every source file at 450 lines or fewer (#82). Every public name and
+  import path is unchanged.
+
 ## 1.0.0rc13 — 2026-10-26
 
 - `Diagram` takes `name_gap`, `name_diagonal` (share of the gap used on a diagonal side) and a
