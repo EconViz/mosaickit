@@ -13,8 +13,9 @@ from mosaickit.diagram._names import (
     DEFAULT_NAME_ORDER,
     RISING_NAME_ORDER,
     SIDES,
+    TextSize,
+    estimate_text_size,
     place_name,
-    text_size,
 )
 from mosaickit.errors import ConfigurationError
 from mosaickit.layout import Obstacles, Rect, View, clip_polyline, extend_line_through
@@ -47,6 +48,8 @@ NAME_GAP = 5.0
 """Gap in points between a curve's end and its name."""
 NAME_CLEARANCE = 3.5
 """Free space in points kept between a curve name and any line or other name."""
+NAME_DIAGONAL = 1.0
+"""Share of the name gap used on a diagonal side (1: as far as on a straight side)."""
 NAME_CHARACTER_WIDTH = 0.8
 """Average character width in em assumed when placing names (a margin over the real one)."""
 NAME_LINE_HEIGHT = 1.25
@@ -118,6 +121,9 @@ class Diagram:
         name_order: Sequence[str] = DEFAULT_NAME_ORDER,
         plot_share: float = PLOT_SHARE,
         font_size: float = NAME_FONT_SIZE,
+        name_gap: float = NAME_GAP,
+        name_diagonal: float = NAME_DIAGONAL,
+        text_size: TextSize | None = None,
     ) -> None:
         if view is not None:
             if x_max is not None or y_max is not None:
@@ -141,6 +147,8 @@ class Diagram:
         self.rising_names_upper_right = rising_names_upper_right
         self.name_order = tuple(name_order)
         self.plot_share, self.font_size = plot_share, font_size
+        self.name_gap, self.name_diagonal = name_gap, name_diagonal
+        self.text_size: TextSize = text_size or _default_text_size
         self._points: dict[str, Point] = {}
         self._layers: list[Layer] = []
         self._curves: list[_Curve] = []
@@ -231,6 +239,46 @@ class Diagram:
         return self.curve(
             name, chord, role=role, label=label, side=side, floor=floor, z_index=z_index
         )
+
+    def tail_label(
+        self,
+        name: str,
+        curve: str,
+        text: str,
+        *,
+        offset: Point,
+        role: str | None = None,
+        anchor: str | None = None,
+        z_index: int = 7,
+    ) -> Diagram:
+        """``text`` at a fixed ``offset`` (points) from the end of the curve ``curve``.
+
+        Unlike a curve name it is not searched for a free spot. The end is the curve's point
+        farthest right (then highest). Unless ``anchor`` is given, the text sits on the side the
+        offset points to: right of the end for ``(8, 0)``, above it for ``(0, 8)``. ``role``
+        defaults to the curve's.
+        """
+        layer = next(
+            (c for c in self._layers if isinstance(c, PathLayer) and c.id == self._id(curve)), None
+        )
+        if layer is None:
+            raise ConfigurationError(f"unknown curve {curve!r}; declare it with curve() first")
+        dx, dy = offset
+        if anchor is None:
+            anchor = _OFFSET_ANCHOR[(_sign(dx), _sign(dy))]
+        end = max(layer.path, key=lambda p: (p[0], p[1]))
+        self._layers.append(
+            TextLayer(
+                end,
+                text,
+                id=self._id(name),
+                role=role or layer.role,
+                anchor=anchor,
+                offset=(float(dx), float(dy)),
+                z_index=z_index,
+            )
+        )
+        return self
 
     def point(
         self,
@@ -437,9 +485,16 @@ class Diagram:
                 order = RISING_NAME_ORDER
             else:
                 order = self.name_order
-            size = text_size(curve.label, self.font_size, NAME_CHARACTER_WIDTH, NAME_LINE_HEIGHT)
+            size = self.text_size(curve.label, self.font_size)
             placed = place_name(
-                anchor, size, obstacles, bounds, order, gap=NAME_GAP, clearance=NAME_CLEARANCE
+                anchor,
+                size,
+                obstacles,
+                bounds,
+                order,
+                gap=self.name_gap,
+                clearance=NAME_CLEARANCE,
+                diagonal=self.name_diagonal,
             )
             obstacles = Obstacles(obstacles.segments, (*obstacles.rects, placed.box))
             names.append(
@@ -480,6 +535,19 @@ class Diagram:
         options: dict[str, Any] = {"theme": self.theme, "config": self.config}
         options.update(canvas_options)
         return Canvas(self.spec(), **options).extend(self.layers())
+
+
+def _default_text_size(label: str, font_size: float) -> Point:
+    return estimate_text_size(
+        label, font_size, char_width=NAME_CHARACTER_WIDTH, line_height=NAME_LINE_HEIGHT
+    )
+
+
+def _sign(value: float) -> int:
+    return (value > 0) - (value < 0)
+
+
+_OFFSET_ANCHOR = {(sx, sy): anchor for sx, sy, anchor in [*SIDES.values(), (0, 0, "center")]}
 
 
 @dataclass(frozen=True, slots=True)

@@ -1,6 +1,12 @@
 """A small declarative builder for theory diagrams: axes, curves, named points, guides."""
 
-from mosaickit.diagram._names import DEFAULT_NAME_ORDER, RISING_NAME_ORDER
+from mosaickit.diagram._names import (
+    DEFAULT_NAME_ORDER,
+    RISING_NAME_ORDER,
+    TEX_LAYOUT_COMMANDS,
+    TextSize,
+    estimate_text_size,
+)
 from mosaickit.diagram.builder import (
     Diagram,
     PointLink,
@@ -14,8 +20,11 @@ from mosaickit.diagram.builder import (
 __all__ = [
     "DEFAULT_NAME_ORDER",
     "RISING_NAME_ORDER",
+    "TEX_LAYOUT_COMMANDS",
     "Diagram",
     "PointLink",
+    "TextSize",
+    "estimate_text_size",
     "indexed",
     "is_symbol",
     "link_points",

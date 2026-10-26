@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 
 from mosaickit.layout import Obstacles, Rect
@@ -50,11 +50,36 @@ RISING_NAME_ORDER = (
 _MARKUP = re.compile(r"[$\\{}^_,]")
 _COMMAND = re.compile(r"\\[A-Za-z]+")
 
+TEX_LAYOUT_COMMANDS = ("left", "right", "frac", "dfrac")
+"""TeX commands that draw no glyph of their own; pass as ``strip_commands`` to leave them out."""
 
-def text_size(text: str, size: float, character_width: float, line_height: float) -> Point:
-    """Estimated ``(width, height)`` in points of ``text`` set at ``size`` points."""
-    glyphs = len(_MARKUP.sub("", _COMMAND.sub("x", text)))
-    return character_width * size * glyphs, line_height * size
+TextSize = Callable[[str, float], Point]
+"""Estimates the ``(width, height)`` in points of a label set at a font size in points."""
+
+
+def estimate_text_size(
+    label: str,
+    font_size: float,
+    *,
+    char_width: float = 0.8,
+    line_height: float = 1.25,
+    strip_commands: Iterable[str] = (),
+) -> Point:
+    """Estimated ``(width, height)`` in points of ``label`` set at ``font_size`` points.
+
+    Markup characters (``$ \\ { } ^ _ ,``) count for nothing and every TeX command counts as one
+    glyph, except the commands named in ``strip_commands`` (without the backslash, for example
+    :data:`TEX_LAYOUT_COMMANDS`), which count for nothing. ``char_width`` and ``line_height``
+    are in em. The defaults are the estimate :class:`~mosaickit.diagram.Diagram` uses.
+    """
+    plain = label
+    names = tuple(strip_commands)
+    if names:
+        plain = re.sub(
+            r"\\(?:" + "|".join(re.escape(n) for n in names) + r")(?![A-Za-z])", "", plain
+        )
+    glyphs = len(_MARKUP.sub("", _COMMAND.sub("x", plain)))
+    return char_width * font_size * glyphs, line_height * font_size
 
 
 @dataclass(frozen=True, slots=True)
@@ -66,13 +91,19 @@ class NamePlacement:
     box: Rect
 
 
-def candidate(anchor: Point, side: str, size: Point, gap: float) -> NamePlacement:
-    """The box of a ``size`` text on ``side`` of ``anchor``, ``gap`` points away."""
+def candidate(
+    anchor: Point, side: str, size: Point, gap: float, diagonal: float = 1.0
+) -> NamePlacement:
+    """The box of a ``size`` text on ``side`` of ``anchor``, ``gap`` points away
+    (``gap * diagonal`` on a diagonal side)."""
     sx, sy, _ = SIDES[side]
     width, height = size
-    x0 = anchor[0] + sx * gap - (0 if sx > 0 else width if sx < 0 else width / 2)
-    y0 = anchor[1] + sy * gap - (0 if sy > 0 else height if sy < 0 else height / 2)
-    return NamePlacement(side, (sx * gap, sy * gap), Rect(x0, y0, x0 + width, y0 + height))
+    distance = gap * diagonal if sx and sy else gap
+    x0 = anchor[0] + sx * distance - (0 if sx > 0 else width if sx < 0 else width / 2)
+    y0 = anchor[1] + sy * distance - (0 if sy > 0 else height if sy < 0 else height / 2)
+    return NamePlacement(
+        side, (sx * distance, sy * distance), Rect(x0, y0, x0 + width, y0 + height)
+    )
 
 
 def place_name(
@@ -84,11 +115,12 @@ def place_name(
     *,
     gap: float,
     clearance: float,
+    diagonal: float = 1.0,
 ) -> NamePlacement:
     """The first side of ``order`` whose box touches nothing, else the one touching least."""
     best: tuple[int, NamePlacement] | None = None
     for side in order:
-        placement = candidate(anchor, side, size, gap)
+        placement = candidate(anchor, side, size, gap, diagonal)
         probe = placement.box.inflate(clearance)
         violations = count_violations(probe, obstacles, bounds, obstacles.polygons)
         if violations == 0:
