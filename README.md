@@ -542,6 +542,44 @@ grid.save("derivation.png")
 - `nudge(layer) -> Nudge | None` is added to the layer's own nudge for every label layer.
   `indexed("$Y$", 1)` and `primed("$A$")` build subscripted and primed symbols.
 
+## Placing labels
+
+`mosaickit.layout.labels` is one placer for curve names, point labels and tick labels. A
+`Label` is a box of fixed size with an anchor and a preferred side order; `Obstacle`s are
+lines, markers and boxes. `place_labels` chooses every position together, so the result does not
+depend on the order you list labels in:
+
+```python
+from mosaickit.layout import Rect
+from mosaickit.layout.labels import Label, LabelOptions, Obstacle, place_labels
+
+labels = [Label("p0", end0, size0, owner="p0"), Label("p1", end1, size1, owner="p1")]
+obstacles = [Obstacle.polyline(path0, owner="p0"), Obstacle.polyline(path1, owner="p1")]
+result = place_labels(labels, obstacles, Rect(0, 0, width, height), LabelOptions(clearance=4.0))
+for placed in result.placements:   # box, side, offset, leader, text_anchor
+    ...
+for warning in result.warnings:    # label_id, reason: no label is silently overlapped
+    ...
+```
+
+Every box keeps its label's size (the placer has no font size to change), lies inside the
+bounds, keeps `clearance` from every line, marker and box, `label_gap` from other labels, and
+sits next to its own anchor: the first free preferred side, else widening rings, else a ring
+beyond `leader_after` joined to the anchor by a leader line. A label that sits nearer another
+label's anchor than its own is rejected unless it has a leader. Tick labels use
+`spread="stack"`: they stagger outward in rows and/or flip to the opposite side
+(`LabelOptions.tick_strategy`) instead of overlapping. When a label has no free position its
+`Placement.ok` is `False` and a `PlacementWarning` (`no-free-position`, `conflict` or
+`search-budget`) says so. Every distance and weight is a documented field of the frozen
+`LabelOptions`; the search is deterministic.
+
+`mosaickit.label_scene.place_scene_labels` does it from a canvas snapshot in one call: layers
+become obstacles, labels are the `TextLayer`s you name (anchor = their own `position`), tick
+labels and extra boxes such as axis titles join the same scene, and the replacement text layers
+(and leader `PathLayer`s with a configurable role) come back. Pass it a size function:
+`mosaickit.rendering.matplotlib.text_measurer(size, ...)` measures real text in the configured
+fonts, `mosaickit.diagram.estimate_text_size` estimates when no renderer is available.
+
 ## Rendering
 
 PNG, SVG, and PDF use the built-in Matplotlib renderer:
