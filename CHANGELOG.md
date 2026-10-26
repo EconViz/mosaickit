@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0rc12 — 2026-10-26
+
 - New `mosaickit.diagram`: a small declarative builder for theory diagrams (#75). `Diagram` declares
   arrowed axes with symbol titles and an optional origin label, an optional `centered_view` for
   shifted origins, `curve`/`line` with direct names placed clear of every line, point and name
