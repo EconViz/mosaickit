@@ -53,3 +53,14 @@ def test_default_font_slots_load_when_first_used():
 def test_given_font_files_still_load_up_front():
     typesetter = TextTypesetter(TextFonts(serif=(FONTS / "DejaVuSerif.ttf",)))
     assert list(typesetter._libraries) == ["serif"]
+
+
+def test_ink_matches_matplotlib_for_every_ascii_glyph():
+    typesetter = TextTypesetter(TextFonts())
+    for code in range(33, 127):
+        layout = typesetter.layout(chr(code), 17.0, 400)
+        ink = layout.path.get_extents()
+        x0, y0, x1, y1 = layout.box
+        assert x0 <= ink.x0 + TOLERANCE and y0 <= ink.y0 + TOLERANCE
+        assert x1 >= ink.x1 - TOLERANCE and y1 >= ink.y1 - TOLERANCE
+        assert (x0, y0, x1, y1) != (0, 0, 0, 0)

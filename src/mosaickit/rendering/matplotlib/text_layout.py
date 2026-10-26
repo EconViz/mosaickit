@@ -25,14 +25,8 @@ from glyphkit import TextStyle as GlyphStyle
 from matplotlib.path import Path
 
 from mosaickit.errors import ConfigurationError, RenderError
-from mosaickit.rendering.matplotlib.math_text import (
-    _MOVETO,
-    InkBox,
-    MathLayout,
-    _append_outline,
-    glyph_ink,
-    union_ink,
-)
+from mosaickit.rendering.matplotlib.ink import InkBox, glyph_ink, union_ink
+from mosaickit.rendering.matplotlib.math_text import _MOVETO, MathLayout, _append_outline
 from mosaickit.text_fonts import GENERIC_FONTS, TextFonts
 
 _UNESCAPED_DOLLAR = re.compile(r"(?<!\\)\$")

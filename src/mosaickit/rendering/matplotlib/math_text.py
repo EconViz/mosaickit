@@ -29,6 +29,7 @@ from matplotlib.transforms import Affine2D, Bbox, Transform, offset_copy
 
 from mosaickit.errors import ConfigurationError, RenderError
 from mosaickit.math_font import MathFont
+from mosaickit.rendering.matplotlib.ink import InkBox, glyph_ink, union_ink
 
 _MOVETO, _LINETO, _CURVE3, _CURVE4, _CLOSEPOLY = (
     int(code) for code in (Path.MOVETO, Path.LINETO, Path.CURVE3, Path.CURVE4, Path.CLOSEPOLY)
@@ -59,47 +60,6 @@ class MathLayout:
         corners = self.corners(scale, rotation)
         span = corners.max(axis=0) - corners.min(axis=0)
         return float(span[0]), float(span[1])
-
-
-InkBox = tuple[float, float, float, float]
-"""``x0, y0, x1, y1`` of the ink of some outlines."""
-
-
-def glyph_ink(
-    cache: dict[Any, InkBox | None],
-    glyph: Any,
-    commands: Any,
-    scale: float,
-    dx: float,
-    dy: float,
-) -> InkBox | None:
-    """The ink box of one glyph drawn at ``(dx, dy)``, from a per-glyph cache.
-
-    Matplotlib solves the Bezier extrema of a path segment by segment, which dominates the
-    time a label takes to set. A glyph's ink depends only on the face, the glyph and the
-    scale, so it is computed once at the origin and shifted by the glyph's position.
-    """
-    key = (glyph.face_id, glyph.glyph_id, glyph.variation_coordinates, scale)
-    if key not in cache:
-        vertices: list[tuple[float, float]] = []
-        codes: list[int] = []
-        _append_outline(commands, scale, 0.0, 0.0, vertices, codes)
-        ink = Path(vertices, codes).get_extents() if vertices else None
-        cache[key] = None if ink is None else (ink.x0, ink.y0, ink.x1, ink.y1)
-    local = cache[key]
-    if local is None:
-        return None
-    return (local[0] + dx, local[1] + dy, local[2] + dx, local[3] + dy)
-
-
-def union_ink(boxes: list[InkBox]) -> InkBox:
-    """The smallest box around ``boxes``."""
-    return (
-        min(box[0] for box in boxes),
-        min(box[1] for box in boxes),
-        max(box[2] for box in boxes),
-        max(box[3] for box in boxes),
-    )
 
 
 def _italic(symbol: Symbol, coverage: frozenset[int]) -> Symbol:
