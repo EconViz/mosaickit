@@ -101,9 +101,9 @@ def rect_hits_segments(rect: Rect, array: np.ndarray) -> np.ndarray:
     hit = ((rect.x0 <= ax) & (ax <= rect.x1) & (rect.y0 <= ay) & (ay <= rect.y1)) | (
         (rect.x0 <= bx) & (bx <= rect.x1) & (rect.y0 <= by) & (by <= rect.y1)
     )
-    for (px, py), (qx, qy) in rect.edges():
-        hit |= segments_intersect_many(ax, ay, bx, by, px, py, qx, qy)
-    return hit
+    edges = np.asarray([(p[0], p[1], q[0], q[1]) for p, q in rect.edges()], dtype=float)
+    px, py, qx, qy = (edges[:, i, None] for i in range(4))
+    return hit | segments_intersect_many(ax, ay, bx, by, px, py, qx, qy).any(axis=0)
 
 
 def point_in_edges(point: Point, edges: np.ndarray) -> bool:
