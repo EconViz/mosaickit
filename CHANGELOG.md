@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- New `mosaickit.diagram`: a small declarative builder for theory diagrams (#75). `Diagram` declares
+  arrowed axes with symbol titles and an optional origin label, an optional `centered_view` for
+  shifted origins, `curve`/`line` with direct names placed clear of every line, point and name
+  (with a rising-curves-upper-right option), named marked points, dashed `guide`/`drop` lines to
+  axis marks, and `arrow`. `stack()` with `link_points()` stacks panels into a `CanvasGrid` with
+  `GridLink`s between named points and a `GridSpacing`. A `nudge` callback and role strings keep
+  configuration and themes in the caller.
 - Fix `CanvasGrid` spacing under Matplotlib: `GridSpacing` is now applied after the cells are
   drawn, like a `subplots_adjust` on the rendered figure, instead of before. Point labels,
   leaders and gutters are placed against Matplotlib's default axes and then re-spaced with the
