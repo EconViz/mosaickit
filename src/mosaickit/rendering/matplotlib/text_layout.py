@@ -17,7 +17,7 @@ from contextlib import contextmanager
 from contextvars import ContextVar
 from functools import lru_cache
 from pathlib import Path as FilePath
-from typing import cast
+from typing import Any, cast
 
 import matplotlib
 from glyphkit import FontLibrary, FontSource, GlyphKitError, Paragraph, TextSpan
@@ -25,7 +25,14 @@ from glyphkit import TextStyle as GlyphStyle
 from matplotlib.path import Path
 
 from mosaickit.errors import ConfigurationError, RenderError
-from mosaickit.rendering.matplotlib.math_text import _MOVETO, MathLayout, _append_outline
+from mosaickit.rendering.matplotlib.math_text import (
+    _MOVETO,
+    InkBox,
+    MathLayout,
+    _append_outline,
+    glyph_ink,
+    union_ink,
+)
 from mosaickit.text_fonts import GENERIC_FONTS, TextFonts
 
 _UNESCAPED_DOLLAR = re.compile(r"(?<!\\)\$")
@@ -61,8 +68,12 @@ class TextTypesetter:
         self.fonts = fonts
         self._libraries: dict[str, tuple[FontLibrary, tuple[str, ...]]] = {}
         self._layouts: dict[tuple[str, float, int, str], MathLayout] = {}
-        for slot in GENERIC_FONTS:  # load every slot now, so an unusable file fails before drawing
-            self._library(slot)
+        self._ink: dict[Any, InkBox | None] = {}
+        for slot in GENERIC_FONTS:
+            # Files you gave load now, so an unusable one fails before drawing; the defaults are
+            # Matplotlib's own files and load when a string first uses the slot.
+            if getattr(self.fonts, slot):
+                self._library(slot)
 
     def _library(self, slot: str) -> tuple[FontLibrary, tuple[str, ...]]:
         if slot not in self._libraries:
@@ -98,28 +109,26 @@ class TextTypesetter:
             raise RenderError(f"Cannot set text {text!r} in the {slot} font: {exc}") from exc
         vertices: list[tuple[float, float]] = []
         codes: list[int] = []
+        boxes: list[InkBox] = []
         for line in layout.lines:
             for run in line.runs:
                 for glyph in run.glyphs:
                     outline = library.outline(glyph)
                     scale = run.size / outline.units_per_em
-                    _append_outline(
-                        outline.commands,
-                        scale,
-                        glyph.x + glyph.x_offset,
-                        glyph.y + glyph.y_offset,
-                        vertices,
-                        codes,
-                    )
+                    gx, gy = glyph.x + glyph.x_offset, glyph.y + glyph.y_offset
+                    _append_outline(outline.commands, scale, gx, gy, vertices, codes)
+                    ink = glyph_ink(self._ink, glyph, outline.commands, scale, gx, gy)
+                    if ink is not None:
+                        boxes.append(ink)
         bounds = layout.logical_bounds
         if vertices:
             path = Path(vertices, codes)
-            ink = path.get_extents()
+            x0, y0, x1, y1 = union_ink(boxes)
             box = (
-                min(bounds.x_min, float(ink.x0)),
-                min(bounds.y_min, float(ink.y0)),
-                max(bounds.x_max, float(ink.x1)),
-                max(bounds.y_max, float(ink.y1)),
+                min(bounds.x_min, float(x0)),
+                min(bounds.y_min, float(y0)),
+                max(bounds.x_max, float(x1)),
+                max(bounds.y_max, float(y1)),
             )
         else:  # blank text: nothing to draw but it still takes room
             box = (bounds.x_min, bounds.y_min, bounds.x_max, bounds.y_max)
