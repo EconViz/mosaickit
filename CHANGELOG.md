@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add renderer-neutral line geometry (#71) to `mosaickit.layout`: segment and
+  fragmented-polyline clipping, absolute or relative chord extension, viewport-wide chords,
+  and lines constructed from a requested display-space slope or angle while accounting for
+  data and panel aspect ratios. Also `clip_polyline(points, x_range, y_range)`,
+  `extend_line_through()`, `display_slope()` / `data_slope_for_display()` /
+  `axis_span_for_display_slope()` and `centered_view()` for views centred on two solved points.
+
 ## 1.0.0rc10 — 2026-10-25
 
 - New display-space rotation layout helpers in `mosaickit.layout`:
