@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Fix `CanvasGrid` spacing under Matplotlib: `GridSpacing` is now applied after the cells are
+  drawn, like a `subplots_adjust` on the rendered figure, instead of before. Point labels,
+  leaders and gutters are placed against Matplotlib's default axes and then re-spaced with the
+  figure, so a grid with spacing renders pixel-identically to one adjusted after rendering and
+  downstream packages can drop their own post-render renderers. Grids without spacing are
+  unchanged. (#74)
+
 ## 1.0.0rc11 — 2026-10-26
 
 - Add renderer-neutral `GridSpacing` for `CanvasGrid`. Column and row gaps are

@@ -278,3 +278,52 @@ def test_grid_link_lands_on_the_data_points_with_custom_spacing():
         assert figure is not None
     finally:
         result.close()
+
+
+def _labelled_grid(spacing):
+    from mosaickit import GridLink, MarkerLayer, PointLabelLayer
+
+    spec = CanvasSpec(x_range=(0, 10), y_range=(0, 10), width=4, height=3)
+    cells = [
+        Canvas(spec)
+        .add(MarkerLayer([(5, 5), (5.6, 5.2)], id="dots"))
+        .add(PointLabelLayer((5, 5), "A", id="a"))
+        .add(PointLabelLayer((5.6, 5.2), "B", id="b"))
+        for _ in range(4)
+    ]
+    return CanvasGrid(cells, shape=(2, 2), links=(GridLink(0, (5, 5), 3, (5, 5)),), spacing=spacing)
+
+
+def test_native_spacing_matches_adjusting_the_figure_after_rendering():
+    from io import BytesIO
+
+    gaps = dict(column_gap=0.22, row_gap=0.14, outer=0.02)
+    native = _labelled_grid(GridSpacing(**gaps)).render()
+    reference = _labelled_grid(None).render()
+    try:
+        reference.figure.subplots_adjust(
+            left=gaps["outer"],
+            right=1 - gaps["outer"],
+            bottom=gaps["outer"],
+            top=1 - gaps["outer"],
+            wspace=gaps["column_gap"],
+            hspace=gaps["row_gap"],
+        )
+        for one, other in zip(native.axes, reference.axes, strict=True):
+            assert one.get_position().bounds == pytest.approx(other.get_position().bounds)
+        for figure in (native.figure, reference.figure):
+            figure.canvas.draw()
+        for one, other in zip(native.axes, reference.axes, strict=True):
+            for name in ("a", "b"):
+                a = next(t for t in one.texts if t.get_gid() == name)
+                b = next(t for t in other.texts if t.get_gid() == name)
+                assert a.get_window_extent().extents == pytest.approx(b.get_window_extent().extents)
+        images = []
+        for result in (native, reference):
+            buffer = BytesIO()
+            result.figure.savefig(buffer, format="png")
+            images.append(buffer.getvalue())
+        assert images[0] == images[1]
+    finally:
+        native.close()
+        reference.close()

@@ -477,7 +477,9 @@ Omitted fields retain each renderer's existing default, so `CanvasGrid(cells)`
 continues to produce the same layout. Pass it as `CanvasGrid(cells, spacing=...)`;
 `sweep` and `from_layout` accept it too. Matplotlib fits the grid inside the fixed
 figure (`outer` shrinks the axes), while TikZ keeps cells at their natural size and
-adds `outer` around them. `grid.figure_size` and `mosaickit.rendering.matplotlib.grid_axes_size(grid, cell)` return
+adds `outer` around them. Under Matplotlib the spacing is applied after the cells are drawn
+(as if by `subplots_adjust` on the rendered figure), so labels and links keep their place
+relative to their panel. `grid.figure_size` and `mosaickit.rendering.matplotlib.grid_axes_size(grid, cell)` return
 the figure and per-cell axes size in inches for sizing text or aspect ratios.
 
 Parameters and expressions support arithmetic, ordered comparisons, partial
