@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- New `mosaickit.layout.labels`: one global label placer (#87). `place_labels(labels, obstacles, bounds, options)` places curve names, point labels and tick labels together: fixed-size boxes (the font size is never changed), inside the bounds, clear of every line, marker and box by a named clearance, never on another label, each beside its own anchor. It tries the preferred sides, then widening rings, then a displaced position with a leader line, and searches for the cheapest conflict-free assignment (most constrained first, branch and bound, deterministic). A label with no free position is returned with `ok=False` and a structured `PlacementWarning`. Tick labels stagger in rows or flip to the opposite side (`tick_strategy`). Every number is a documented field of the frozen `LabelOptions`.
+- New `mosaickit.label_scene.place_scene_labels`: the same engine from a canvas snapshot (curves, arrows, markers, texts, tick labels and fixed boxes in one scene), returning replacement `TextLayer`s and leader `PathLayer`s. New `mosaickit.rendering.matplotlib.text_measurer` measures real text extents in the configured fonts.
+- `Diagram` keeps its own name placement for now: the global engine may pick other sides than the greedy first-free one, so outputs would change.
+
 ## 1.0.0rc14 — 2026-10-26
 
 - `estimate_text_size`, and so the `Diagram` name placement, sizes stacked TeX: `\frac` and `\dfrac` put the numerator over the denominator, `\left`/`\right` delimiters are as tall as what they enclose, and `^`/`_` arguments are smaller and raise the line. A label such as `$LM\,\left(\frac{M}{p_1}\right)$` is no longer estimated at one line. The factors are the named `TextSizeFactors` (`DEFAULT_TEXT_SIZE_FACTORS`, `factors=` argument); commands in `strip_commands` still count for nothing (#84).
