@@ -556,9 +556,9 @@ from mosaickit.layout.labels import Label, LabelOptions, Obstacle, place_labels
 labels = [Label("p0", end0, size0, owner="p0"), Label("p1", end1, size1, owner="p1")]
 obstacles = [Obstacle.polyline(path0, owner="p0"), Obstacle.polyline(path1, owner="p1")]
 result = place_labels(labels, obstacles, Rect(0, 0, width, height), LabelOptions(clearance=4.0))
-for placed in result.placements:   # box, side, offset, leader, text_anchor
+for placed in result.placements:  # box, side, offset, leader, text_anchor
     ...
-for warning in result.warnings:    # label_id, reason: no label is silently overlapped
+for warning in result.warnings:  # label_id, reason: no label is silently overlapped
     ...
 ```
 
