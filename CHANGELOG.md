@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 1.0.0rc11 — 2026-10-26
+
 - Add renderer-neutral `GridSpacing` for `CanvasGrid`. Column and row gaps are
   proportional to one cell and the symmetric outer margin is proportional to
   the whole grid. Matplotlib and TikZ exports honor explicit spacing while
