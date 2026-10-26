@@ -164,6 +164,18 @@ class MatplotlibRenderer:
         dpi = max((p.canvas.spec.dpi for p in grid.placements), default=300)
         figure = Figure(figsize=grid.figure_size, dpi=dpi)
         FigureCanvasAgg(figure)
+        slots = figure.add_gridspec(grid.rows, grid.cols)
+        axes, contexts = [], []
+        for p in grid.placements:
+            ax = figure.add_subplot(slots[p.row : p.row + p.rows, p.col : p.col + p.cols])
+            context = p.canvas._context(cache)
+            self._draw(ax, p.canvas.snapshot(), context)
+            axes.append(ax)
+            contexts.append(context)
+        draw_grid_links(figure, tuple(axes), tuple(contexts), grid.links)
+        # Spacing is applied last: labels and leaders are placed against the axes Matplotlib
+        # gives by default and the whole figure is then re-spaced, so a grid with spacing
+        # matches one adjusted after rendering.
         spacing = grid.spacing
         if any(value is not None for value in (spacing.column_gap, spacing.row_gap, spacing.outer)):
             adjust: dict[str, float] = {}
@@ -179,15 +191,6 @@ class MatplotlibRenderer:
                     top=1 - spacing.outer,
                 )
             figure.subplots_adjust(**adjust)
-        slots = figure.add_gridspec(grid.rows, grid.cols)
-        axes, contexts = [], []
-        for p in grid.placements:
-            ax = figure.add_subplot(slots[p.row : p.row + p.rows, p.col : p.col + p.cols])
-            context = p.canvas._context(cache)
-            self._draw(ax, p.canvas.snapshot(), context)
-            axes.append(ax)
-            contexts.append(context)
-        draw_grid_links(figure, tuple(axes), tuple(contexts), grid.links)
         return MatplotlibResult(figure, tuple(axes))
 
     def save(self, result: MatplotlibResult, target: Path, options: SaveOptions) -> list[Path]:

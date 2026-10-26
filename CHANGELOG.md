@@ -9,6 +9,12 @@
   axis marks, and `arrow`. `stack()` with `link_points()` stacks panels into a `CanvasGrid` with
   `GridLink`s between named points and a `GridSpacing`. A `nudge` callback and role strings keep
   configuration and themes in the caller.
+- Fix `CanvasGrid` spacing under Matplotlib: `GridSpacing` is now applied after the cells are
+  drawn, like a `subplots_adjust` on the rendered figure, instead of before. Point labels,
+  leaders and gutters are placed against Matplotlib's default axes and then re-spaced with the
+  figure, so a grid with spacing renders pixel-identically to one adjusted after rendering and
+  downstream packages can drop their own post-render renderers. Grids without spacing are
+  unchanged. (#74)
 
 ## 1.0.0rc11 — 2026-10-26
 
