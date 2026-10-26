@@ -161,10 +161,8 @@ class MatplotlibRenderer:
         return MatplotlibResult(figure, ax)
 
     def render_grid(self, grid, cache) -> MatplotlibResult:
-        width = max((p.canvas.spec.width / p.cols for p in grid.placements), default=6)
-        height = max((p.canvas.spec.height / p.rows for p in grid.placements), default=6)
         dpi = max((p.canvas.spec.dpi for p in grid.placements), default=300)
-        figure = Figure(figsize=(width * grid.cols, height * grid.rows), dpi=dpi)
+        figure = Figure(figsize=grid.figure_size, dpi=dpi)
         FigureCanvasAgg(figure)
         spacing = grid.spacing
         if any(value is not None for value in (spacing.column_gap, spacing.row_gap, spacing.outer)):

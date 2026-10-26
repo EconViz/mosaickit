@@ -176,6 +176,13 @@ class CanvasGrid:
         }
         return cls(canvases, shape=shapes[layout], spacing=spacing)
 
+    @property
+    def figure_size(self) -> tuple[float, float]:
+        """Width and height in inches of the Matplotlib figure this grid renders to."""
+        width = max((p.canvas.spec.width / p.cols for p in self.placements), default=6)
+        height = max((p.canvas.spec.height / p.rows for p in self.placements), default=6)
+        return (width * self.cols, height * self.rows)
+
     def _renderer(self, renderer: Renderer | str | None) -> Renderer:
         if renderer is None:
             return (

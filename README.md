@@ -449,7 +449,11 @@ explicit `rows` and `cols` may leave trailing cells empty.
 `GridSpacing` controls renderer-neutral gaps: `column_gap` and `row_gap` are
 fractions of one cell, while `outer` is a symmetric fraction of the whole grid.
 Omitted fields retain each renderer's existing default, so `CanvasGrid(cells)`
-continues to produce the same layout.
+continues to produce the same layout. Pass it as `CanvasGrid(cells, spacing=...)`;
+`sweep` and `from_layout` accept it too. Matplotlib fits the grid inside the fixed
+figure (`outer` shrinks the axes), while TikZ keeps cells at their natural size and
+adds `outer` around them. `grid.figure_size` and `mosaickit.rendering.matplotlib.grid_axes_size(grid, cell)` return
+the figure and per-cell axes size in inches for sizing text or aspect ratios.
 
 Parameters and expressions support arithmetic, ordered comparisons, partial
 binding, and stable structural equality.

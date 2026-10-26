@@ -114,3 +114,21 @@ def test_tikz_sets_the_generic_font_of_a_text_style(tmp_path):
     assert r"\sffamily" in _tikz_text(tmp_path)  # sans is the default
     assert r"\rmfamily" in _tikz_text(tmp_path, font="serif")
     assert r"\ttfamily" in _tikz_text(tmp_path, font="mono")
+
+
+def test_canvas_grid_tikz_gap_only_spacing_keeps_the_centered_layout(tmp_path):
+    canvas = Canvas()
+    target = tmp_path / "gap.tex"
+    CanvasGrid([[canvas, canvas]], spacing=GridSpacing(column_gap=0.5)).save(target)
+    source = target.read_text(encoding="utf-8")
+    assert r"\begin{center}" in source
+    assert r"\hspace{3in}" in source
+    assert r"\hspace*" not in source
+
+
+def test_canvas_grid_tikz_default_spacing_is_unchanged(tmp_path):
+    canvas = Canvas()
+    plain, explicit = tmp_path / "a.tex", tmp_path / "b.tex"
+    CanvasGrid([[canvas, canvas], [canvas, canvas]]).save(plain)
+    CanvasGrid([[canvas, canvas], [canvas, canvas]], spacing=GridSpacing()).save(explicit)
+    assert plain.read_text(encoding="utf-8") == explicit.read_text(encoding="utf-8")

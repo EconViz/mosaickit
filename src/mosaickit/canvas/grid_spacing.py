@@ -16,6 +16,15 @@ class GridSpacing:
     ``column_gap`` and ``row_gap`` are fractions of a cell's width and height.
     ``outer`` is the symmetric margin on every side as a fraction of the whole
     grid. Leaving a value as ``None`` preserves the renderer's existing default.
+
+    Example: ``CanvasGrid(cells, spacing=GridSpacing(column_gap=0.2, outer=0.04))``.
+
+    Matplotlib (PNG, PDF, SVG) fits the grid inside the fixed figure, so ``outer``
+    shrinks the axes and a gap is a share of the axes' own width or height. TikZ
+    keeps every cell at its natural size, so gaps are the same share of one cell
+    and ``outer`` is added around the grid instead. Use
+    :func:`mosaickit.rendering.matplotlib.grid_axes_size`
+    for the size a Matplotlib cell ends up with.
     """
 
     column_gap: float | None = None
