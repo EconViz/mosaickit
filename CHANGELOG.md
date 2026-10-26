@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add renderer-neutral `GridSpacing` for `CanvasGrid`. Column and row gaps are
+  proportional to one cell and the symmetric outer margin is proportional to
+  the whole grid. Matplotlib and TikZ exports honor explicit spacing while
+  omitted values preserve their previous renderer defaults. New
+  `CanvasGrid.figure_size` and `mosaickit.rendering.matplotlib.grid_axes_size` report the rendered
+  figure and per-cell axes size in inches. (#71)
+
 ## 1.0.0rc10 — 2026-10-25
 
 - New display-space rotation layout helpers in `mosaickit.layout`:
