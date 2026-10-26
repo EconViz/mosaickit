@@ -138,6 +138,31 @@ places a label's bottom-center anchor on the invisible continuation of that
 tail. Their distances are display units, so callers can derive them from the
 active font and stroke metrics.
 
+Line geometry follows the same renderer-neutral boundary. `clip_segment()` and
+`clip_polyline()` retain the parts inside any `Rect`; a clipped polyline returns separate
+fragments when it leaves and later re-enters. `extend_chord()` adds absolute or
+solved-span-relative tails, while `chord_to_rect()` continues a chord to a viewport.
+For a line whose visual angle must stay fixed as panel proportions change, provide both
+coordinate systems explicitly:
+
+```python
+from mosaickit.layout import Rect, line_through_display_slope
+
+line = line_through_display_slope(
+    (50, 4),
+    -0.75,
+    data_rect=Rect(0, 0, 100, 10),
+    display_rect=Rect(0, 0, 600, 300),  # points or pixels
+)
+```
+
+The returned endpoints are in data coordinates and clipped to `data_rect`.
+`line_through_display_angle()` provides the same operation with a counter-clockwise angle
+in degrees. `display_slope()`, `data_slope_for_display()` and `axis_span_for_display_slope()`
+convert between data and on-screen slopes from axis spans and physical size, and
+`centered_view(points, gap_share=...)` returns the origin and spans of a view centred on two
+solved points. These functions do not read a renderer, axes, or domain model.
+
 ## Axis marks, notes, and braces
 
 ```python
