@@ -1,6 +1,7 @@
 """Axis-aligned rectangles and the coordinate aliases used by layout.
 
-Layout coordinates are display pixels.
+Layout normally uses display pixels, while the pure geometry operations also
+accept rectangles and points expressed in any consistent Cartesian units.
 """
 
 from __future__ import annotations

@@ -138,6 +138,31 @@ places a label's bottom-center anchor on the invisible continuation of that
 tail. Their distances are display units, so callers can derive them from the
 active font and stroke metrics.
 
+Line geometry follows the same renderer-neutral boundary. `clip_segment()` and
+`clip_polyline()` retain the parts inside any `Rect`; a clipped polyline returns separate
+fragments when it leaves and later re-enters. `extend_chord()` adds absolute or
+solved-span-relative tails, while `chord_to_rect()` continues a chord to a viewport.
+For a line whose visual angle must stay fixed as panel proportions change, provide both
+coordinate systems explicitly:
+
+```python
+from mosaickit.layout import Rect, line_through_display_slope
+
+line = line_through_display_slope(
+    (50, 4),
+    -0.75,
+    data_rect=Rect(0, 0, 100, 10),
+    display_rect=Rect(0, 0, 600, 300),  # points or pixels
+)
+```
+
+The returned endpoints are in data coordinates and clipped to `data_rect`.
+`line_through_display_angle()` provides the same operation with a counter-clockwise angle
+in degrees. `display_slope()`, `data_slope_for_display()` and `axis_span_for_display_slope()`
+convert between data and on-screen slopes from axis spans and physical size, and
+`centered_view(points, gap_share=...)` returns the origin and spans of a view centred on two
+solved points. These functions do not read a renderer, axes, or domain model.
+
 ## Axis marks, notes, and braces
 
 ```python
@@ -429,18 +454,31 @@ right = "8pt"
 ## Grids and parameters
 
 ```python
-from mosaickit import Canvas, CanvasGrid, Parameter, TextLayer
+from mosaickit import Canvas, CanvasGrid, GridSpacing, Parameter, TextLayer
 
 position = Parameter("position", value_type=float)
 template = Canvas().add(TextLayer((position, 5), "moving"))
 values = position.values([1.0, 3.0, 5.0])
 
-CanvasGrid.sweep(template, values, cols=3).save("sweep.svg")
+CanvasGrid.sweep(
+    template,
+    values,
+    cols=3,
+    spacing=GridSpacing(column_gap=0.2, row_gap=0.15, outer=0.04),
+).save("sweep.svg")
 ```
 
 `CanvasGrid` accepts flat canvases, nested rows, `None` cells, and
 `Span(canvas, rows=..., cols=...)`. A flat list infers a roughly square grid;
 explicit `rows` and `cols` may leave trailing cells empty.
+`GridSpacing` controls renderer-neutral gaps: `column_gap` and `row_gap` are
+fractions of one cell, while `outer` is a symmetric fraction of the whole grid.
+Omitted fields retain each renderer's existing default, so `CanvasGrid(cells)`
+continues to produce the same layout. Pass it as `CanvasGrid(cells, spacing=...)`;
+`sweep` and `from_layout` accept it too. Matplotlib fits the grid inside the fixed
+figure (`outer` shrinks the axes), while TikZ keeps cells at their natural size and
+adds `outer` around them. `grid.figure_size` and `mosaickit.rendering.matplotlib.grid_axes_size(grid, cell)` return
+the figure and per-cell axes size in inches for sizing text or aspect ratios.
 
 Parameters and expressions support arithmetic, ordered comparisons, partial
 binding, and stable structural equality.
