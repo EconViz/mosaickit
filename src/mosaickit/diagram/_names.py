@@ -2,8 +2,7 @@
 
 from __future__ import annotations
 
-import re
-from collections.abc import Callable, Iterable, Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
 from mosaickit.layout import Obstacles, Rect
@@ -47,39 +46,11 @@ RISING_NAME_ORDER = (
 )
 """The same, for a rising curve when its name should sit above its end."""
 
-_MARKUP = re.compile(r"[$\\{}^_,]")
-_COMMAND = re.compile(r"\\[A-Za-z]+")
-
 TEX_LAYOUT_COMMANDS = ("left", "right", "frac", "dfrac")
 """TeX commands that draw no glyph of their own; pass as ``strip_commands`` to leave them out."""
 
 TextSize = Callable[[str, float], Point]
 """Estimates the ``(width, height)`` in points of a label set at a font size in points."""
-
-
-def estimate_text_size(
-    label: str,
-    font_size: float,
-    *,
-    char_width: float = 0.8,
-    line_height: float = 1.25,
-    strip_commands: Iterable[str] = (),
-) -> Point:
-    """Estimated ``(width, height)`` in points of ``label`` set at ``font_size`` points.
-
-    Markup characters (``$ \\ { } ^ _ ,``) count for nothing and every TeX command counts as one
-    glyph, except the commands named in ``strip_commands`` (without the backslash, for example
-    :data:`TEX_LAYOUT_COMMANDS`), which count for nothing. ``char_width`` and ``line_height``
-    are in em. The defaults are the estimate :class:`~mosaickit.diagram.Diagram` uses.
-    """
-    plain = label
-    names = tuple(strip_commands)
-    if names:
-        plain = re.sub(
-            r"\\(?:" + "|".join(re.escape(n) for n in names) + r")(?![A-Za-z])", "", plain
-        )
-    glyphs = len(_MARKUP.sub("", _COMMAND.sub("x", plain)))
-    return char_width * font_size * glyphs, line_height * font_size
 
 
 @dataclass(frozen=True, slots=True)
