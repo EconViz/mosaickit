@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- `Diagram` takes `name_gap`, `name_diagonal` (share of the gap used on a diagonal side) and a
+  `text_size(label, font_size)` estimator, so downstream packages can match their own placement;
+  the defaults reproduce the previous behaviour exactly (#79). New public
+  `mosaickit.diagram.estimate_text_size`, which can leave TeX commands such as `\left` and
+  `\frac` out of the width (`TEX_LAYOUT_COMMANDS`), and `Diagram.tail_label`, a text at a fixed
+  point offset from the end of a curve.
+
 ## 1.0.0rc12 — 2026-10-26
 
 - New `mosaickit.diagram`: a small declarative builder for theory diagrams (#75). `Diagram` declares

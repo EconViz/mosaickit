@@ -3,7 +3,15 @@
 import pytest
 
 from mosaickit import CanvasGrid, GridSpacing, Nudge, TextLayer
-from mosaickit.diagram import Diagram, indexed, link_points, primed, stack
+from mosaickit.diagram import (
+    TEX_LAYOUT_COMMANDS,
+    Diagram,
+    estimate_text_size,
+    indexed,
+    link_points,
+    primed,
+    stack,
+)
 from mosaickit.errors import ConfigurationError
 from mosaickit.layout import centered_view
 from mosaickit.scene import ArrowLayer, AxisMarkLayer, MarkerLayer, PointLabelLayer
@@ -191,3 +199,70 @@ def test_two_panel_derivation_saves(tmp_path):
     )
     assert grid.save(tmp_path / "ad.png") == [tmp_path / "ad.png"]
     assert (tmp_path / "ad.png").stat().st_size > 0
+
+
+# -- name placement parameters ---------------------------------------------------------------
+
+
+def _names(**options):
+    d = Diagram(10, 10, rising_names_upper_right=True, **options)
+    d.curve("a", [(0, 9), (9, 1)], label=r"$\frac{M}{P}$ demand")
+    d.curve("b", [(0, 1), (9, 9)], label="$S$")
+    d.curve("c", [(0, 5), (9, 5)], label=r"$\left(Y\right)$")
+    return {n: (by_id(d, f"{n}.label").anchor, by_id(d, f"{n}.label").offset) for n in "abc"}
+
+
+def test_name_defaults_are_unchanged():
+    baseline = {
+        "a": ("top-right", (-5.0, -5.0)),
+        "b": ("bottom-left", (5.0, 5.0)),
+        "c": ("top-left", (5.0, -5.0)),
+    }
+    assert _names() == baseline
+    assert _names(name_gap=5.0, name_diagonal=1.0) == baseline
+
+
+def test_name_gap_and_diagonal_factor():
+    assert _names(name_gap=8.0)["b"][1] == (8.0, 8.0)
+    assert _names(name_diagonal=0.75)["b"][1] == (3.75, 3.75)
+    assert _names(name_gap=8.0, name_diagonal=0.5)["a"][1] == (-4.0, -4.0)
+
+
+def test_custom_text_size_is_used_for_every_name():
+    seen = []
+
+    def size(label, font_size):
+        seen.append((label, font_size))
+        return (10.0, 5.0)
+
+    d = Diagram(10, 10, font_size=9.0, text_size=size)
+    d.curve("a", [(0, 9), (9, 1)], label="$D$")
+    d.layers()
+    assert seen == [("$D$", 9.0)]
+
+
+def test_estimate_text_size_defaults_and_stripping():
+    label = r"$\frac{M}{P}$"
+    width, height = estimate_text_size(label, 10)
+    assert (width, height) == (0.8 * 10 * 3, 12.5)  # \frac counts as one glyph
+    stripped = estimate_text_size(label, 10, strip_commands=TEX_LAYOUT_COMMANDS)
+    assert stripped == (0.8 * 10 * 2, 12.5)
+    assert estimate_text_size(
+        r"\left(x\right)\alpha",
+        10,
+        char_width=0.5,
+        line_height=1.0,
+        strip_commands=["left", "right"],
+    ) == (0.5 * 10 * 4, 10.0)
+
+
+def test_tail_label_sits_at_a_fixed_offset_from_the_curve_end():
+    d = Diagram(10, 10).curve("s", [(0, 2), (9, 2)], role="supply")
+    d.tail_label("s.tail", "s", "text", offset=(8.0, 0.0))
+    d.tail_label("s.up", "s", "up", offset=(0.0, 8.0), role="other")
+    right, up = by_id(d, "s.tail"), by_id(d, "s.up")
+    assert right.position == (9.0, 2.0) and right.offset == (8.0, 0.0)
+    assert (right.anchor, right.role) == ("left", "supply")
+    assert (up.anchor, up.role) == ("bottom", "other")
+    with pytest.raises(ConfigurationError):
+        d.tail_label("x", "missing", "t", offset=(1, 0))
