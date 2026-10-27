@@ -34,6 +34,21 @@ def test_root_import_does_not_load_matplotlib_or_domain_packages():
     assert result.returncode == 0, result.stderr
 
 
+def test_reorganized_modules_keep_legacy_imports_compatible():
+    from mosaickit import econ_toml
+    from mosaickit.config import Config as LegacyConfig
+    from mosaickit.configuration import Config, toml
+    from mosaickit.configuration.toml import registry
+    from mosaickit.econ_toml import registry as legacy_registry
+    from mosaickit.label_scene import SceneLabelOptions as LegacySceneLabelOptions
+    from mosaickit.labels import SceneLabelOptions
+
+    assert LegacyConfig is Config
+    assert LegacySceneLabelOptions is SceneLabelOptions
+    assert econ_toml.Schema is toml.Schema
+    assert legacy_registry is registry
+
+
 def test_distribution_has_no_bezierkit_dependency():
     dependencies = requires("mosaickit") or []
     assert not any(requirement.lower().startswith("bezierkit") for requirement in dependencies)

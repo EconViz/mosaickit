@@ -8,11 +8,18 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import mosaickit.econ_toml as _toml
-from mosaickit.econ_toml._apply import _apply, _dotted_get, _merge, _toml_value
-from mosaickit.econ_toml._helpers import _hint, _is_color, _located, _message, _relocated, _unknown
-from mosaickit.econ_toml.config import ConfigBase
-from mosaickit.econ_toml.constants import (
+import mosaickit.configuration.toml as _toml
+from mosaickit.configuration.toml._apply import _apply, _dotted_get, _merge, _toml_value
+from mosaickit.configuration.toml._helpers import (
+    _hint,
+    _is_color,
+    _located,
+    _message,
+    _relocated,
+    _unknown,
+)
+from mosaickit.configuration.toml.config import ConfigBase
+from mosaickit.configuration.toml.constants import (
     _SHARED_KEYS,
     FILE_NAME,
     LEGACY_SECTIONS,
@@ -20,8 +27,8 @@ from mosaickit.econ_toml.constants import (
     SHARED_NAMES,
     SHARED_SECTIONS,
 )
-from mosaickit.econ_toml.fields import Context, Field, Pattern
-from mosaickit.econ_toml.shared import find, read, shared_settings
+from mosaickit.configuration.toml.fields import Context, Field, Pattern
+from mosaickit.configuration.toml.shared import find, read, shared_settings
 from mosaickit.errors import ConfigurationError
 
 

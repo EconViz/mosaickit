@@ -8,12 +8,12 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-import mosaickit.econ_toml as _toml
-from mosaickit.econ_toml._helpers import _path
-from mosaickit.econ_toml.constants import FILE_NAME, SHARED_COLORS
-from mosaickit.econ_toml.figures import _NO_FIGURES, figure_labels
+import mosaickit.configuration.toml as _toml
+from mosaickit.configuration.label_overrides import FigureLabels
+from mosaickit.configuration.toml._helpers import _path
+from mosaickit.configuration.toml.constants import FILE_NAME, SHARED_COLORS
+from mosaickit.configuration.toml.figures import _NO_FIGURES, figure_labels
 from mosaickit.errors import ConfigurationError
-from mosaickit.label_overrides import FigureLabels
 from mosaickit.text_fonts import GENERIC_FONTS, TextFonts
 
 if sys.version_info >= (3, 11):

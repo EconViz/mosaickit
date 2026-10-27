@@ -7,9 +7,8 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from mosaickit import label_overrides
 from mosaickit.canvas_spec import CanvasSpec
-from mosaickit.config import Config, current_config
+from mosaickit.configuration import Config, current_config, label_overrides
 from mosaickit.errors import RenderError
 from mosaickit.parameter import Parameter, bind
 from mosaickit.rendering import RenderCache, Renderer, RendererRegistry, SaveOptions
@@ -120,7 +119,7 @@ class Canvas:
         """Write the canvas to ``target`` (``.png``, ``.pdf``, ``.svg`` or ``.tex``).
 
         The label overrides active for the file's stem (``[figure.<stem>.label."<id>"]`` in
-        ``econ-viz.toml``, see :mod:`mosaickit.econ_toml`) replace the nudges of the labels
+        ``econ-viz.toml``, see :mod:`mosaickit.configuration.toml`) replace the nudges of the labels
         they name before drawing. ``render()`` never applies them.
         """
         target = Path(target)

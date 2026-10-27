@@ -3,7 +3,7 @@
 from mosaickit.canvas import Canvas, CanvasGrid, GridLink, GridSpacing, Layout, Span
 from mosaickit.canvas_spec import CanvasSpec
 from mosaickit.colors import TRANSPARENT, Color
-from mosaickit.config import Config, use_config
+from mosaickit.configuration import Config, use_config
 from mosaickit.errors import (
     BindingError,
     ConfigurationError,

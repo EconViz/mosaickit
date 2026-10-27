@@ -8,7 +8,14 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from mosaickit.econ_toml._helpers import _hint, _is_color, _located, _message, _path, _relocated
+from mosaickit.configuration.toml._helpers import (
+    _hint,
+    _is_color,
+    _located,
+    _message,
+    _path,
+    _relocated,
+)
 from mosaickit.errors import ConfigurationError
 from mosaickit.styles.nudge import POINTS_PER_UNIT, parse_length
 
