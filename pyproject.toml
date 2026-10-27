@@ -66,7 +66,8 @@ type = "forbidden"
 source_modules = ["mosaickit.layout"]
 forbidden_modules = [
     "mosaickit.scene", "mosaickit.styles", "mosaickit.themes", "mosaickit.palette",
-    "mosaickit.config", "mosaickit.canvas", "mosaickit.rendering", "matplotlib",
+    "mosaickit.configuration", "mosaickit.config", "mosaickit.canvas",
+    "mosaickit.rendering", "matplotlib",
 ]
 
 [[tool.importlinter.contracts]]
@@ -80,7 +81,10 @@ allow_indirect_imports = true
 name = "Scene models know nothing about themes, layout, or config"
 type = "forbidden"
 source_modules = ["mosaickit.scene"]
-forbidden_modules = ["mosaickit.themes", "mosaickit.palette", "mosaickit.layout", "mosaickit.config"]
+forbidden_modules = [
+    "mosaickit.themes", "mosaickit.palette", "mosaickit.layout",
+    "mosaickit.configuration", "mosaickit.config",
+]
 
 [[tool.importlinter.contracts]]
 name = "Only the Matplotlib backend imports Matplotlib"
@@ -88,6 +92,7 @@ type = "forbidden"
 source_modules = [
     "mosaickit.scene", "mosaickit.styles", "mosaickit.themes", "mosaickit.palette",
     "mosaickit.colors", "mosaickit.parameter", "mosaickit.layout", "mosaickit.canvas",
+    "mosaickit.configuration.core", "mosaickit.configuration.label_overrides",
     "mosaickit.config", "mosaickit.canvas_spec", "mosaickit.interval", "mosaickit.errors",
     "mosaickit.rendering.plan", "mosaickit.rendering.cache", "mosaickit.rendering.context",
     "mosaickit.rendering.protocol", "mosaickit.rendering.registry",
@@ -100,7 +105,7 @@ type = "forbidden"
 source_modules = ["mosaickit.document"]
 forbidden_modules = [
     "mosaickit.rendering", "mosaickit.canvas", "mosaickit.layout", "mosaickit.themes",
-    "mosaickit.config", "matplotlib",
+    "mosaickit.configuration", "mosaickit.config", "matplotlib",
 ]
 
 [[tool.importlinter.contracts]]
@@ -108,6 +113,7 @@ name = "Shared theme tokens are pure data"
 type = "forbidden"
 source_modules = ["mosaickit.themes.shared"]
 forbidden_modules = [
-    "mosaickit.econ_toml", "mosaickit.config", "mosaickit.palette", "mosaickit.styles",
+    "mosaickit.configuration", "mosaickit.econ_toml", "mosaickit.config",
+    "mosaickit.palette", "mosaickit.styles",
     "mosaickit.scene", "mosaickit.canvas", "mosaickit.rendering", "matplotlib",
 ]

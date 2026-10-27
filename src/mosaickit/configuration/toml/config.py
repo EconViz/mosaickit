@@ -6,15 +6,15 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from mosaickit import label_overrides
-from mosaickit.econ_toml.constants import FILE_NAME
-from mosaickit.econ_toml.figures import _NO_FIGURES, figure_labels
-from mosaickit.econ_toml.shared import find, read
+from mosaickit.configuration import label_overrides
+from mosaickit.configuration.label_overrides import FigureLabels
+from mosaickit.configuration.toml.constants import FILE_NAME
+from mosaickit.configuration.toml.figures import _NO_FIGURES, figure_labels
+from mosaickit.configuration.toml.shared import find, read
 from mosaickit.errors import ConfigurationError
-from mosaickit.label_overrides import FigureLabels
 
 if TYPE_CHECKING:
-    from mosaickit.econ_toml.schema import Schema
+    from mosaickit.configuration.toml.schema import Schema
 
 
 class ConfigBase:

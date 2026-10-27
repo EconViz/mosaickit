@@ -8,12 +8,12 @@ from collections.abc import Mapping
 from types import MappingProxyType
 from typing import Any
 
-from mosaickit import label_overrides
-from mosaickit.econ_toml._helpers import _unknown
-from mosaickit.econ_toml.fields import Context, length
+from mosaickit.configuration import label_overrides
+from mosaickit.configuration.label_overrides import NO_FIGURES as _NO_FIGURES
+from mosaickit.configuration.label_overrides import FigureLabels
+from mosaickit.configuration.toml._helpers import _unknown
+from mosaickit.configuration.toml.fields import Context, length
 from mosaickit.errors import ConfigurationError
-from mosaickit.label_overrides import NO_FIGURES as _NO_FIGURES
-from mosaickit.label_overrides import FigureLabels
 from mosaickit.styles.nudge import Nudge
 
 LABEL_SIDES = ("top", "bottom", "left", "right")

@@ -12,7 +12,7 @@ from mosaickit.errors import ConfigurationError
 from mosaickit.palette import DEFAULT_PALETTE
 
 if TYPE_CHECKING:
-    from mosaickit.econ_toml.fields import Context
+    from mosaickit.configuration.toml.fields import Context
 
 _HEX = re.compile(r"#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})")
 

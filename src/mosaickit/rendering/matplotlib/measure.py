@@ -29,7 +29,7 @@ def text_measurer(
 
     It sets the text with the same GlyphKit (or Matplotlib) layout the renderer draws with, in
     the fonts you pass, so the box is the one drawn, not an estimate. Pass it to
-    :func:`mosaickit.label_scene.place_scene_labels`. The size is never altered.
+    :func:`mosaickit.labels.place_scene_labels`. The size is never altered.
     """
     style = TextStyle(size=size, weight=weight, font=font, rotation=0.0)
     figure = Figure(dpi=POINTS_DPI)

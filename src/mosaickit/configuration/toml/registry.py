@@ -8,9 +8,9 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Any
 
-from mosaickit.econ_toml.constants import ENTRY_POINT_GROUP, FILE_NAME
-from mosaickit.econ_toml.schema import Schema
-from mosaickit.econ_toml.shared import find, read
+from mosaickit.configuration.toml.constants import ENTRY_POINT_GROUP, FILE_NAME
+from mosaickit.configuration.toml.schema import Schema
+from mosaickit.configuration.toml.shared import find, read
 from mosaickit.errors import ConfigurationError
 
 _REGISTRY: dict[str, Schema] = {}
